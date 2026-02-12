@@ -1,4 +1,4 @@
-# CLAUDE.md
+# AGENTS.md
 
 ## Purpose
 This file is the contributor/agent operating guide for this repository.
@@ -38,6 +38,12 @@ Sandbox note:
 - `HTTP_ADDR` (default `:8080`)
 - `LOG_LEVEL` (default `INFO`)
 
+## API Endpoints
+- `GET /healthz`: SQLite health check
+- `GET /openapi.json`: OpenAPI 3.1 spec
+- `GET /docs`: Swagger UI
+- `GET /ws/echo`: WebSocket echo test endpoint
+
 ## Architecture Rules
 - SQLite is the single datastore and source of truth.
 - Keep dependency footprint minimal.
@@ -53,8 +59,9 @@ Sandbox note:
 - Do not add external state infra (Redis, cache brokers) unless explicitly requested.
 
 ## API Rules
-- Health endpoint: `GET /healthz` should reflect real runtime dependencies only.
+- Health endpoint must reflect real runtime dependencies only.
 - WebSocket handlers must remain context-aware and close connections correctly.
+- Keep OpenAPI spec in sync with implemented routes and payloads.
 - Avoid cross-file abstractions unless they reduce real complexity.
 
 ## Editing Standards
@@ -68,4 +75,4 @@ A change is complete when all are true:
 - Code compiles.
 - Relevant tests pass.
 - `go.mod`/`go.sum` are clean.
-- `CLAUDE.md` stays aligned with current code.
+- `AGENTS.md` stays aligned with current code.
