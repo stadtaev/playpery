@@ -11,11 +11,12 @@ import (
 	"syscall"
 
 	"github.com/redis/go-redis/v9"
-	_ "github.com/tursodatabase/go-libsql"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/playperu/cityquiz/internal/config"
+	"github.com/playperu/cityquiz/internal/database"
 	"github.com/playperu/cityquiz/internal/handler"
+	"github.com/playperu/cityquiz/internal/migrations"
 	"github.com/playperu/cityquiz/internal/server"
 )
 
@@ -39,39 +40,24 @@ func run(ctx context.Context, stdout io.Writer) error {
 		Level: cfg.LogLevel,
 	}))
 
-	// --- SQLite (via libSQL) ---
-	db, err := sql.Open("libsql", "file:"+cfg.DBPath)
+	// --- SQLite ---
+	db, err := database.Open(ctx, cfg.DBPath)
 	if err != nil {
-		return fmt.Errorf("opening database: %w", err)
+		return fmt.Errorf("connecting to sqlite: %w", err)
 	}
 	defer db.Close()
 
-	if _, err := db.ExecContext(ctx, "PRAGMA journal_mode=WAL"); err != nil {
-		return fmt.Errorf("setting WAL mode: %w", err)
-	}
-	if _, err := db.ExecContext(ctx, "PRAGMA busy_timeout=5000"); err != nil {
-		return fmt.Errorf("setting busy timeout: %w", err)
-	}
-	if _, err := db.ExecContext(ctx, "PRAGMA foreign_keys=ON"); err != nil {
-		return fmt.Errorf("enabling foreign keys: %w", err)
-	}
-
-	if err := db.PingContext(ctx); err != nil {
-		return fmt.Errorf("pinging database: %w", err)
+	if err := migrations.Run(db); err != nil {
+		return fmt.Errorf("running migrations: %w", err)
 	}
 	logger.Info("connected to sqlite", "path", cfg.DBPath)
 
 	// --- Redis ---
-	ropt, err := redis.ParseURL(cfg.RedisURL)
+	rdb, err := openRedis(ctx, cfg.RedisURL)
 	if err != nil {
-		return fmt.Errorf("parsing redis url: %w", err)
+		return fmt.Errorf("connecting to redis: %w", err)
 	}
-	rdb := redis.NewClient(ropt)
 	defer rdb.Close()
-
-	if err := rdb.Ping(ctx).Err(); err != nil {
-		return fmt.Errorf("pinging redis: %w", err)
-	}
 	logger.Info("connected to redis")
 
 	// --- Handlers ---
@@ -98,20 +84,25 @@ func run(ctx context.Context, stdout io.Writer) error {
 	return g.Wait()
 }
 
-// dbPinger adapts *sql.DB to handler.Pinger.
-type dbPinger struct {
-	db *sql.DB
+func openRedis(ctx context.Context, rawURL string) (*redis.Client, error) {
+	opt, err := redis.ParseURL(rawURL)
+	if err != nil {
+		return nil, fmt.Errorf("parsing redis url: %w", err)
+	}
+	rdb := redis.NewClient(opt)
+	if err := rdb.Ping(ctx).Err(); err != nil {
+		rdb.Close()
+		return nil, fmt.Errorf("pinging redis: %w", err)
+	}
+	return rdb, nil
 }
 
-func (d dbPinger) Ping(ctx context.Context) error {
-	return d.db.PingContext(ctx)
-}
+// dbPinger adapts *sql.DB to handler.Pinger.
+type dbPinger struct{ db *sql.DB }
+
+func (d dbPinger) Ping(ctx context.Context) error { return d.db.PingContext(ctx) }
 
 // redisPinger adapts *redis.Client to handler.Pinger.
-type redisPinger struct {
-	client *redis.Client
-}
+type redisPinger struct{ client *redis.Client }
 
-func (r redisPinger) Ping(ctx context.Context) error {
-	return r.client.Ping(ctx).Err()
-}
+func (r redisPinger) Ping(ctx context.Context) error { return r.client.Ping(ctx).Err() }

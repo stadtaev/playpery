@@ -40,8 +40,9 @@ cityquiz/
 │   │   ├── ws/               # WebSocket hub, room management, broadcasting
 │   │   ├── model/            # Domain types
 │   │   ├── store/            # SQLite repositories (via database/sql)
+│   │   ├── database/         # SQLite connection + PRAGMA setup
+│   │   ├── migrations/       # Embedded SQL migrations (goose v3)
 │   │   └── cache/            # Redis state + pub/sub
-│   ├── migrations/           # SQL migrations (golang-migrate)
 │   ├── go.mod
 │   ├── go.sum
 │   └── Dockerfile
@@ -318,7 +319,7 @@ ssh cityquiz "cd /opt/cityquiz && docker compose pull api && docker compose up -
 Build and validate in this sequence:
 
 1. ~~**Go API skeleton** — health check endpoint, WebSocket echo test, Redis + SQLite connection~~ ✅ DONE
-2. **Database schema + migrations** — use golang-migrate or goose
+2. ~~**Database schema + migrations** — goose v3 with embedded SQL files, auto-run on startup~~ ✅ DONE
 3. **Scenario + Game CRUD** — REST endpoints for admin to create/manage scenarios and games
 4. **Join flow** — token generation, QR code rendering, WebSocket room assignment on join
 5. **Game engine** — stage progression state machine, answer checking, server-authoritative timer
@@ -335,7 +336,7 @@ Build and validate in this sequence:
 - Prefer table-driven tests in Go
 - React: functional components with hooks; no class components
 - Use TypeScript for the React frontend
-- Migrations: numbered SQL files, never modify existing migrations
+- Migrations: numbered SQL files with `-- +goose Up`/`-- +goose Down` markers in `internal/migrations/`, embedded via `//go:embed`, never modify existing migrations
 - Environment config via environment variables (12-factor)
 - All times in UTC, stored as ISO 8601 TEXT in SQLite (e.g., `2026-02-11T10:00:00.000Z`)
 
@@ -345,7 +346,7 @@ Build and validate in this sequence:
 - WebSocket: `nhooyr.io/websocket` (context-aware)
 - SQLite/libSQL: `github.com/tursodatabase/go-libsql` (CGO, `database/sql` compatible)
 - Redis: `github.com/redis/go-redis/v9`
-- Migrations: `golang-migrate/migrate`
+- Migrations: `github.com/pressly/goose/v3` (works with any `database/sql` driver; `golang-migrate` lacks a libSQL driver)
 - Config: `github.com/caarlos0/env/v11`
 - Lifecycle: `golang.org/x/sync/errgroup`
 - Logging: `log/slog` (stdlib)
