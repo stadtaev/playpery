@@ -1,0 +1,23 @@
+# Go
+api/bin/
+api/tmp/
+api/vendor/
+
+# SQLite
+*.db
+*.db-shm
+*.db-wal
+
+# Environment
+.env
+*.env
+terraform.tfvars
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
