@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"io"
 	"log/slog"
@@ -10,14 +9,11 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/redis/go-redis/v9"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/playperu/cityquiz/internal/config"
 	"github.com/playperu/cityquiz/internal/database"
-	"github.com/playperu/cityquiz/internal/handler/health"
-	"github.com/playperu/cityquiz/internal/handler/wsecho"
 	"github.com/playperu/cityquiz/internal/migrations"
 	"github.com/playperu/cityquiz/internal/server"
 )
@@ -42,7 +38,6 @@ func run(ctx context.Context, stdout io.Writer) error {
 		Level: cfg.LogLevel,
 	}))
 
-	// --- SQLite ---
 	db, err := database.Open(ctx, cfg.DBPath)
 	if err != nil {
 		return fmt.Errorf("connecting to sqlite: %w", err)
@@ -54,24 +49,20 @@ func run(ctx context.Context, stdout io.Writer) error {
 	}
 	logger.Info("connected to sqlite", "path", cfg.DBPath)
 
-	// --- Redis ---
-	rdb, err := openRedis(ctx, cfg.RedisURL)
+	ropt, err := redis.ParseURL(cfg.RedisURL)
 	if err != nil {
-		return fmt.Errorf("connecting to redis: %w", err)
+		return fmt.Errorf("parsing redis url: %w", err)
 	}
+	rdb := redis.NewClient(ropt)
 	defer rdb.Close()
+
+	if err := rdb.Ping(ctx).Err(); err != nil {
+		return fmt.Errorf("pinging redis: %w", err)
+	}
 	logger.Info("connected to redis")
 
-	// --- HTTP Server ---
-	srv := server.New(cfg.HTTPAddr, logger, func(r chi.Router) {
-		r.Mount("/healthz", health.NewHandler(logger, map[string]health.Checker{
-			"sqlite": dbChecker{db},
-			"redis":  redisChecker{rdb},
-		}).Routes())
-		r.Mount("/ws", wsecho.NewHandler(logger).Routes())
-	})
+	srv := server.New(cfg.HTTPAddr, logger, db, rdb)
 
-	// --- Run ---
 	g, gctx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
@@ -87,26 +78,3 @@ func run(ctx context.Context, stdout io.Writer) error {
 
 	return g.Wait()
 }
-
-func openRedis(ctx context.Context, rawURL string) (*redis.Client, error) {
-	opt, err := redis.ParseURL(rawURL)
-	if err != nil {
-		return nil, fmt.Errorf("parsing redis url: %w", err)
-	}
-	rdb := redis.NewClient(opt)
-	if err := rdb.Ping(ctx).Err(); err != nil {
-		rdb.Close()
-		return nil, fmt.Errorf("pinging redis: %w", err)
-	}
-	return rdb, nil
-}
-
-// dbChecker adapts *sql.DB to health.Checker.
-type dbChecker struct{ db *sql.DB }
-
-func (d dbChecker) Check(ctx context.Context) error { return d.db.PingContext(ctx) }
-
-// redisChecker adapts *redis.Client to health.Checker.
-type redisChecker struct{ client *redis.Client }
-
-func (r redisChecker) Check(ctx context.Context) error { return r.client.Ping(ctx).Err() }

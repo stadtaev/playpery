@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/redis/go-redis/v9"
 )
 
 type Server struct {
@@ -18,11 +20,7 @@ type Server struct {
 	logger *slog.Logger
 }
 
-// MountFunc registers routes onto a chi router. The composition root
-// provides this — the server never knows which handlers exist.
-type MountFunc func(r chi.Router)
-
-func New(addr string, logger *slog.Logger, mount MountFunc) *Server {
+func New(addr string, logger *slog.Logger, db *sql.DB, rdb *redis.Client) *Server {
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
@@ -30,7 +28,7 @@ func New(addr string, logger *slog.Logger, mount MountFunc) *Server {
 	r.Use(newStructuredLogger(logger))
 	r.Use(middleware.Recoverer)
 
-	mount(r)
+	addRoutes(r, logger, db, rdb)
 
 	return &Server{
 		srv: &http.Server{
