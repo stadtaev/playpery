@@ -13,21 +13,16 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-type RouteRegistrar interface {
-	Routes() chi.Router
-}
-
 type Server struct {
 	srv    *http.Server
 	logger *slog.Logger
 }
 
-func New(
-	addr string,
-	logger *slog.Logger,
-	health RouteRegistrar,
-	wsEcho RouteRegistrar,
-) *Server {
+// MountFunc registers routes onto a chi router. The composition root
+// provides this — the server never knows which handlers exist.
+type MountFunc func(r chi.Router)
+
+func New(addr string, logger *slog.Logger, mount MountFunc) *Server {
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
@@ -35,8 +30,7 @@ func New(
 	r.Use(newStructuredLogger(logger))
 	r.Use(middleware.Recoverer)
 
-	r.Mount("/healthz", health.Routes())
-	r.Mount("/ws", wsEcho.Routes())
+	mount(r)
 
 	return &Server{
 		srv: &http.Server{

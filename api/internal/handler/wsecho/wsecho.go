@@ -1,4 +1,4 @@
-package handler
+package wsecho
 
 import (
 	"context"
@@ -10,26 +10,26 @@ import (
 	"nhooyr.io/websocket"
 )
 
-type WSEcho struct {
+type Handler struct {
 	logger *slog.Logger
 }
 
-func NewWSEcho(logger *slog.Logger) *WSEcho {
-	return &WSEcho{logger: logger}
+func NewHandler(logger *slog.Logger) *Handler {
+	return &Handler{logger: logger}
 }
 
-func (ws *WSEcho) Routes() chi.Router {
+func (h *Handler) Routes() chi.Router {
 	r := chi.NewRouter()
-	r.Get("/echo", ws.echo)
+	r.Get("/echo", h.echo)
 	return r
 }
 
-func (ws *WSEcho) echo(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) echo(w http.ResponseWriter, r *http.Request) {
 	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
 		InsecureSkipVerify: true,
 	})
 	if err != nil {
-		ws.logger.Error("websocket accept failed", "error", err)
+		h.logger.Error("websocket accept failed", "error", err)
 		return
 	}
 	defer conn.CloseNow()
@@ -40,12 +40,12 @@ func (ws *WSEcho) echo(w http.ResponseWriter, r *http.Request) {
 	for {
 		typ, msg, err := conn.Read(ctx)
 		if err != nil {
-			ws.logger.Debug("websocket read ended", "error", err)
+			h.logger.Debug("websocket read ended", "error", err)
 			return
 		}
 
 		if err := conn.Write(ctx, typ, msg); err != nil {
-			ws.logger.Debug("websocket write failed", "error", err)
+			h.logger.Debug("websocket write failed", "error", err)
 			return
 		}
 	}

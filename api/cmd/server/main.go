@@ -10,12 +10,14 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/redis/go-redis/v9"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/playperu/cityquiz/internal/config"
 	"github.com/playperu/cityquiz/internal/database"
-	"github.com/playperu/cityquiz/internal/handler"
+	"github.com/playperu/cityquiz/internal/handler/health"
+	"github.com/playperu/cityquiz/internal/handler/wsecho"
 	"github.com/playperu/cityquiz/internal/migrations"
 	"github.com/playperu/cityquiz/internal/server"
 )
@@ -60,12 +62,14 @@ func run(ctx context.Context, stdout io.Writer) error {
 	defer rdb.Close()
 	logger.Info("connected to redis")
 
-	// --- Handlers ---
-	healthHandler := handler.NewHealth(dbPinger{db}, redisPinger{rdb}, logger)
-	wsEchoHandler := handler.NewWSEcho(logger)
-
 	// --- HTTP Server ---
-	srv := server.New(cfg.HTTPAddr, logger, healthHandler, wsEchoHandler)
+	srv := server.New(cfg.HTTPAddr, logger, func(r chi.Router) {
+		r.Mount("/healthz", health.NewHandler(logger, map[string]health.Checker{
+			"sqlite": dbChecker{db},
+			"redis":  redisChecker{rdb},
+		}).Routes())
+		r.Mount("/ws", wsecho.NewHandler(logger).Routes())
+	})
 
 	// --- Run ---
 	g, gctx := errgroup.WithContext(ctx)
@@ -97,12 +101,12 @@ func openRedis(ctx context.Context, rawURL string) (*redis.Client, error) {
 	return rdb, nil
 }
 
-// dbPinger adapts *sql.DB to handler.Pinger.
-type dbPinger struct{ db *sql.DB }
+// dbChecker adapts *sql.DB to health.Checker.
+type dbChecker struct{ db *sql.DB }
 
-func (d dbPinger) Ping(ctx context.Context) error { return d.db.PingContext(ctx) }
+func (d dbChecker) Check(ctx context.Context) error { return d.db.PingContext(ctx) }
 
-// redisPinger adapts *redis.Client to handler.Pinger.
-type redisPinger struct{ client *redis.Client }
+// redisChecker adapts *redis.Client to health.Checker.
+type redisChecker struct{ client *redis.Client }
 
-func (r redisPinger) Ping(ctx context.Context) error { return r.client.Ping(ctx).Err() }
+func (r redisChecker) Check(ctx context.Context) error { return r.client.Ping(ctx).Err() }

@@ -1,4 +1,4 @@
-package handler_test
+package wsecho_test
 
 import (
 	"context"
@@ -9,11 +9,11 @@ import (
 
 	"nhooyr.io/websocket"
 
-	"github.com/playperu/cityquiz/internal/handler"
+	"github.com/playperu/cityquiz/internal/handler/wsecho"
 )
 
-func TestWSEcho(t *testing.T) {
-	h := handler.NewWSEcho(slog.Default())
+func TestEcho(t *testing.T) {
+	h := wsecho.NewHandler(slog.Default())
 	srv := httptest.NewServer(h.Routes())
 	defer srv.Close()
 
