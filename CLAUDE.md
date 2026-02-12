@@ -35,14 +35,10 @@ cityquiz/
 ├── api/                      # Go backend
 │   ├── cmd/server/           # main.go entrypoint
 │   ├── internal/
-│   │   ├── handler/          # HTTP + WebSocket handlers
-│   │   ├── game/             # Game engine (state machine, answer checking, timer)
-│   │   ├── ws/               # WebSocket hub, room management, broadcasting
-│   │   ├── model/            # Domain types
-│   │   ├── store/            # SQLite repositories (via database/sql)
+│   │   ├── config/           # Env var loading
 │   │   ├── database/         # SQLite connection + PRAGMA setup
 │   │   ├── migrations/       # Embedded SQL migrations (goose v3)
-│   │   └── cache/            # Redis state + pub/sub
+│   │   └── server/           # HTTP server, routes, all handlers
 │   ├── go.mod
 │   ├── go.sum
 │   └── Dockerfile
@@ -354,17 +350,16 @@ Build and validate in this sequence:
 
 ## Go Patterns & Conventions
 
-These patterns are established in the skeleton and must be followed in all new code:
+Old-school idiomatic Go. Flat packages, split when it hurts, no premature abstraction.
 
-- **Composition root**: All dependency wiring happens in `cmd/server/main.go`. No service locators or DI frameworks.
-- **`run()` function**: `main()` calls `run(ctx, stdout)` which returns error. Makes the entire app testable.
-- **Interfaces at point of use**: Small interfaces (1-2 methods) defined by the consumer, not the provider. E.g., `handler.Pinger`, `server.RouteRegistrar`.
-- **Adapters at composition root**: Thin adapter structs in `main.go` to bridge real clients to handler interfaces.
-- **Constructor pattern**: `NewFoo(deps...) *Foo` — accept interfaces, return concrete structs.
-- **No globals, no `init()`**: Every dependency flows through constructors.
-- **`log/slog`**: JSON structured logging passed via constructors. Never use `slog.Default()` in library code.
-- **Error wrapping**: `fmt.Errorf("doing thing: %w", err)` — verb in present participle, always wrap with `%w`.
-- **Handler pattern**: Struct with dependencies → `Routes() chi.Router` method → mounted by `server.New()`.
-- **Tests**: `_test` package suffix (black-box), table-driven, mock tiny interfaces, stdlib only (no testify).
-- **SQLite PRAGMAs**: `journal_mode=WAL`, `busy_timeout=5000`, `foreign_keys=ON` — set on connection open in `main.go`.
+- **Flat packages**: Handlers live in `server/` alongside the router. New handlers go in `server/foo.go`. Split into separate packages only when the package exceeds ~800 lines or pieces have clearly different dependencies.
+- **`routes.go` is the table of contents**: All route registration in one file. Easy to see the full API surface.
+- **Pass concrete types**: Handlers take `*sql.DB` and `*redis.Client` directly. No wrapper interfaces unless testing demands it. Introduce interfaces when there's a second implementation, not before.
+- **Handlers are closures**: `func handleFoo(logger, db, rdb) http.HandlerFunc` — returns a closure that closes over dependencies. No handler structs for simple cases.
+- **`run()` function**: `main()` calls `run(ctx, stdout)` which returns error. Entire app is testable.
+- **`log/slog`**: JSON structured logging, passed explicitly. Never `slog.Default()` in library code.
+- **Error wrapping**: `fmt.Errorf("doing thing: %w", err)` — present participle, always `%w`.
+- **Tests**: White-box (same package) for handlers, use real in-memory SQLite, real (unreachable) Redis client. Table-driven. Stdlib only.
+- **No dead-weight packages**: Don't create a package for types that have no behavior. Don't create a package with one file. Types live next to the code that uses them.
+- **SQLite PRAGMAs**: `journal_mode=WAL`, `busy_timeout=5000`, `foreign_keys=ON` — set in `database.Open()`.
 - **CGO required**: `go-libsql` needs `CGO_ENABLED=1` (default on most platforms).
