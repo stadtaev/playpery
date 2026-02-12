@@ -10,7 +10,6 @@ import (
 type Config struct {
 	HTTPAddr string     `env:"HTTP_ADDR" envDefault:":8080"`
 	DBPath   string     `env:"DB_PATH,required"`
-	RedisURL string     `env:"REDIS_URL,required"`
 	LogLevel slog.Level `env:"LOG_LEVEL" envDefault:"INFO"`
 }
 

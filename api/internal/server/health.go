@@ -7,11 +7,9 @@ import (
 	"log/slog"
 	"net/http"
 	"time"
-
-	"github.com/redis/go-redis/v9"
 )
 
-func handleHealth(logger *slog.Logger, db *sql.DB, rdb *redis.Client) http.HandlerFunc {
+func handleHealth(logger *slog.Logger, db *sql.DB) http.HandlerFunc {
 	type result struct {
 		Status string `json:"status"`
 	}
@@ -22,19 +20,12 @@ func handleHealth(logger *slog.Logger, db *sql.DB, rdb *redis.Client) http.Handl
 
 		checks := map[string]result{
 			"sqlite": {Status: "ok"},
-			"redis":  {Status: "ok"},
 		}
 		status := http.StatusOK
 
 		if err := db.PingContext(ctx); err != nil {
 			logger.Error("health check failed", "name", "sqlite", "error", err)
 			checks["sqlite"] = result{Status: "error"}
-			status = http.StatusServiceUnavailable
-		}
-
-		if err := rdb.Ping(ctx).Err(); err != nil {
-			logger.Error("health check failed", "name", "redis", "error", err)
-			checks["redis"] = result{Status: "error"}
 			status = http.StatusServiceUnavailable
 		}
 

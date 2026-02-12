@@ -9,7 +9,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/redis/go-redis/v9"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/playperu/cityquiz/internal/config"
@@ -49,19 +48,7 @@ func run(ctx context.Context, stdout io.Writer) error {
 	}
 	logger.Info("connected to sqlite", "path", cfg.DBPath)
 
-	ropt, err := redis.ParseURL(cfg.RedisURL)
-	if err != nil {
-		return fmt.Errorf("parsing redis url: %w", err)
-	}
-	rdb := redis.NewClient(ropt)
-	defer rdb.Close()
-
-	if err := rdb.Ping(ctx).Err(); err != nil {
-		return fmt.Errorf("pinging redis: %w", err)
-	}
-	logger.Info("connected to redis")
-
-	srv := server.New(cfg.HTTPAddr, logger, db, rdb)
+	srv := server.New(cfg.HTTPAddr, logger, db)
 
 	g, gctx := errgroup.WithContext(ctx)
 

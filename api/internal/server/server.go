@@ -12,7 +12,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/redis/go-redis/v9"
 )
 
 type Server struct {
@@ -20,7 +19,7 @@ type Server struct {
 	logger *slog.Logger
 }
 
-func New(addr string, logger *slog.Logger, db *sql.DB, rdb *redis.Client) *Server {
+func New(addr string, logger *slog.Logger, db *sql.DB) *Server {
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
@@ -28,7 +27,7 @@ func New(addr string, logger *slog.Logger, db *sql.DB, rdb *redis.Client) *Serve
 	r.Use(newStructuredLogger(logger))
 	r.Use(middleware.Recoverer)
 
-	addRoutes(r, logger, db, rdb)
+	addRoutes(r, logger, db)
 
 	return &Server{
 		srv: &http.Server{
