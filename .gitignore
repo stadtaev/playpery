@@ -18,6 +18,7 @@ terraform.tfvars
 .vscode/
 *.swp
 *.swo
+.prompts/
 
 # OS
 .DS_Store
