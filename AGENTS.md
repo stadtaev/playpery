@@ -34,7 +34,7 @@ Sandbox note:
   - `cd api && go test ./cmd/server ./internal/config ./internal/database ./internal/migrations`
 
 ## Environment Variables
-- `DB_PATH` (required): SQLite path
+- `DB_PATH` (default `local.db`): SQLite path
 - `HTTP_ADDR` (default `:8080`)
 - `LOG_LEVEL` (default `INFO`)
 
