@@ -48,7 +48,7 @@ func run(ctx context.Context, stdout io.Writer) error {
 	}
 	logger.Info("connected to sqlite", "path", cfg.DBPath)
 
-	srv := server.New(cfg.HTTPAddr, logger, db)
+	srv := server.New(cfg.HTTPAddr, logger, db, cfg.SPADir)
 
 	g, gctx := errgroup.WithContext(ctx)
 
