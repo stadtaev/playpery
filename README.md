@@ -76,8 +76,8 @@ That's it. The Go server handles everything: API requests, SSE streaming, and se
 ### Prerequisites
 
 - Go 1.21+ (with CGO enabled — required by the SQLite driver)
-- Node.js 18+
-- npm
+- Node.js 18+ (with corepack enabled)
+- pnpm (`corepack enable && corepack prepare pnpm@latest --activate`)
 
 ### Quick Start
 
@@ -88,8 +88,8 @@ cd cityquiz
 
 # Build the frontend
 cd web
-npm install
-npm run build
+pnpm install
+pnpm build
 cd ..
 
 # Start the server (serves API + SPA)
@@ -110,7 +110,7 @@ go run ./cmd/server
 
 # Terminal 2: Vite dev server (proxies /api to :8080)
 cd web
-npm run dev
+pnpm dev
 ```
 
 Open http://localhost:5173/join/incas-2025.

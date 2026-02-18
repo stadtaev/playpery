@@ -26,15 +26,15 @@ go test ./cmd/server ./internal/config ./internal/database ./internal/migrations
 ### Frontend (run from `web/`)
 
 ```bash
-npm install                      # install deps
-npm run dev                      # dev server on :5173 (proxies /api to :8080)
-npm run build                    # production build to web/dist/
+pnpm install                     # install deps
+pnpm dev                         # dev server on :5173 (proxies /api to :8080)
+pnpm build                       # production build to web/dist/
 ```
 
 ### Full stack
 
 ```bash
-cd web && npm run build
+cd web && pnpm build
 cd api && SPA_DIR=../web/dist go run ./cmd/server
 # Open http://localhost:8080/join/incas-2025
 ```
@@ -115,6 +115,7 @@ Session = `session_id` from players table (opaque hex token). `Authorization: Be
 ### Frontend
 - **Vite** — build tool, dev server with proxy.
 - **React 19** + TypeScript.
+- **pnpm** — fast, disk-efficient package manager.
 - **Pico.css** (CDN) — minimal classless CSS framework.
 
 ## Database

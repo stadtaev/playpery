@@ -3,6 +3,7 @@ package server
 import (
 	"database/sql"
 	"log/slog"
+	"os"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/swaggest/swgui/v5emb"
@@ -25,6 +26,9 @@ func addRoutes(r chi.Router, logger *slog.Logger, db *sql.DB, spaDir string) {
 	})
 
 	if spaDir != "" {
-		r.NotFound(handleSPA(spaDir))
+		if info, err := os.Stat(spaDir); err == nil && info.IsDir() {
+			logger.Info("serving SPA", "dir", spaDir)
+			r.NotFound(handleSPA(spaDir))
+		}
 	}
 }

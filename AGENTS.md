@@ -42,12 +42,12 @@ Run from repo root unless noted.
 - Format: `gofmt -w api/`
 
 ### Frontend
-- Install: `cd web && npm install`
-- Dev: `cd web && npm run dev` (proxies `/api/*` to `:8080`)
-- Build: `cd web && npm run build`
+- Install: `cd web && pnpm install`
+- Dev: `cd web && pnpm dev` (proxies `/api/*` to `:8080`)
+- Build: `cd web && pnpm build`
 
 ### Full stack
-- `cd web && npm run build && cd ../api && SPA_DIR=../web/dist go run ./cmd/server`
+- `cd web && pnpm build && cd ../api && SPA_DIR=../web/dist go run ./cmd/server`
 
 Sandbox note:
 - In restricted environments, `TestHandleWSEcho` may fail due to blocked local socket bind from `httptest.NewServer`.
@@ -112,7 +112,7 @@ Sandbox note:
 
 ## Done Criteria
 A change is complete when all are true:
-- Code compiles (`go build ./...` and `npm run build`).
+- Code compiles (`go build ./...` and `pnpm build`).
 - Relevant tests pass.
 - `go.mod`/`go.sum` are clean.
 - `CLAUDE.md` and `AGENTS.md` stay aligned with current code.
