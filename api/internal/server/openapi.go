@@ -79,6 +79,78 @@ func newOpenAPISpec() *openapi3.Spec {
 		openapi.WithContentType("text/event-stream"))
 	_ = r.AddOperation(getEvents)
 
+	// POST /api/admin/login
+	postLogin, _ := r.NewOperationContext(http.MethodPost, "/api/admin/login")
+	postLogin.SetSummary("Admin login")
+	postLogin.SetDescription("Authenticate with email and password. Sets admin_session cookie.")
+	postLogin.AddReqStructure(AdminLoginRequest{})
+	postLogin.AddRespStructure(AdminMeResponse{}, openapi.WithHTTPStatus(http.StatusOK))
+	postLogin.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusUnauthorized))
+	_ = r.AddOperation(postLogin)
+
+	// POST /api/admin/logout
+	postLogout, _ := r.NewOperationContext(http.MethodPost, "/api/admin/logout")
+	postLogout.SetSummary("Admin logout")
+	postLogout.SetDescription("Clears admin session and cookie.")
+	postLogout.AddRespStructure(nil, openapi.WithHTTPStatus(http.StatusOK))
+	_ = r.AddOperation(postLogout)
+
+	// GET /api/admin/me
+	getMe, _ := r.NewOperationContext(http.MethodGet, "/api/admin/me")
+	getMe.SetSummary("Current admin")
+	getMe.SetDescription("Returns the currently authenticated admin. Requires admin_session cookie.")
+	getMe.AddRespStructure(AdminMeResponse{}, openapi.WithHTTPStatus(http.StatusOK))
+	getMe.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusUnauthorized))
+	_ = r.AddOperation(getMe)
+
+	// GET /api/admin/scenarios
+	listScenarios, _ := r.NewOperationContext(http.MethodGet, "/api/admin/scenarios")
+	listScenarios.SetSummary("List scenarios")
+	listScenarios.SetDescription("Returns all scenarios with stage counts. Requires admin_session cookie.")
+	listScenarios.AddRespStructure([]AdminScenarioSummary{}, openapi.WithHTTPStatus(http.StatusOK))
+	listScenarios.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusUnauthorized))
+	_ = r.AddOperation(listScenarios)
+
+	// POST /api/admin/scenarios
+	createScenario, _ := r.NewOperationContext(http.MethodPost, "/api/admin/scenarios")
+	createScenario.SetSummary("Create scenario")
+	createScenario.SetDescription("Creates a new scenario with stages. Requires admin_session cookie.")
+	createScenario.AddReqStructure(AdminScenarioRequest{})
+	createScenario.AddRespStructure(AdminScenarioDetail{}, openapi.WithHTTPStatus(http.StatusCreated))
+	createScenario.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusBadRequest))
+	createScenario.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusUnauthorized))
+	_ = r.AddOperation(createScenario)
+
+	// GET /api/admin/scenarios/{id}
+	getScenario, _ := r.NewOperationContext(http.MethodGet, "/api/admin/scenarios/{id}")
+	getScenario.SetSummary("Get scenario")
+	getScenario.SetDescription("Returns a scenario with full stage details. Requires admin_session cookie.")
+	getScenario.AddRespStructure(AdminScenarioDetail{}, openapi.WithHTTPStatus(http.StatusOK))
+	getScenario.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusNotFound))
+	getScenario.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusUnauthorized))
+	_ = r.AddOperation(getScenario)
+
+	// PUT /api/admin/scenarios/{id}
+	updateScenario, _ := r.NewOperationContext(http.MethodPut, "/api/admin/scenarios/{id}")
+	updateScenario.SetSummary("Update scenario")
+	updateScenario.SetDescription("Updates a scenario and its stages. Requires admin_session cookie.")
+	updateScenario.AddReqStructure(AdminScenarioRequest{})
+	updateScenario.AddRespStructure(AdminScenarioDetail{}, openapi.WithHTTPStatus(http.StatusOK))
+	updateScenario.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusBadRequest))
+	updateScenario.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusNotFound))
+	updateScenario.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusUnauthorized))
+	_ = r.AddOperation(updateScenario)
+
+	// DELETE /api/admin/scenarios/{id}
+	deleteScenario, _ := r.NewOperationContext(http.MethodDelete, "/api/admin/scenarios/{id}")
+	deleteScenario.SetSummary("Delete scenario")
+	deleteScenario.SetDescription("Deletes a scenario. Blocked if games reference it. Requires admin_session cookie.")
+	deleteScenario.AddRespStructure(nil, openapi.WithHTTPStatus(http.StatusOK))
+	deleteScenario.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusConflict))
+	deleteScenario.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusNotFound))
+	deleteScenario.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusUnauthorized))
+	_ = r.AddOperation(deleteScenario)
+
 	return r.Spec
 }
 

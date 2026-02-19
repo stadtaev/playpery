@@ -74,6 +74,10 @@ api/
       health.go                   — GET /healthz
       openapi.go                  — OpenAPI 3.0 spec generation
       wsecho.go                   — GET /ws/echo (WebSocket test)
+      admin_auth.go               — admin session lookup (adminFromRequest, cookie-based)
+      handle_admin_login.go       — POST /api/admin/login, GET /api/admin/me
+      handle_admin_logout.go      — POST /api/admin/logout
+      handle_admin_scenarios.go   — CRUD for /api/admin/scenarios
 web/
   src/
     types.ts                      — TS types matching API responses
@@ -82,6 +86,13 @@ web/
     JoinPage.tsx                  — team lookup → name input → join
     GamePage.tsx                  — game state, clue, question, answer, timer
     useGameEvents.ts              — SSE hook (EventSource)
+    admin/
+      adminTypes.ts               — TS types for admin API
+      adminApi.ts                 — fetch wrappers for admin endpoints (cookie auth)
+      AdminLoginPage.tsx          — email + password login
+      AdminLayout.tsx             — auth check, nav, logout
+      AdminScenariosPage.tsx      — scenario list + delete
+      AdminScenarioEditorPage.tsx — create/edit scenario with stages
 ```
 
 Startup order: load config → open DB → run migrations → start HTTP server. Graceful shutdown via errgroup + signal.NotifyContext.
@@ -99,8 +110,18 @@ Startup order: load config → open DB → run migrations → start HTTP server.
 | GET | `/api/game/state` | Full game state for player's team | Bearer |
 | POST | `/api/game/answer` | Submit answer for current stage | Bearer |
 | GET | `/api/game/events` | SSE stream for real-time updates | `?token=` |
+| POST | `/api/admin/login` | Admin login (email+password → cookie) | none |
+| POST | `/api/admin/logout` | Admin logout (clear session) | cookie |
+| GET | `/api/admin/me` | Current admin info | cookie |
+| GET | `/api/admin/scenarios` | List all scenarios | cookie |
+| POST | `/api/admin/scenarios` | Create scenario with stages | cookie |
+| GET | `/api/admin/scenarios/{id}` | Get scenario detail | cookie |
+| PUT | `/api/admin/scenarios/{id}` | Update scenario | cookie |
+| DELETE | `/api/admin/scenarios/{id}` | Delete scenario (409 if games exist) | cookie |
 
-Session = `session_id` from players table (opaque hex token). `Authorization: Bearer {token}` for REST, `?token=` query param for SSE.
+**Player auth:** `session_id` from players table (opaque hex token). `Authorization: Bearer {token}` for REST, `?token=` query param for SSE.
+
+**Admin auth:** `admin_session` HttpOnly cookie. Default credentials: `admin@playperu.com` / `changeme`.
 
 ## Key Dependencies
 
@@ -111,6 +132,7 @@ Session = `session_id` from players table (opaque hex token). `Authorization: Be
 - **swaggest/openapi-go** — OpenAPI 3.0 spec generated from Go structs via reflector.
 - **swaggest/swgui** — embedded Swagger UI v5 served at `/docs`.
 - **nhooyr.io/websocket** — WebSocket support.
+- **golang.org/x/crypto/bcrypt** — admin password hashing.
 
 ### Frontend
 - **Vite** — build tool, dev server with proxy.
@@ -122,7 +144,7 @@ Session = `session_id` from players table (opaque hex token). `Authorization: Be
 
 SQLite with WAL mode. All IDs are 16-byte random hex (`randomblob(16)`). Timestamps are ISO 8601 UTC. `:memory:` works for tests.
 
-7 migrations: clients, scenarios, games, teams, players, stage_results, seed demo data.
+9 migrations: clients, scenarios, games, teams, players, stage_results, seed demo data, admins + admin_sessions, seed admin.
 
 ## Design Rules
 

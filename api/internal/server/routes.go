@@ -23,6 +23,17 @@ func addRoutes(r chi.Router, logger *slog.Logger, db *sql.DB, spaDir string) {
 		r.Get("/game/state", handleGameState(db))
 		r.Post("/game/answer", handleAnswer(db, broker))
 		r.Get("/game/events", handleEvents(db, broker))
+
+		r.Route("/admin", func(r chi.Router) {
+			r.Post("/login", handleAdminLogin(db))
+			r.Post("/logout", handleAdminLogout(db))
+			r.Get("/me", handleAdminMe(db))
+			r.Get("/scenarios", handleAdminListScenarios(db))
+			r.Post("/scenarios", handleAdminCreateScenario(db))
+			r.Get("/scenarios/{id}", handleAdminGetScenario(db))
+			r.Put("/scenarios/{id}", handleAdminUpdateScenario(db))
+			r.Delete("/scenarios/{id}", handleAdminDeleteScenario(db))
+		})
 	})
 
 	if spaDir != "" {

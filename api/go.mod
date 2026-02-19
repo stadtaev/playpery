@@ -9,6 +9,7 @@ require (
 	github.com/swaggest/openapi-go v0.2.60
 	github.com/swaggest/swgui v1.8.5
 	github.com/tursodatabase/go-libsql v0.0.0-20251219133454-43644db490ff
+	golang.org/x/crypto v0.48.0
 	golang.org/x/sync v0.19.0
 	nhooyr.io/websocket v1.8.17
 )

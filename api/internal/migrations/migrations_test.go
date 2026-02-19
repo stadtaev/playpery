@@ -20,7 +20,7 @@ func TestMigrations(t *testing.T) {
 	}
 
 	// Verify all tables exist by querying sqlite_master.
-	want := []string{"clients", "scenarios", "games", "teams", "players", "stage_results"}
+	want := []string{"clients", "scenarios", "games", "teams", "players", "stage_results", "admins", "admin_sessions"}
 
 	for _, table := range want {
 		var name string
