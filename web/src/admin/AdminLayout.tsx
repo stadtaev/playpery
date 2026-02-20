@@ -33,11 +33,15 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <main className="container">
       <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h1 style={{ margin: 0 }}>
-          <a href="/admin/scenarios" onClick={(e) => { e.preventDefault(); window.history.pushState(null, '', '/admin/scenarios'); window.dispatchEvent(new PopStateEvent('popstate')) }} style={{ textDecoration: 'none' }}>
-            CityQuiz Admin
-          </a>
-        </h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+          <h1 style={{ margin: 0 }}>
+            <a href="/admin/scenarios" onClick={(e) => { e.preventDefault(); window.history.pushState(null, '', '/admin/scenarios'); window.dispatchEvent(new PopStateEvent('popstate')) }} style={{ textDecoration: 'none' }}>
+              CityQuiz Admin
+            </a>
+          </h1>
+          <a href="/admin/scenarios" onClick={(e) => { e.preventDefault(); window.history.pushState(null, '', '/admin/scenarios'); window.dispatchEvent(new PopStateEvent('popstate')) }}>Scenarios</a>
+          <a href="/admin/games" onClick={(e) => { e.preventDefault(); window.history.pushState(null, '', '/admin/games'); window.dispatchEvent(new PopStateEvent('popstate')) }}>Games</a>
+        </div>
         <button className="outline secondary" onClick={handleLogout} style={{ width: 'auto' }}>
           Log out
         </button>

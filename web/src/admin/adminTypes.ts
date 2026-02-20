@@ -37,3 +37,44 @@ export interface ScenarioRequest {
   description: string
   stages: Stage[]
 }
+
+export interface GameSummary {
+  id: string
+  scenarioId: string
+  scenarioName: string
+  status: string
+  timerMinutes: number
+  teamCount: number
+  createdAt: string
+}
+
+export interface TeamItem {
+  id: string
+  name: string
+  joinToken: string
+  guideName: string
+  playerCount: number
+  createdAt: string
+}
+
+export interface GameDetail {
+  id: string
+  scenarioId: string
+  scenarioName: string
+  status: string
+  timerMinutes: number
+  teams: TeamItem[]
+  createdAt: string
+}
+
+export interface GameRequest {
+  scenarioId: string
+  status: string
+  timerMinutes: number
+}
+
+export interface TeamRequest {
+  name: string
+  joinToken: string
+  guideName: string
+}

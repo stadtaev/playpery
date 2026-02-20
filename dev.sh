@@ -3,6 +3,15 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 
+# Kill existing servers from a previous run.
+for port in 8080 5173; do
+    if pid=$(lsof -ti :"$port" 2>/dev/null); then
+        echo "==> killing existing process on :$port (PID $pid)..."
+        kill $pid 2>/dev/null || true
+    fi
+done
+sleep 0.3
+
 PIDS=()
 cleanup() {
     trap - EXIT INT TERM

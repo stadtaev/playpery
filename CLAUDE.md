@@ -78,6 +78,7 @@ api/
       handle_admin_login.go       — POST /api/admin/login, GET /api/admin/me
       handle_admin_logout.go      — POST /api/admin/logout
       handle_admin_scenarios.go   — CRUD for /api/admin/scenarios
+      handle_admin_games.go       — CRUD for /api/admin/games + nested teams
 web/
   src/
     types.ts                      — TS types matching API responses
@@ -93,6 +94,8 @@ web/
       AdminLayout.tsx             — auth check, nav, logout
       AdminScenariosPage.tsx      — scenario list + delete
       AdminScenarioEditorPage.tsx — create/edit scenario with stages
+      AdminGamesPage.tsx          — game list + delete
+      AdminGameEditorPage.tsx     — create/edit game with teams section
 ```
 
 Startup order: load config → open DB → run migrations → start HTTP server. Graceful shutdown via errgroup + signal.NotifyContext.
@@ -118,6 +121,15 @@ Startup order: load config → open DB → run migrations → start HTTP server.
 | GET | `/api/admin/scenarios/{id}` | Get scenario detail | cookie |
 | PUT | `/api/admin/scenarios/{id}` | Update scenario | cookie |
 | DELETE | `/api/admin/scenarios/{id}` | Delete scenario (409 if games exist) | cookie |
+| GET | `/api/admin/games` | List all games | cookie |
+| POST | `/api/admin/games` | Create game (demo client) | cookie |
+| GET | `/api/admin/games/{gameID}` | Get game with teams | cookie |
+| PUT | `/api/admin/games/{gameID}` | Update game | cookie |
+| DELETE | `/api/admin/games/{gameID}` | Delete game (409 if players exist) | cookie |
+| GET | `/api/admin/games/{gameID}/teams` | List teams for game | cookie |
+| POST | `/api/admin/games/{gameID}/teams` | Create team (auto-token) | cookie |
+| PUT | `/api/admin/games/{gameID}/teams/{teamID}` | Update team name/guide | cookie |
+| DELETE | `/api/admin/games/{gameID}/teams/{teamID}` | Delete team (409 if players) | cookie |
 
 **Player auth:** `session_id` from players table (opaque hex token). `Authorization: Bearer {token}` for REST, `?token=` query param for SSE.
 

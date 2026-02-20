@@ -5,6 +5,8 @@ import { AdminLoginPage } from './admin/AdminLoginPage'
 import { AdminLayout } from './admin/AdminLayout'
 import { AdminScenariosPage } from './admin/AdminScenariosPage'
 import { AdminScenarioEditorPage } from './admin/AdminScenarioEditorPage'
+import { AdminGamesPage } from './admin/AdminGamesPage'
+import { AdminGameEditorPage } from './admin/AdminGameEditorPage'
 
 type Route =
   | { page: 'join'; token: string }
@@ -14,6 +16,9 @@ type Route =
   | { page: 'admin-scenarios' }
   | { page: 'admin-scenario-new' }
   | { page: 'admin-scenario-edit'; id: string }
+  | { page: 'admin-games' }
+  | { page: 'admin-game-new' }
+  | { page: 'admin-game-edit'; id: string }
 
 function getRoute(): Route {
   const path = window.location.pathname
@@ -31,6 +36,12 @@ function getRoute(): Route {
 
   const editMatch = path.match(/^\/admin\/scenarios\/(.+)\/edit$/)
   if (editMatch) return { page: 'admin-scenario-edit', id: editMatch[1] }
+
+  if (path === '/admin/games') return { page: 'admin-games' }
+  if (path === '/admin/games/new') return { page: 'admin-game-new' }
+
+  const gameEditMatch = path.match(/^\/admin\/games\/(.+)\/edit$/)
+  if (gameEditMatch) return { page: 'admin-game-edit', id: gameEditMatch[1] }
 
   return { page: 'home' }
 }
@@ -59,6 +70,12 @@ export default function App() {
       return <AdminLayout><AdminScenarioEditorPage /></AdminLayout>
     case 'admin-scenario-edit':
       return <AdminLayout><AdminScenarioEditorPage id={route.id} /></AdminLayout>
+    case 'admin-games':
+      return <AdminLayout><AdminGamesPage /></AdminLayout>
+    case 'admin-game-new':
+      return <AdminLayout><AdminGameEditorPage /></AdminLayout>
+    case 'admin-game-edit':
+      return <AdminLayout><AdminGameEditorPage id={route.id} /></AdminLayout>
     default:
       return (
         <main className="container" style={{ maxWidth: 480, textAlign: 'center' }}>

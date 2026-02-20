@@ -151,6 +151,95 @@ func newOpenAPISpec() *openapi3.Spec {
 	deleteScenario.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusUnauthorized))
 	_ = r.AddOperation(deleteScenario)
 
+	// GET /api/admin/games
+	listGames, _ := r.NewOperationContext(http.MethodGet, "/api/admin/games")
+	listGames.SetSummary("List games")
+	listGames.SetDescription("Returns all games with scenario names and team counts. Requires admin_session cookie.")
+	listGames.AddRespStructure([]AdminGameSummary{}, openapi.WithHTTPStatus(http.StatusOK))
+	listGames.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusUnauthorized))
+	_ = r.AddOperation(listGames)
+
+	// POST /api/admin/games
+	createGame, _ := r.NewOperationContext(http.MethodPost, "/api/admin/games")
+	createGame.SetSummary("Create game")
+	createGame.SetDescription("Creates a new game for the demo client. Requires admin_session cookie.")
+	createGame.AddReqStructure(AdminGameRequest{})
+	createGame.AddRespStructure(AdminGameDetail{}, openapi.WithHTTPStatus(http.StatusCreated))
+	createGame.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusBadRequest))
+	createGame.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusUnauthorized))
+	_ = r.AddOperation(createGame)
+
+	// GET /api/admin/games/{gameID}
+	getGame, _ := r.NewOperationContext(http.MethodGet, "/api/admin/games/{gameID}")
+	getGame.SetSummary("Get game")
+	getGame.SetDescription("Returns a game with teams and player counts. Requires admin_session cookie.")
+	getGame.AddRespStructure(AdminGameDetail{}, openapi.WithHTTPStatus(http.StatusOK))
+	getGame.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusNotFound))
+	getGame.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusUnauthorized))
+	_ = r.AddOperation(getGame)
+
+	// PUT /api/admin/games/{gameID}
+	updateGame, _ := r.NewOperationContext(http.MethodPut, "/api/admin/games/{gameID}")
+	updateGame.SetSummary("Update game")
+	updateGame.SetDescription("Updates a game's scenario, status, and timer. Requires admin_session cookie.")
+	updateGame.AddReqStructure(AdminGameRequest{})
+	updateGame.AddRespStructure(AdminGameDetail{}, openapi.WithHTTPStatus(http.StatusOK))
+	updateGame.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusBadRequest))
+	updateGame.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusNotFound))
+	updateGame.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusUnauthorized))
+	_ = r.AddOperation(updateGame)
+
+	// DELETE /api/admin/games/{gameID}
+	deleteGame, _ := r.NewOperationContext(http.MethodDelete, "/api/admin/games/{gameID}")
+	deleteGame.SetSummary("Delete game")
+	deleteGame.SetDescription("Deletes a game. Blocked if any team has players. Requires admin_session cookie.")
+	deleteGame.AddRespStructure(nil, openapi.WithHTTPStatus(http.StatusOK))
+	deleteGame.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusConflict))
+	deleteGame.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusNotFound))
+	deleteGame.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusUnauthorized))
+	_ = r.AddOperation(deleteGame)
+
+	// GET /api/admin/games/{gameID}/teams
+	listTeams, _ := r.NewOperationContext(http.MethodGet, "/api/admin/games/{gameID}/teams")
+	listTeams.SetSummary("List teams")
+	listTeams.SetDescription("Returns teams for a game with player counts. Requires admin_session cookie.")
+	listTeams.AddRespStructure([]AdminTeamItem{}, openapi.WithHTTPStatus(http.StatusOK))
+	listTeams.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusNotFound))
+	listTeams.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusUnauthorized))
+	_ = r.AddOperation(listTeams)
+
+	// POST /api/admin/games/{gameID}/teams
+	createTeam, _ := r.NewOperationContext(http.MethodPost, "/api/admin/games/{gameID}/teams")
+	createTeam.SetSummary("Create team")
+	createTeam.SetDescription("Creates a team in a game. Auto-generates join token if blank. Requires admin_session cookie.")
+	createTeam.AddReqStructure(AdminTeamRequest{})
+	createTeam.AddRespStructure(AdminTeamItem{}, openapi.WithHTTPStatus(http.StatusCreated))
+	createTeam.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusBadRequest))
+	createTeam.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusConflict))
+	createTeam.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusUnauthorized))
+	_ = r.AddOperation(createTeam)
+
+	// PUT /api/admin/games/{gameID}/teams/{teamID}
+	updateTeam, _ := r.NewOperationContext(http.MethodPut, "/api/admin/games/{gameID}/teams/{teamID}")
+	updateTeam.SetSummary("Update team")
+	updateTeam.SetDescription("Updates a team's name and guide name. Token is immutable. Requires admin_session cookie.")
+	updateTeam.AddReqStructure(AdminTeamRequest{})
+	updateTeam.AddRespStructure(AdminTeamItem{}, openapi.WithHTTPStatus(http.StatusOK))
+	updateTeam.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusBadRequest))
+	updateTeam.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusNotFound))
+	updateTeam.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusUnauthorized))
+	_ = r.AddOperation(updateTeam)
+
+	// DELETE /api/admin/games/{gameID}/teams/{teamID}
+	deleteTeamOp, _ := r.NewOperationContext(http.MethodDelete, "/api/admin/games/{gameID}/teams/{teamID}")
+	deleteTeamOp.SetSummary("Delete team")
+	deleteTeamOp.SetDescription("Deletes a team. Blocked if players exist. Requires admin_session cookie.")
+	deleteTeamOp.AddRespStructure(nil, openapi.WithHTTPStatus(http.StatusOK))
+	deleteTeamOp.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusConflict))
+	deleteTeamOp.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusNotFound))
+	deleteTeamOp.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusUnauthorized))
+	_ = r.AddOperation(deleteTeamOp)
+
 	return r.Spec
 }
 
