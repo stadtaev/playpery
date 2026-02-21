@@ -1,7 +1,6 @@
 package server
 
 import (
-	"database/sql"
 	"errors"
 	"net/http"
 	"strings"
@@ -22,7 +21,7 @@ type AdminMeResponse struct {
 	Email string `json:"email"`
 }
 
-func handleAdminLogin(db *sql.DB) http.HandlerFunc {
+func handleAdminLogin(store Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req AdminLoginRequest
 		if err := readJSON(r, &req); err != nil {
@@ -36,11 +35,8 @@ func handleAdminLogin(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		var adminID, passwordHash string
-		err := db.QueryRowContext(r.Context(), `
-			SELECT id, password_hash FROM admins WHERE email = ?
-		`, req.Email).Scan(&adminID, &passwordHash)
-		if errors.Is(err, sql.ErrNoRows) {
+		adminID, passwordHash, err := store.AdminByEmail(r.Context(), req.Email)
+		if errors.Is(err, ErrNotFound) {
 			writeError(w, http.StatusUnauthorized, "invalid credentials")
 			return
 		}
@@ -55,12 +51,7 @@ func handleAdminLogin(db *sql.DB) http.HandlerFunc {
 		}
 
 		// Create session.
-		var sessionID string
-		err = db.QueryRowContext(r.Context(), `
-			INSERT INTO admin_sessions (admin_id)
-			VALUES (?)
-			RETURNING id
-		`, adminID).Scan(&sessionID)
+		sessionID, err := store.CreateAdminSession(r.Context(), adminID)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "internal error")
 			return
@@ -82,9 +73,9 @@ func handleAdminLogin(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func handleAdminMe(db *sql.DB) http.HandlerFunc {
+func handleAdminMe(store Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		sess, err := adminFromRequest(r, db)
+		sess, err := adminFromRequest(r, store)
 		if err != nil {
 			writeError(w, http.StatusUnauthorized, "not authenticated")
 			return

@@ -1,7 +1,6 @@
 package server
 
 import (
-	"database/sql"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -53,75 +52,40 @@ type scenarioStage struct {
 	CorrectAnswer string `json:"correctAnswer"`
 }
 
-func handleGameState(db *sql.DB) http.HandlerFunc {
+func handleGameState(store Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		sess, err := playerFromRequest(r, db)
+		sess, err := playerFromRequest(r, store)
 		if err != nil {
 			writeError(w, http.StatusUnauthorized, "invalid or missing session token")
 			return
 		}
 
-		// Fetch game + scenario info.
-		var (
-			gameStatus   string
-			timerMinutes int
-			startedAt    sql.NullString
-			stagesJSON   string
-			teamName     string
-		)
-		err = db.QueryRowContext(r.Context(), `
-			SELECT g.status, g.timer_minutes, g.started_at, s.stages, t.name
-			FROM games g
-			JOIN scenarios s ON s.id = g.scenario_id
-			JOIN teams t ON t.id = ?
-			WHERE g.id = ?
-		`, sess.TeamID, sess.GameID).Scan(&gameStatus, &timerMinutes, &startedAt, &stagesJSON, &teamName)
+		data, err := store.GameState(r.Context(), sess.GameID, sess.TeamID)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "internal error")
 			return
 		}
 
-		// Check timer expiry (lazy).
-		if gameStatus == "active" && startedAt.Valid {
-			start, _ := time.Parse(time.RFC3339Nano, startedAt.String)
-			if time.Since(start) > time.Duration(timerMinutes)*time.Minute {
-				gameStatus = "ended"
-				db.ExecContext(r.Context(), `
-					UPDATE games SET status = 'ended', ended_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
-					WHERE id = ? AND status = 'active'
-				`, sess.GameID)
+		if data.Status == "active" && data.StartedAt != nil {
+			start, _ := time.Parse(time.RFC3339Nano, *data.StartedAt)
+			if time.Since(start) > time.Duration(data.TimerMinutes)*time.Minute {
+				data.Status = "ended"
+				store.ExpireGame(r.Context(), sess.GameID)
 			}
 		}
 
 		var stages []scenarioStage
-		json.Unmarshal([]byte(stagesJSON), &stages)
+		json.Unmarshal([]byte(data.StagesJSON), &stages)
 
-		// Fetch completed stages (correct answers only for advancement).
-		rows, err := db.QueryContext(r.Context(), `
-			SELECT stage_number, is_correct, answered_at
-			FROM stage_results
-			WHERE game_id = ? AND team_id = ? AND is_correct = 1
-			ORDER BY stage_number
-		`, sess.GameID, sess.TeamID)
+		completed, err := store.ListCompletedStages(r.Context(), sess.GameID, sess.TeamID)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "internal error")
 			return
 		}
-		defer rows.Close()
 
-		var completed []CompletedStage
-		for rows.Next() {
-			var cs CompletedStage
-			var isCorrectInt int
-			rows.Scan(&cs.StageNumber, &isCorrectInt, &cs.AnsweredAt)
-			cs.IsCorrect = isCorrectInt == 1
-			completed = append(completed, cs)
-		}
-
-		// Current stage = number of correct answers + 1.
 		currentStageNum := len(completed) + 1
 		var currentStage *StageInfo
-		if currentStageNum <= len(stages) && gameStatus == "active" {
+		if currentStageNum <= len(stages) && data.Status == "active" {
 			s := stages[currentStageNum-1]
 			currentStage = &StageInfo{
 				StageNumber: s.StageNumber,
@@ -131,38 +95,22 @@ func handleGameState(db *sql.DB) http.HandlerFunc {
 			}
 		}
 
-		// Fetch players on this team.
-		playerRows, err := db.QueryContext(r.Context(), `
-			SELECT id, name FROM players WHERE team_id = ? ORDER BY joined_at
-		`, sess.TeamID)
+		players, err := store.ListPlayers(r.Context(), sess.TeamID)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "internal error")
 			return
 		}
-		defer playerRows.Close()
-
-		var players []PlayerInfo
-		for playerRows.Next() {
-			var p PlayerInfo
-			playerRows.Scan(&p.ID, &p.Name)
-			players = append(players, p)
-		}
-
-		var startedAtPtr *string
-		if startedAt.Valid {
-			startedAtPtr = &startedAt.String
-		}
 
 		resp := GameStateResponse{
 			Game: GameInfo{
-				Status:       gameStatus,
-				TimerMinutes: timerMinutes,
-				StartedAt:    startedAtPtr,
+				Status:       data.Status,
+				TimerMinutes: data.TimerMinutes,
+				StartedAt:    data.StartedAt,
 				TotalStages:  len(stages),
 			},
 			Team: TeamInfo{
 				ID:   sess.TeamID,
-				Name: teamName,
+				Name: data.TeamName,
 			},
 			CurrentStage:    currentStage,
 			CompletedStages: completed,

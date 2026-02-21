@@ -1,15 +1,14 @@
 package server
 
 import (
-	"database/sql"
 	"net/http"
 )
 
-func handleAdminLogout(db *sql.DB) http.HandlerFunc {
+func handleAdminLogout(store Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie(adminCookieName)
 		if err == nil && cookie.Value != "" {
-			db.ExecContext(r.Context(), `DELETE FROM admin_sessions WHERE id = ?`, cookie.Value)
+			store.DeleteAdminSession(r.Context(), cookie.Value)
 		}
 
 		http.SetCookie(w, &http.Cookie{

@@ -3,7 +3,6 @@ package server
 import (
 	"bytes"
 	"context"
-	"database/sql"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -15,7 +14,7 @@ import (
 	"github.com/playperu/cityquiz/internal/migrations"
 )
 
-func setupTestDB(t *testing.T) *sql.DB {
+func setupStore(t *testing.T) Store {
 	t.Helper()
 	db, err := database.Open(context.Background(), ":memory:")
 	if err != nil {
@@ -25,14 +24,14 @@ func setupTestDB(t *testing.T) *sql.DB {
 		t.Fatalf("run migrations: %v", err)
 	}
 	t.Cleanup(func() { db.Close() })
-	return db
+	return NewSQLiteStore(db)
 }
 
 func TestTeamLookup(t *testing.T) {
-	db := setupTestDB(t)
+	store := setupStore(t)
 
 	r := chi.NewRouter()
-	r.Get("/api/teams/{joinToken}", handleTeamLookup(db))
+	r.Get("/api/teams/{joinToken}", handleTeamLookup(store))
 
 	req := httptest.NewRequest(http.MethodGet, "/api/teams/incas-2025", nil)
 	w := httptest.NewRecorder()
@@ -54,10 +53,10 @@ func TestTeamLookup(t *testing.T) {
 }
 
 func TestTeamLookupNotFound(t *testing.T) {
-	db := setupTestDB(t)
+	store := setupStore(t)
 
 	r := chi.NewRouter()
-	r.Get("/api/teams/{joinToken}", handleTeamLookup(db))
+	r.Get("/api/teams/{joinToken}", handleTeamLookup(store))
 
 	req := httptest.NewRequest(http.MethodGet, "/api/teams/nope-1234", nil)
 	w := httptest.NewRecorder()
@@ -69,12 +68,12 @@ func TestTeamLookupNotFound(t *testing.T) {
 }
 
 func TestJoinAndGameState(t *testing.T) {
-	db := setupTestDB(t)
+	store := setupStore(t)
 	broker := NewBroker()
 
 	r := chi.NewRouter()
-	r.Post("/api/join", handleJoin(db, broker))
-	r.Get("/api/game/state", handleGameState(db))
+	r.Post("/api/join", handleJoin(store, broker))
+	r.Get("/api/game/state", handleGameState(store))
 
 	// Join the team.
 	body, _ := json.Marshal(JoinRequest{JoinToken: "incas-2025", PlayerName: "Maria"})
@@ -127,13 +126,13 @@ func TestJoinAndGameState(t *testing.T) {
 }
 
 func TestAnswerFlow(t *testing.T) {
-	db := setupTestDB(t)
+	store := setupStore(t)
 	broker := NewBroker()
 
 	r := chi.NewRouter()
-	r.Post("/api/join", handleJoin(db, broker))
-	r.Get("/api/game/state", handleGameState(db))
-	r.Post("/api/game/answer", handleAnswer(db, broker))
+	r.Post("/api/join", handleJoin(store, broker))
+	r.Get("/api/game/state", handleGameState(store))
+	r.Post("/api/game/answer", handleAnswer(store, broker))
 
 	// Join.
 	body, _ := json.Marshal(JoinRequest{JoinToken: "condores-2025", PlayerName: "Carlos"})
@@ -200,13 +199,13 @@ func TestAnswerFlow(t *testing.T) {
 }
 
 func TestCompleteAllStages(t *testing.T) {
-	db := setupTestDB(t)
+	store := setupStore(t)
 	broker := NewBroker()
 
 	r := chi.NewRouter()
-	r.Post("/api/join", handleJoin(db, broker))
-	r.Post("/api/game/answer", handleAnswer(db, broker))
-	r.Get("/api/game/state", handleGameState(db))
+	r.Post("/api/join", handleJoin(store, broker))
+	r.Post("/api/game/answer", handleAnswer(store, broker))
+	r.Get("/api/game/state", handleGameState(store))
 
 	// Join.
 	body, _ := json.Marshal(JoinRequest{JoinToken: "incas-2025", PlayerName: "Ana"})
@@ -264,10 +263,10 @@ func TestCompleteAllStages(t *testing.T) {
 }
 
 func TestUnauthorizedAccess(t *testing.T) {
-	db := setupTestDB(t)
+	store := setupStore(t)
 
 	r := chi.NewRouter()
-	r.Get("/api/game/state", handleGameState(db))
+	r.Get("/api/game/state", handleGameState(store))
 
 	// No token.
 	req := httptest.NewRequest(http.MethodGet, "/api/game/state", nil)

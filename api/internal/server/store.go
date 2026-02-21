@@ -1,0 +1,57 @@
+package server
+
+import (
+	"context"
+	"errors"
+)
+
+var ErrNotFound = errors.New("not found")
+
+type gameStateData struct {
+	Status       string
+	TimerMinutes int
+	StartedAt    *string
+	StagesJSON   string
+	TeamName     string
+}
+
+type Store interface {
+	PlayerFromToken(ctx context.Context, token string) (playerSession, error)
+	AdminFromSession(ctx context.Context, sessionID string) (adminSession, error)
+
+	TeamLookup(ctx context.Context, joinToken string) (TeamLookupResponse, error)
+	JoinTeam(ctx context.Context, teamID, playerName string) (playerID, sessionID string, err error)
+	GameState(ctx context.Context, gameID, teamID string) (gameStateData, error)
+	ExpireGame(ctx context.Context, gameID string) error
+	CountCorrectAnswers(ctx context.Context, gameID, teamID string) (int, error)
+	RecordAnswer(ctx context.Context, gameID, teamID string, stageNumber int, answer string, isCorrect bool) error
+	ListPlayers(ctx context.Context, teamID string) ([]PlayerInfo, error)
+	ListCompletedStages(ctx context.Context, gameID, teamID string) ([]CompletedStage, error)
+
+	AdminByEmail(ctx context.Context, email string) (adminID, passwordHash string, err error)
+	CreateAdminSession(ctx context.Context, adminID string) (sessionID string, err error)
+	DeleteAdminSession(ctx context.Context, sessionID string) error
+
+	ListScenarios(ctx context.Context) ([]AdminScenarioSummary, error)
+	CreateScenario(ctx context.Context, req AdminScenarioRequest) (AdminScenarioDetail, error)
+	GetScenario(ctx context.Context, id string) (AdminScenarioDetail, error)
+	UpdateScenario(ctx context.Context, id string, req AdminScenarioRequest) (AdminScenarioDetail, error)
+	DeleteScenario(ctx context.Context, id string) error
+	ScenarioHasGames(ctx context.Context, scenarioID string) (bool, error)
+
+	ListGames(ctx context.Context) ([]AdminGameSummary, error)
+	CreateGame(ctx context.Context, req AdminGameRequest) (AdminGameDetail, error)
+	GetGame(ctx context.Context, id string) (AdminGameDetail, error)
+	UpdateGame(ctx context.Context, id string, req AdminGameRequest) (AdminGameDetail, error)
+	DeleteGame(ctx context.Context, id string) error
+	GameHasPlayers(ctx context.Context, gameID string) (bool, error)
+	DeleteTeamsByGame(ctx context.Context, gameID string) error
+
+	ListTeams(ctx context.Context, gameID string) ([]AdminTeamItem, error)
+	CreateTeam(ctx context.Context, gameID string, req AdminTeamRequest, token string) (AdminTeamItem, error)
+	UpdateTeam(ctx context.Context, gameID, teamID string, req AdminTeamRequest) (AdminTeamItem, error)
+	DeleteTeam(ctx context.Context, gameID, teamID string) error
+	TeamHasPlayers(ctx context.Context, gameID, teamID string) (bool, error)
+	GameExists(ctx context.Context, gameID string) (bool, error)
+	ScenarioName(ctx context.Context, scenarioID string) (string, error)
+}

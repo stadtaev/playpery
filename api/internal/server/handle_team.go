@@ -1,7 +1,6 @@
 package server
 
 import (
-	"database/sql"
 	"errors"
 	"net/http"
 
@@ -14,20 +13,12 @@ type TeamLookupResponse struct {
 	GameName string `json:"gameName"`
 }
 
-func handleTeamLookup(db *sql.DB) http.HandlerFunc {
+func handleTeamLookup(store Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		token := chi.URLParam(r, "joinToken")
 
-		var resp TeamLookupResponse
-		err := db.QueryRowContext(r.Context(), `
-			SELECT t.id, t.name, s.name
-			FROM teams t
-			JOIN games g ON g.id = t.game_id
-			JOIN scenarios s ON s.id = g.scenario_id
-			WHERE t.join_token = ? AND g.status = 'active'
-		`, token).Scan(&resp.ID, &resp.Name, &resp.GameName)
-
-		if errors.Is(err, sql.ErrNoRows) {
+		resp, err := store.TeamLookup(r.Context(), token)
+		if errors.Is(err, ErrNotFound) {
 			writeError(w, http.StatusNotFound, "team not found or game not active")
 			return
 		}

@@ -1,7 +1,6 @@
 package server
 
 import (
-	"database/sql"
 	"errors"
 	"net/http"
 	"strings"
@@ -19,7 +18,7 @@ type JoinResponse struct {
 	TeamName string `json:"teamName"`
 }
 
-func handleJoin(db *sql.DB, broker *Broker) http.HandlerFunc {
+func handleJoin(store Store, broker *Broker) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req JoinRequest
 		if err := readJSON(r, &req); err != nil {
@@ -33,16 +32,8 @@ func handleJoin(db *sql.DB, broker *Broker) http.HandlerFunc {
 			return
 		}
 
-		// Look up team + verify game is active.
-		var teamID, teamName string
-		err := db.QueryRowContext(r.Context(), `
-			SELECT t.id, t.name
-			FROM teams t
-			JOIN games g ON g.id = t.game_id
-			WHERE t.join_token = ? AND g.status = 'active'
-		`, req.JoinToken).Scan(&teamID, &teamName)
-
-		if errors.Is(err, sql.ErrNoRows) {
+		team, err := store.TeamLookup(r.Context(), req.JoinToken)
+		if errors.Is(err, ErrNotFound) {
 			writeError(w, http.StatusNotFound, "team not found or game not active")
 			return
 		}
@@ -51,19 +42,13 @@ func handleJoin(db *sql.DB, broker *Broker) http.HandlerFunc {
 			return
 		}
 
-		// Insert player with random session_id.
-		var playerID, sessionID string
-		err = db.QueryRowContext(r.Context(), `
-			INSERT INTO players (team_id, name, session_id)
-			VALUES (?, ?, lower(hex(randomblob(16))))
-			RETURNING id, session_id
-		`, teamID, req.PlayerName).Scan(&playerID, &sessionID)
+		playerID, sessionID, err := store.JoinTeam(r.Context(), team.ID, req.PlayerName)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "internal error")
 			return
 		}
 
-		broker.Publish(teamID, SSEEvent{
+		broker.Publish(team.ID, SSEEvent{
 			Type:       "player_joined",
 			PlayerName: req.PlayerName,
 		})
@@ -71,8 +56,8 @@ func handleJoin(db *sql.DB, broker *Broker) http.HandlerFunc {
 		writeJSON(w, http.StatusOK, JoinResponse{
 			Token:    sessionID,
 			PlayerID: playerID,
-			TeamID:   teamID,
-			TeamName: teamName,
+			TeamID:   team.ID,
+			TeamName: team.Name,
 		})
 	}
 }

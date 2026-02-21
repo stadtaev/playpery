@@ -1,8 +1,6 @@
 package server
 
 import (
-	"database/sql"
-	"encoding/json"
 	"errors"
 	"net/http"
 	"strings"
@@ -10,7 +8,6 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// AdminScenarioSummary is returned in the list endpoint.
 type AdminScenarioSummary struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
@@ -20,7 +17,6 @@ type AdminScenarioSummary struct {
 	CreatedAt   string `json:"createdAt"`
 }
 
-// AdminScenarioDetail is returned for a single scenario with stages.
 type AdminScenarioDetail struct {
 	ID          string       `json:"id"`
 	Name        string       `json:"name"`
@@ -30,7 +26,6 @@ type AdminScenarioDetail struct {
 	CreatedAt   string       `json:"createdAt"`
 }
 
-// AdminStage represents a stage in a scenario.
 type AdminStage struct {
 	StageNumber   int     `json:"stageNumber"`
 	Location      string  `json:"location"`
@@ -41,7 +36,6 @@ type AdminStage struct {
 	Lng           float64 `json:"lng"`
 }
 
-// AdminScenarioRequest is the request body for creating/updating a scenario.
 type AdminScenarioRequest struct {
 	Name        string       `json:"name"`
 	City        string       `json:"city"`
@@ -77,36 +71,17 @@ func (req *AdminScenarioRequest) validate() string {
 	return ""
 }
 
-func handleAdminListScenarios(db *sql.DB) http.HandlerFunc {
+func handleAdminListScenarios(store Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if _, err := adminFromRequest(r, db); err != nil {
+		if _, err := adminFromRequest(r, store); err != nil {
 			writeError(w, http.StatusUnauthorized, "not authenticated")
 			return
 		}
 
-		rows, err := db.QueryContext(r.Context(), `
-			SELECT id, name, city, COALESCE(description, ''), stages, created_at
-			FROM scenarios
-			ORDER BY created_at DESC
-		`)
+		scenarios, err := store.ListScenarios(r.Context())
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "internal error")
 			return
-		}
-		defer rows.Close()
-
-		var scenarios []AdminScenarioSummary
-		for rows.Next() {
-			var s AdminScenarioSummary
-			var stagesJSON string
-			if err := rows.Scan(&s.ID, &s.Name, &s.City, &s.Description, &stagesJSON, &s.CreatedAt); err != nil {
-				writeError(w, http.StatusInternalServerError, "internal error")
-				return
-			}
-			var stages []json.RawMessage
-			json.Unmarshal([]byte(stagesJSON), &stages)
-			s.StageCount = len(stages)
-			scenarios = append(scenarios, s)
 		}
 
 		if scenarios == nil {
@@ -116,9 +91,9 @@ func handleAdminListScenarios(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func handleAdminCreateScenario(db *sql.DB) http.HandlerFunc {
+func handleAdminCreateScenario(store Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if _, err := adminFromRequest(r, db); err != nil {
+		if _, err := adminFromRequest(r, store); err != nil {
 			writeError(w, http.StatusUnauthorized, "not authenticated")
 			return
 		}
@@ -133,46 +108,27 @@ func handleAdminCreateScenario(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		stagesJSON, _ := json.Marshal(req.Stages)
-
-		var id, createdAt string
-		err := db.QueryRowContext(r.Context(), `
-			INSERT INTO scenarios (id, name, city, description, stages)
-			VALUES (lower(hex(randomblob(16))), ?, ?, ?, ?)
-			RETURNING id, created_at
-		`, req.Name, req.City, req.Description, string(stagesJSON)).Scan(&id, &createdAt)
+		scenario, err := store.CreateScenario(r.Context(), req)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "internal error")
 			return
 		}
 
-		writeJSON(w, http.StatusCreated, AdminScenarioDetail{
-			ID:          id,
-			Name:        req.Name,
-			City:        req.City,
-			Description: req.Description,
-			Stages:      req.Stages,
-			CreatedAt:   createdAt,
-		})
+		writeJSON(w, http.StatusCreated, scenario)
 	}
 }
 
-func handleAdminGetScenario(db *sql.DB) http.HandlerFunc {
+func handleAdminGetScenario(store Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if _, err := adminFromRequest(r, db); err != nil {
+		if _, err := adminFromRequest(r, store); err != nil {
 			writeError(w, http.StatusUnauthorized, "not authenticated")
 			return
 		}
 
 		id := chi.URLParam(r, "id")
 
-		var s AdminScenarioDetail
-		var stagesJSON string
-		err := db.QueryRowContext(r.Context(), `
-			SELECT id, name, city, COALESCE(description, ''), stages, created_at
-			FROM scenarios WHERE id = ?
-		`, id).Scan(&s.ID, &s.Name, &s.City, &s.Description, &stagesJSON, &s.CreatedAt)
-		if errors.Is(err, sql.ErrNoRows) {
+		scenario, err := store.GetScenario(r.Context(), id)
+		if errors.Is(err, ErrNotFound) {
 			writeError(w, http.StatusNotFound, "scenario not found")
 			return
 		}
@@ -181,17 +137,13 @@ func handleAdminGetScenario(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		json.Unmarshal([]byte(stagesJSON), &s.Stages)
-		if s.Stages == nil {
-			s.Stages = []AdminStage{}
-		}
-		writeJSON(w, http.StatusOK, s)
+		writeJSON(w, http.StatusOK, scenario)
 	}
 }
 
-func handleAdminUpdateScenario(db *sql.DB) http.HandlerFunc {
+func handleAdminUpdateScenario(store Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if _, err := adminFromRequest(r, db); err != nil {
+		if _, err := adminFromRequest(r, store); err != nil {
 			writeError(w, http.StatusUnauthorized, "not authenticated")
 			return
 		}
@@ -208,15 +160,8 @@ func handleAdminUpdateScenario(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		stagesJSON, _ := json.Marshal(req.Stages)
-
-		var createdAt string
-		err := db.QueryRowContext(r.Context(), `
-			UPDATE scenarios SET name = ?, city = ?, description = ?, stages = ?
-			WHERE id = ?
-			RETURNING created_at
-		`, req.Name, req.City, req.Description, string(stagesJSON), id).Scan(&createdAt)
-		if errors.Is(err, sql.ErrNoRows) {
+		scenario, err := store.UpdateScenario(r.Context(), id, req)
+		if errors.Is(err, ErrNotFound) {
 			writeError(w, http.StatusNotFound, "scenario not found")
 			return
 		}
@@ -225,48 +170,35 @@ func handleAdminUpdateScenario(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		writeJSON(w, http.StatusOK, AdminScenarioDetail{
-			ID:          id,
-			Name:        req.Name,
-			City:        req.City,
-			Description: req.Description,
-			Stages:      req.Stages,
-			CreatedAt:   createdAt,
-		})
+		writeJSON(w, http.StatusOK, scenario)
 	}
 }
 
-func handleAdminDeleteScenario(db *sql.DB) http.HandlerFunc {
+func handleAdminDeleteScenario(store Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if _, err := adminFromRequest(r, db); err != nil {
+		if _, err := adminFromRequest(r, store); err != nil {
 			writeError(w, http.StatusUnauthorized, "not authenticated")
 			return
 		}
 
 		id := chi.URLParam(r, "id")
 
-		// Block deletion if games reference this scenario.
-		var gameCount int
-		err := db.QueryRowContext(r.Context(), `
-			SELECT COUNT(*) FROM games WHERE scenario_id = ?
-		`, id).Scan(&gameCount)
+		hasGames, err := store.ScenarioHasGames(r.Context(), id)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "internal error")
 			return
 		}
-		if gameCount > 0 {
+		if hasGames {
 			writeError(w, http.StatusConflict, "cannot delete scenario with existing games")
 			return
 		}
 
-		result, err := db.ExecContext(r.Context(), `DELETE FROM scenarios WHERE id = ?`, id)
-		if err != nil {
+		if err := store.DeleteScenario(r.Context(), id); err != nil {
+			if errors.Is(err, ErrNotFound) {
+				writeError(w, http.StatusNotFound, "scenario not found")
+				return
+			}
 			writeError(w, http.StatusInternalServerError, "internal error")
-			return
-		}
-		rows, _ := result.RowsAffected()
-		if rows == 0 {
-			writeError(w, http.StatusNotFound, "scenario not found")
 			return
 		}
 

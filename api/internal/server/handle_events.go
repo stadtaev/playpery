@@ -1,13 +1,12 @@
 package server
 
 import (
-	"database/sql"
 	"fmt"
 	"net/http"
 	"time"
 )
 
-func handleEvents(db *sql.DB, broker *Broker) http.HandlerFunc {
+func handleEvents(store Store, broker *Broker) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		token := r.URL.Query().Get("token")
 		if token == "" {
@@ -15,7 +14,7 @@ func handleEvents(db *sql.DB, broker *Broker) http.HandlerFunc {
 			return
 		}
 
-		sess, err := playerFromToken(db, token)
+		sess, err := store.PlayerFromToken(r.Context(), token)
 		if err != nil {
 			writeError(w, http.StatusUnauthorized, "invalid session token")
 			return
