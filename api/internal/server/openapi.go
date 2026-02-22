@@ -15,9 +15,9 @@ type ErrorResponse struct {
 
 func newOpenAPISpec() *openapi3.Spec {
 	r := openapi3.NewReflector()
-	r.Spec.Info.Title = "CityQuiz API"
+	r.Spec.Info.Title = "CityQuest API"
 	r.Spec.Info.Version = "0.1.0"
-	r.Spec.Info.WithDescription("Backend API for the CityQuiz game.")
+	r.Spec.Info.WithDescription("Backend API for the CityQuest game.")
 
 	// GET /healthz
 	getHealthz, _ := r.NewOperationContext(http.MethodGet, "/healthz")

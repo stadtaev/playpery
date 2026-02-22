@@ -13,7 +13,7 @@ func addRoutes(r chi.Router, logger *slog.Logger, admin AdminAuth, clients *Regi
 	broker := NewBroker()
 
 	r.Get("/openapi.json", handleOpenAPI())
-	r.Mount("/docs", v5emb.New("CityQuiz API", "/openapi.json", "/docs"))
+	r.Mount("/docs", v5emb.New("CityQuest API", "/openapi.json", "/docs"))
 	r.Get("/healthz", handleHealth(logger, adminDB))
 	r.Get("/ws/echo", handleWSEcho(logger))
 

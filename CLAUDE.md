@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-CityQuiz — a location-based quiz game SaaS. Players join teams via link/QR, walk through city landmarks, answer questions at each stage. Single Go process with embedded SQLite (Turso go-libsql), React SPA frontend. No Redis, no distributed state. Multi-tenant: each client gets its own SQLite database file.
+CityQuest — a location-based quest game SaaS. Players join teams via link/QR, walk through city landmarks, answer questions at each stage. Single Go process with embedded SQLite (Turso go-libsql), React SPA frontend. No Redis, no distributed state. Multi-tenant: each client gets its own SQLite database file.
 
 ## Commands
 

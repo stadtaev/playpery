@@ -39,7 +39,7 @@ export function AdminLayout({ client, children }: { client?: string; children: R
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
           <h1 style={{ margin: 0 }}>
             <a href="/admin/clients" onClick={(e) => { e.preventDefault(); navigate('/admin/clients') }} style={{ textDecoration: 'none' }}>
-              CityQuiz Admin
+              CityQuest Admin
             </a>
           </h1>
           <a href="/admin/scenarios" onClick={(e) => { e.preventDefault(); navigate('/admin/scenarios') }}>Scenarios</a>

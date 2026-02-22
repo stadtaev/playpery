@@ -29,7 +29,7 @@ func TestHandleWSEcho(t *testing.T) {
 	}
 	defer conn.CloseNow()
 
-	messages := []string{"hello cityquiz", "¡hola lima!", "🎯"}
+	messages := []string{"hello cityquest", "¡hola lima!", "🎯"}
 
 	for _, want := range messages {
 		if err := conn.Write(ctx, websocket.MessageText, []byte(want)); err != nil {

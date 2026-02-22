@@ -79,7 +79,7 @@ export function GamePage() {
   if (error) {
     return (
       <main className="container">
-        <h1>CityQuiz</h1>
+        <h1>CityQuest</h1>
         <p role="alert">{error}</p>
         <button onClick={handleLogout}>Back to start</button>
       </main>
@@ -100,7 +100,7 @@ export function GamePage() {
   return (
     <main className="container" style={{ maxWidth: 600 }}>
       <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 style={{ margin: 0 }}>CityQuiz</h1>
+        <h1 style={{ margin: 0 }}>CityQuest</h1>
         <small>
           {team.name} &middot;{' '}
           {game.startedAt && (

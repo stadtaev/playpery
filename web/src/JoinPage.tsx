@@ -35,7 +35,7 @@ export function JoinPage({ client, joinToken }: { client: string; joinToken: str
   if (error && !team) {
     return (
       <main className="container">
-        <h1>CityQuiz</h1>
+        <h1>CityQuest</h1>
         <p role="alert">{error}</p>
       </main>
     )
@@ -51,7 +51,7 @@ export function JoinPage({ client, joinToken }: { client: string; joinToken: str
 
   return (
     <main className="container" style={{ maxWidth: 480 }}>
-      <h1>CityQuiz</h1>
+      <h1>CityQuest</h1>
       <hgroup>
         <h2>Join {team.name}</h2>
         <p>{team.gameName}</p>

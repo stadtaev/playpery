@@ -100,7 +100,7 @@ export default function App() {
     default:
       return (
         <main className="container" style={{ maxWidth: 480, textAlign: 'center' }}>
-          <h1>CityQuiz</h1>
+          <h1>CityQuest</h1>
           <p>Scan your team's QR code or use the join link to get started.</p>
         </main>
       )
