@@ -37,9 +37,11 @@ export function AdminGameStatusPage({ client, id }: { client: string; id: string
         <span>
           <strong>Status:</strong> {game.status}
         </span>
-        <span>
-          <strong>Timer:</strong> {game.timerMinutes}m
-        </span>
+        {game.timerEnabled && (
+          <span>
+            <strong>Timer:</strong> {game.timerMinutes}m (stage: {game.stageTimerMinutes}m)
+          </span>
+        )}
         <span>
           <strong>Players:</strong> {totalPlayers}
         </span>
@@ -65,37 +67,64 @@ export function AdminGameStatusPage({ client, id }: { client: string; id: string
       {game.teams.length === 0 ? (
         <p>No teams yet.</p>
       ) : (
-        game.teams.map((team) => (
-          <article key={team.id} style={{ marginBottom: '1rem' }}>
-            <header>
-              <strong>{team.name}</strong>
-              {team.guideName && <span> &mdash; Guide: {team.guideName}</span>}
-              <span style={{ float: 'right' }}>
-                {team.completedStages}/{game.totalStages} stages
-              </span>
-            </header>
-            {team.players.length === 0 ? (
-              <p style={{ margin: 0 }}>No players yet.</p>
-            ) : (
-              <table>
-                <thead>
-                  <tr>
-                    <th>Player</th>
-                    <th>Joined</th>
+        <>
+          <h3>Scoreboard</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Team</th>
+                <th>Points</th>
+                <th>Progress</th>
+                <th>Players</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[...game.teams]
+                .sort((a, b) => b.completedStages - a.completedStages)
+                .map((team) => (
+                  <tr key={team.id}>
+                    <td><strong>{team.name}</strong></td>
+                    <td>{team.completedStages}</td>
+                    <td>{team.completedStages}/{game.totalStages} stages</td>
+                    <td>{team.players.length}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {team.players.map((p, i) => (
-                    <tr key={i}>
-                      <td>{p.name}</td>
-                      <td>{new Date(p.joinedAt).toLocaleString()}</td>
+                ))}
+            </tbody>
+          </table>
+
+          <h3>Team Details</h3>
+          {game.teams.map((team) => (
+            <article key={team.id} style={{ marginBottom: '1rem' }}>
+              <header>
+                <strong>{team.name}</strong>
+                {team.guideName && <span> &mdash; Guide: {team.guideName}</span>}
+                <span style={{ float: 'right' }}>
+                  {team.completedStages} pts
+                </span>
+              </header>
+              {team.players.length === 0 ? (
+                <p style={{ margin: 0 }}>No players yet.</p>
+              ) : (
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Player</th>
+                      <th>Joined</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </article>
-        ))
+                  </thead>
+                  <tbody>
+                    {team.players.map((p, i) => (
+                      <tr key={i}>
+                        <td>{p.name}</td>
+                        <td>{new Date(p.joinedAt).toLocaleString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </article>
+          ))}
+        </>
       )}
     </>
   )
