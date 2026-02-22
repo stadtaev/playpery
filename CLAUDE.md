@@ -43,7 +43,7 @@ cd api && SPA_DIR=../web/dist go run ./cmd/server
 
 | Var | Default | Notes |
 |-----|---------|-------|
-| `DB_DIR` | `data` | Directory for SQLite database files |
+| `DB_PATH` | `local.db` | SQLite file path; admin + client DBs sit in same directory |
 | `HTTP_ADDR` | `:8080` | Listen address |
 | `LOG_LEVEL` | `INFO` | slog level |
 | `SPA_DIR` | `../web/dist` | Path to built SPA (`web/dist/`). If empty, no SPA serving. |
@@ -54,7 +54,7 @@ cd api && SPA_DIR=../web/dist go run ./cmd/server
 
 **Multi-tenant database layout:**
 ```
-data/                          ← DB_DIR env var (default "data/")
+data/                          ← directory derived from DB_PATH
   _admin.db                    ← shared: admins, admin_sessions, clients
   demo.db                      ← per-client: scenarios, games, player_sessions
   {slug}.db                    ← one per client
@@ -111,7 +111,7 @@ web/
       AdminGameEditorPage.tsx     — create/edit game with teams section (per-client)
 ```
 
-Startup order: load config → ensure DB_DIR → open admin DB → create Registry → pre-open existing clients → seed demo if first run → start HTTP server. Graceful shutdown via errgroup + signal.NotifyContext.
+Startup order: load config → derive DB directory from DB_PATH → open admin DB → create Registry → pre-open existing clients → seed demo if first run → start HTTP server. Graceful shutdown via errgroup + signal.NotifyContext.
 
 ## API Endpoints
 

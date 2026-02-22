@@ -37,13 +37,14 @@ func run(ctx context.Context, stdout io.Writer) error {
 		Level: cfg.LogLevel,
 	}))
 
-	// Ensure data directory exists.
-	if err := os.MkdirAll(cfg.DBDir, 0755); err != nil {
-		return fmt.Errorf("creating data dir: %w", err)
+	// Derive data directory from DB_PATH.
+	dbDir := filepath.Dir(cfg.DBPath)
+	if dbDir == "." {
+		dbDir = "."
 	}
 
-	// Open admin DB.
-	adminDBPath := filepath.Join(cfg.DBDir, "_admin.db")
+	// Open admin DB (sits alongside the client DBs).
+	adminDBPath := filepath.Join(dbDir, "_admin.db")
 	adminDB, err := database.Open(ctx, adminDBPath)
 	if err != nil {
 		return fmt.Errorf("opening admin db: %w", err)
@@ -57,7 +58,7 @@ func run(ctx context.Context, stdout io.Writer) error {
 	logger.Info("admin db ready", "path", adminDBPath)
 
 	// Create registry for per-client stores.
-	clients := server.NewRegistry(cfg.DBDir)
+	clients := server.NewRegistry(dbDir)
 	defer clients.Close()
 
 	// Pre-open existing clients.
