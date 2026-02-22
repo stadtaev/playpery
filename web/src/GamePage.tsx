@@ -50,6 +50,7 @@ export function GamePage() {
   const [feedback, setFeedback] = useState<{ correct: boolean; message: string } | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [stageStartedAt, setStageStartedAt] = useState<number | null>(null)
 
   const fetchState = useCallback(() => {
     getGameState(client)
@@ -66,6 +67,12 @@ export function GamePage() {
 
   useGameEvents(client, fetchState)
 
+  // Reset interstitial when stage changes (e.g. teammate answered via SSE).
+  const currentStageNumber = state?.currentStage?.stageNumber ?? null
+  useEffect(() => {
+    setStageStartedAt(null)
+  }, [currentStageNumber])
+
   // Compute timer deadlines.
   const timerActive = state?.game.timerEnabled && state.game.status === 'active'
 
@@ -73,19 +80,9 @@ export function GamePage() {
     ? new Date(state.game.startedAt).getTime() + state.game.timerMinutes * 60000
     : null
 
-  const stageDeadline = (() => {
-    if (!timerActive || !state.currentStage || !state.game.stageTimerMinutes) return null
-    const { completedStages } = state
-    // Stage started when previous stage was completed, or when the game started for stage 1.
-    let stageStart: string | null = null
-    if (completedStages.length > 0) {
-      stageStart = completedStages[completedStages.length - 1].answeredAt
-    } else {
-      stageStart = state.game.startedAt
-    }
-    if (!stageStart) return null
-    return new Date(stageStart).getTime() + state.game.stageTimerMinutes * 60000
-  })()
+  const stageDeadline = (timerActive && stageStartedAt && state.game.stageTimerMinutes)
+    ? stageStartedAt + state.game.stageTimerMinutes * 60000
+    : null
 
   const gameRemaining = useCountdown(gameDeadline)
   const stageRemaining = useCountdown(stageDeadline)
@@ -100,6 +97,7 @@ export function GamePage() {
       if (resp.isCorrect) {
         setFeedback({ correct: true, message: `Stage ${resp.stageNumber} complete!` })
         setAnswer('')
+        setStageStartedAt(null)
         fetchState()
       } else {
         console.log('[debug] correct answer:', resp.correctAnswer)
@@ -160,7 +158,19 @@ export function GamePage() {
         </article>
       )}
 
-      {currentStage && !isEnded && (
+      {currentStage && !isEnded && stageStartedAt === null && (
+        <article>
+          <header>
+            Stage {currentStage.stageNumber} of {game.totalStages} &mdash; {currentStage.location}
+          </header>
+          <p><strong>Clue:</strong> {currentStage.clue}</p>
+          <button onClick={() => setStageStartedAt(Date.now())}>
+            {completedStages.length === 0 ? 'Start Quest' : 'Go to Next Stage'}
+          </button>
+        </article>
+      )}
+
+      {currentStage && !isEnded && stageStartedAt !== null && (
         <article>
           <header>
             Stage {currentStage.stageNumber} of {game.totalStages} &mdash; {currentStage.location}
