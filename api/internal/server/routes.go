@@ -34,21 +34,25 @@ func addRoutes(r chi.Router, logger *slog.Logger, admin AdminAuth, clients *Regi
 	r.Get("/api/admin/clients", handleAdminListClients(admin))
 	r.Post("/api/admin/clients", handleAdminCreateClient(admin, clients))
 
-	// Admin CRUD — per-client, requires admin auth.
+	// Admin scenarios — global, stored in admin DB.
+	r.Route("/api/admin/scenarios", func(r chi.Router) {
+		r.Use(adminAuthMiddleware(admin))
+		r.Get("/", handleAdminListScenarios(admin))
+		r.Post("/", handleAdminCreateScenario(admin))
+		r.Get("/{id}", handleAdminGetScenario(admin))
+		r.Put("/{id}", handleAdminUpdateScenario(admin))
+		r.Delete("/{id}", handleAdminDeleteScenario(admin, clients))
+	})
+
+	// Admin games/teams — per-client, requires admin auth.
 	r.Route("/api/admin/clients/{client}", func(r chi.Router) {
 		r.Use(adminAuthMiddleware(admin))
 		r.Use(clientMiddleware(clients))
 
-		r.Get("/scenarios", handleAdminListScenarios())
-		r.Post("/scenarios", handleAdminCreateScenario())
-		r.Get("/scenarios/{id}", handleAdminGetScenario())
-		r.Put("/scenarios/{id}", handleAdminUpdateScenario())
-		r.Delete("/scenarios/{id}", handleAdminDeleteScenario())
-
 		r.Get("/games", handleAdminListGames())
-		r.Post("/games", handleAdminCreateGame())
+		r.Post("/games", handleAdminCreateGame(admin))
 		r.Get("/games/{gameID}", handleAdminGetGame())
-		r.Put("/games/{gameID}", handleAdminUpdateGame())
+		r.Put("/games/{gameID}", handleAdminUpdateGame(admin))
 		r.Delete("/games/{gameID}", handleAdminDeleteGame())
 		r.Get("/games/{gameID}/teams", handleAdminListTeams())
 		r.Post("/games/{gameID}/teams", handleAdminCreateTeam())

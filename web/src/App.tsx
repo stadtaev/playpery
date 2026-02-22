@@ -15,9 +15,9 @@ type Route =
   | { page: 'home' }
   | { page: 'admin-login' }
   | { page: 'admin-clients' }
-  | { page: 'admin-scenarios'; client: string }
-  | { page: 'admin-scenario-new'; client: string }
-  | { page: 'admin-scenario-edit'; client: string; id: string }
+  | { page: 'admin-scenarios' }
+  | { page: 'admin-scenario-new' }
+  | { page: 'admin-scenario-edit'; id: string }
   | { page: 'admin-games'; client: string }
   | { page: 'admin-game-new'; client: string }
   | { page: 'admin-game-edit'; client: string; id: string }
@@ -36,15 +36,14 @@ function getRoute(): Route {
   if (path === '/admin/login') return { page: 'admin-login' }
   if (path === '/admin' || path === '/admin/clients') return { page: 'admin-clients' }
 
-  // /admin/clients/{client}/scenarios
-  const scenariosMatch = path.match(/^\/admin\/clients\/([^/]+)\/scenarios$/)
-  if (scenariosMatch) return { page: 'admin-scenarios', client: scenariosMatch[1] }
+  // /admin/scenarios (global)
+  if (path === '/admin/scenarios') return { page: 'admin-scenarios' }
 
-  const scenarioNewMatch = path.match(/^\/admin\/clients\/([^/]+)\/scenarios\/new$/)
-  if (scenarioNewMatch) return { page: 'admin-scenario-new', client: scenarioNewMatch[1] }
+  const scenarioNewMatch = path.match(/^\/admin\/scenarios\/new$/)
+  if (scenarioNewMatch) return { page: 'admin-scenario-new' }
 
-  const scenarioEditMatch = path.match(/^\/admin\/clients\/([^/]+)\/scenarios\/(.+)\/edit$/)
-  if (scenarioEditMatch) return { page: 'admin-scenario-edit', client: scenarioEditMatch[1], id: scenarioEditMatch[2] }
+  const scenarioEditMatch = path.match(/^\/admin\/scenarios\/(.+)\/edit$/)
+  if (scenarioEditMatch) return { page: 'admin-scenario-edit', id: scenarioEditMatch[1] }
 
   // /admin/clients/{client}/games
   const gamesMatch = path.match(/^\/admin\/clients\/([^/]+)\/games$/)
@@ -80,11 +79,11 @@ export default function App() {
     case 'admin-clients':
       return <AdminLayout><AdminClientsPage /></AdminLayout>
     case 'admin-scenarios':
-      return <AdminLayout client={route.client}><AdminScenariosPage client={route.client} /></AdminLayout>
+      return <AdminLayout><AdminScenariosPage /></AdminLayout>
     case 'admin-scenario-new':
-      return <AdminLayout client={route.client}><AdminScenarioEditorPage client={route.client} /></AdminLayout>
+      return <AdminLayout><AdminScenarioEditorPage /></AdminLayout>
     case 'admin-scenario-edit':
-      return <AdminLayout client={route.client}><AdminScenarioEditorPage client={route.client} id={route.id} /></AdminLayout>
+      return <AdminLayout><AdminScenarioEditorPage id={route.id} /></AdminLayout>
     case 'admin-games':
       return <AdminLayout client={route.client}><AdminGamesPage client={route.client} /></AdminLayout>
     case 'admin-game-new':

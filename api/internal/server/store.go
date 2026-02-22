@@ -27,15 +27,8 @@ type Store interface {
 	ListPlayers(ctx context.Context, gameID, teamID string) ([]PlayerInfo, error)
 	ListCompletedStages(ctx context.Context, gameID, teamID string) ([]CompletedStage, error)
 
-	ListScenarios(ctx context.Context) ([]AdminScenarioSummary, error)
-	CreateScenario(ctx context.Context, req AdminScenarioRequest) (AdminScenarioDetail, error)
-	GetScenario(ctx context.Context, id string) (AdminScenarioDetail, error)
-	UpdateScenario(ctx context.Context, id string, req AdminScenarioRequest) (AdminScenarioDetail, error)
-	DeleteScenario(ctx context.Context, id string) error
-	ScenarioHasGames(ctx context.Context, scenarioID string) (bool, error)
-
 	ListGames(ctx context.Context) ([]AdminGameSummary, error)
-	CreateGame(ctx context.Context, req AdminGameRequest) (AdminGameDetail, error)
+	CreateGame(ctx context.Context, req AdminGameRequest, stages []AdminStage) (AdminGameDetail, error)
 	GetGame(ctx context.Context, id string) (AdminGameDetail, error)
 	UpdateGame(ctx context.Context, id string, req AdminGameRequest) (AdminGameDetail, error)
 	DeleteGame(ctx context.Context, id string) error
@@ -48,5 +41,4 @@ type Store interface {
 	DeleteTeam(ctx context.Context, gameID, teamID string) error
 	TeamHasPlayers(ctx context.Context, gameID, teamID string) (bool, error)
 	GameExists(ctx context.Context, gameID string) (bool, error)
-	ScenarioName(ctx context.Context, scenarioID string) (string, error)
 }

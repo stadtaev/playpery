@@ -23,14 +23,16 @@ type scenarioDoc struct {
 }
 
 type gameDoc struct {
-	ID           string    `json:"id"`
-	ScenarioID   string    `json:"scenarioId"`
-	Status       string    `json:"status"`
-	TimerMinutes int       `json:"timerMinutes"`
-	StartedAt    *string   `json:"startedAt"`
-	EndedAt      *string   `json:"endedAt"`
-	CreatedAt    string    `json:"createdAt"`
-	Teams        []teamDoc `json:"teams"`
+	ID           string       `json:"id"`
+	ScenarioID   string       `json:"scenarioId"`
+	ScenarioName string       `json:"scenarioName"`
+	Status       string       `json:"status"`
+	TimerMinutes int          `json:"timerMinutes"`
+	Stages       []AdminStage `json:"stages"`
+	StartedAt    *string      `json:"startedAt"`
+	EndedAt      *string      `json:"endedAt"`
+	CreatedAt    string       `json:"createdAt"`
+	Teams        []teamDoc    `json:"teams"`
 }
 
 type teamDoc struct {
@@ -70,11 +72,6 @@ type DocStore struct {
 
 func NewDocStore(ctx context.Context, db *sql.DB) (*DocStore, error) {
 	for _, ddl := range []string{
-		`CREATE TABLE IF NOT EXISTS scenarios (
-			id   TEXT PRIMARY KEY,
-			name TEXT UNIQUE NOT NULL,
-			data JSONB NOT NULL
-		)`,
 		`CREATE TABLE IF NOT EXISTS games (
 			id          TEXT PRIMARY KEY,
 			scenario_id TEXT NOT NULL,
@@ -125,19 +122,6 @@ func (s *DocStore) del(ctx context.Context, table, id string) error {
 }
 
 // Per-table put methods — different columns per table.
-
-func (s *DocStore) putScenario(ctx context.Context, sc scenarioDoc) error {
-	data, err := json.Marshal(sc)
-	if err != nil {
-		return err
-	}
-	_, err = s.db.ExecContext(ctx,
-		`INSERT INTO scenarios (id, name, data) VALUES (?, ?, jsonb(?))
-		 ON CONFLICT(id) DO UPDATE SET name = excluded.name, data = excluded.data`,
-		sc.ID, sc.Name, string(data),
-	)
-	return err
-}
 
 func (s *DocStore) putGame(ctx context.Context, g gameDoc) error {
 	data, err := json.Marshal(g)
@@ -197,31 +181,6 @@ func (s *DocStore) allGames(ctx context.Context) ([]gameDoc, error) {
 		games = append(games, g)
 	}
 	return games, nil
-}
-
-// allScenarios loads all scenario documents into memory.
-func (s *DocStore) allScenarios(ctx context.Context) ([]scenarioDoc, error) {
-	rows, err := s.db.QueryContext(ctx,
-		`SELECT json(data) FROM scenarios ORDER BY id`,
-	)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var scenarios []scenarioDoc
-	for rows.Next() {
-		var data string
-		if err := rows.Scan(&data); err != nil {
-			return nil, err
-		}
-		var sc scenarioDoc
-		if err := json.Unmarshal([]byte(data), &sc); err != nil {
-			return nil, err
-		}
-		scenarios = append(scenarios, sc)
-	}
-	return scenarios, nil
 }
 
 // getGame is a convenience wrapper that returns the gameDoc by ID.
@@ -316,14 +275,10 @@ func (s *DocStore) TeamLookup(ctx context.Context, joinToken string) (TeamLookup
 	for _, g := range games {
 		for _, t := range g.Teams {
 			if t.JoinToken == joinToken {
-				var sc scenarioDoc
-				if err := s.get(ctx, "scenarios", g.ScenarioID, &sc); err != nil {
-					return TeamLookupResponse{}, err
-				}
 				return TeamLookupResponse{
 					ID:       t.ID,
 					Name:     t.Name,
-					GameName: sc.Name,
+					GameName: g.ScenarioName,
 					GameID:   g.ID,
 				}, nil
 			}
@@ -373,12 +328,7 @@ func (s *DocStore) GameState(ctx context.Context, gameID, teamID string) (gameSt
 		return gameStateData{}, err
 	}
 
-	var sc scenarioDoc
-	if err := s.get(ctx, "scenarios", g.ScenarioID, &sc); err != nil {
-		return gameStateData{}, err
-	}
-
-	stagesJSON, _ := json.Marshal(sc.Stages)
+	stagesJSON, _ := json.Marshal(g.Stages)
 
 	var teamName string
 	for _, t := range g.Teams {
@@ -485,123 +435,9 @@ func (s *DocStore) ListCompletedStages(ctx context.Context, gameID, teamID strin
 	return nil, nil
 }
 
-// Admin scenarios
-
-func (s *DocStore) ListScenarios(ctx context.Context) ([]AdminScenarioSummary, error) {
-	all, err := s.allScenarios(ctx)
-	if err != nil {
-		return nil, err
-	}
-	var scenarios []AdminScenarioSummary
-	for _, sc := range all {
-		scenarios = append(scenarios, AdminScenarioSummary{
-			ID:          sc.ID,
-			Name:        sc.Name,
-			City:        sc.City,
-			Description: sc.Description,
-			StageCount:  len(sc.Stages),
-			CreatedAt:   sc.CreatedAt,
-		})
-	}
-	// Sort newest first.
-	for i, j := 0, len(scenarios)-1; i < j; i, j = i+1, j-1 {
-		scenarios[i], scenarios[j] = scenarios[j], scenarios[i]
-	}
-	return scenarios, nil
-}
-
-func (s *DocStore) CreateScenario(ctx context.Context, req AdminScenarioRequest) (AdminScenarioDetail, error) {
-	id := newID()
-	now := nowUTC()
-	doc := scenarioDoc{
-		ID:          id,
-		Name:        req.Name,
-		City:        req.City,
-		Description: req.Description,
-		Stages:      req.Stages,
-		CreatedAt:   now,
-	}
-	if err := s.putScenario(ctx, doc); err != nil {
-		return AdminScenarioDetail{}, err
-	}
-	return AdminScenarioDetail{
-		ID:          id,
-		Name:        req.Name,
-		City:        req.City,
-		Description: req.Description,
-		Stages:      req.Stages,
-		CreatedAt:   now,
-	}, nil
-}
-
-func (s *DocStore) GetScenario(ctx context.Context, id string) (AdminScenarioDetail, error) {
-	var sc scenarioDoc
-	if err := s.get(ctx, "scenarios", id, &sc); err != nil {
-		return AdminScenarioDetail{}, err
-	}
-	stages := sc.Stages
-	if stages == nil {
-		stages = []AdminStage{}
-	}
-	return AdminScenarioDetail{
-		ID:          sc.ID,
-		Name:        sc.Name,
-		City:        sc.City,
-		Description: sc.Description,
-		Stages:      stages,
-		CreatedAt:   sc.CreatedAt,
-	}, nil
-}
-
-func (s *DocStore) UpdateScenario(ctx context.Context, id string, req AdminScenarioRequest) (AdminScenarioDetail, error) {
-	var sc scenarioDoc
-	if err := s.get(ctx, "scenarios", id, &sc); err != nil {
-		return AdminScenarioDetail{}, err
-	}
-	sc.Name = req.Name
-	sc.City = req.City
-	sc.Description = req.Description
-	sc.Stages = req.Stages
-	if err := s.putScenario(ctx, sc); err != nil {
-		return AdminScenarioDetail{}, err
-	}
-	return AdminScenarioDetail{
-		ID:          id,
-		Name:        req.Name,
-		City:        req.City,
-		Description: req.Description,
-		Stages:      req.Stages,
-		CreatedAt:   sc.CreatedAt,
-	}, nil
-}
-
-func (s *DocStore) DeleteScenario(ctx context.Context, id string) error {
-	return s.del(ctx, "scenarios", id)
-}
-
-func (s *DocStore) ScenarioHasGames(ctx context.Context, scenarioID string) (bool, error) {
-	var count int
-	err := s.db.QueryRowContext(ctx,
-		`SELECT COUNT(*) FROM games WHERE scenario_id = ?`, scenarioID,
-	).Scan(&count)
-	if err != nil {
-		return false, err
-	}
-	return count > 0, nil
-}
-
 // Admin games
 
 func (s *DocStore) ListGames(ctx context.Context) ([]AdminGameSummary, error) {
-	scenarios, err := s.allScenarios(ctx)
-	if err != nil {
-		return nil, err
-	}
-	scenarioNames := map[string]string{}
-	for _, sc := range scenarios {
-		scenarioNames[sc.ID] = sc.Name
-	}
-
 	allGames, err := s.allGames(ctx)
 	if err != nil {
 		return nil, err
@@ -612,7 +448,7 @@ func (s *DocStore) ListGames(ctx context.Context) ([]AdminGameSummary, error) {
 		games = append(games, AdminGameSummary{
 			ID:           g.ID,
 			ScenarioID:   g.ScenarioID,
-			ScenarioName: scenarioNames[g.ScenarioID],
+			ScenarioName: g.ScenarioName,
 			Status:       g.Status,
 			TimerMinutes: g.TimerMinutes,
 			TeamCount:    len(g.Teams),
@@ -626,14 +462,16 @@ func (s *DocStore) ListGames(ctx context.Context) ([]AdminGameSummary, error) {
 	return games, nil
 }
 
-func (s *DocStore) CreateGame(ctx context.Context, req AdminGameRequest) (AdminGameDetail, error) {
+func (s *DocStore) CreateGame(ctx context.Context, req AdminGameRequest, stages []AdminStage) (AdminGameDetail, error) {
 	id := newID()
 	now := nowUTC()
 	doc := gameDoc{
 		ID:           id,
 		ScenarioID:   req.ScenarioID,
+		ScenarioName: req.ScenarioName,
 		Status:       req.Status,
 		TimerMinutes: req.TimerMinutes,
+		Stages:       stages,
 		CreatedAt:    now,
 		Teams:        []teamDoc{},
 	}
@@ -643,6 +481,7 @@ func (s *DocStore) CreateGame(ctx context.Context, req AdminGameRequest) (AdminG
 	return AdminGameDetail{
 		ID:           id,
 		ScenarioID:   req.ScenarioID,
+		ScenarioName: req.ScenarioName,
 		Status:       req.Status,
 		TimerMinutes: req.TimerMinutes,
 		Teams:        []AdminTeamItem{},
@@ -653,11 +492,6 @@ func (s *DocStore) CreateGame(ctx context.Context, req AdminGameRequest) (AdminG
 func (s *DocStore) GetGame(ctx context.Context, id string) (AdminGameDetail, error) {
 	g, err := s.getGame(ctx, id)
 	if err != nil {
-		return AdminGameDetail{}, err
-	}
-
-	var sc scenarioDoc
-	if err := s.get(ctx, "scenarios", g.ScenarioID, &sc); err != nil && !errors.Is(err, ErrNotFound) {
 		return AdminGameDetail{}, err
 	}
 
@@ -676,7 +510,7 @@ func (s *DocStore) GetGame(ctx context.Context, id string) (AdminGameDetail, err
 	return AdminGameDetail{
 		ID:           g.ID,
 		ScenarioID:   g.ScenarioID,
-		ScenarioName: sc.Name,
+		ScenarioName: g.ScenarioName,
 		Status:       g.Status,
 		TimerMinutes: g.TimerMinutes,
 		Teams:        teams,
@@ -861,23 +695,10 @@ func (s *DocStore) GameExists(ctx context.Context, gameID string) (bool, error) 
 	return err == nil, err
 }
 
-func (s *DocStore) ScenarioName(ctx context.Context, scenarioID string) (string, error) {
-	var name string
-	err := s.db.QueryRowContext(ctx,
-		`SELECT name FROM scenarios WHERE id = ?`, scenarioID,
-	).Scan(&name)
-	if errors.Is(err, sql.ErrNoRows) {
-		return "", ErrNotFound
-	}
-	return name, err
-}
-
-// SeedDemo populates the store with demo data if empty.
-func (s *DocStore) SeedDemo(ctx context.Context) error {
+// SeedDemoGame creates the demo game if no games exist, snapshotting the given scenario stages.
+func (s *DocStore) SeedDemoGame(ctx context.Context, sc *scenarioDoc) error {
 	var count int
-	err := s.db.QueryRowContext(ctx,
-		`SELECT COUNT(*) FROM scenarios`,
-	).Scan(&count)
+	err := s.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM games`).Scan(&count)
 	if err != nil {
 		return err
 	}
@@ -886,29 +707,13 @@ func (s *DocStore) SeedDemo(ctx context.Context) error {
 	}
 
 	now := nowUTC()
-
-	scenario := scenarioDoc{
-		ID:          "s0000000deadbeef",
-		Name:        "Lima Centro Historico",
-		City:        "Lima",
-		Description: "Explore the historic center of Lima through four iconic landmarks.",
-		CreatedAt:   now,
-		Stages: []AdminStage{
-			{StageNumber: 1, Location: "Plaza Mayor", Clue: "Head to the main square where Pizarro founded the city. Look for the bronze fountain in the center.", Question: "What year was the fountain in Plaza Mayor built?", CorrectAnswer: "1651", Lat: -12.0464, Lng: -77.0300},
-			{StageNumber: 2, Location: "Iglesia de San Francisco", Clue: "Walk south to the yellow church with famous underground tunnels.", Question: "What are the underground tunnels beneath San Francisco called?", CorrectAnswer: "catacombs", Lat: -12.0463, Lng: -77.0275},
-			{StageNumber: 3, Location: "Jiron de la Union", Clue: "Stroll down Limas most famous pedestrian street. Find the statue of the liberator.", Question: "Which liberator has a statue on Jiron de la Union?", CorrectAnswer: "San Martin", Lat: -12.0500, Lng: -77.0350},
-			{StageNumber: 4, Location: "Parque de la Muralla", Clue: "Follow the old city wall to the park along the Rimac river.", Question: "What century were the original city walls built in?", CorrectAnswer: "17th", Lat: -12.0450, Lng: -77.0260},
-		},
-	}
-	if err := s.putScenario(ctx, scenario); err != nil {
-		return err
-	}
-
 	game := gameDoc{
 		ID:           "g0000000deadbeef",
-		ScenarioID:   "s0000000deadbeef",
+		ScenarioID:   sc.ID,
+		ScenarioName: sc.Name,
 		Status:       "active",
 		TimerMinutes: 120,
+		Stages:       sc.Stages,
 		StartedAt:    &now,
 		CreatedAt:    now,
 		Teams: []teamDoc{
@@ -930,11 +735,7 @@ func (s *DocStore) SeedDemo(ctx context.Context) error {
 			},
 		},
 	}
-	if err := s.putGame(ctx, game); err != nil {
-		return err
-	}
-
-	return nil
+	return s.putGame(ctx, game)
 }
 
 // Ensure DocStore implements Store at compile time.

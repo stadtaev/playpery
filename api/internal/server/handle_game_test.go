@@ -13,7 +13,7 @@ import (
 	"github.com/playperu/cityquiz/internal/database"
 )
 
-func setupStores(t *testing.T) (AdminAuth, Store) {
+func setupStores(t *testing.T) (*AdminStore, *DocStore) {
 	t.Helper()
 	ctx := context.Background()
 
@@ -28,6 +28,12 @@ func setupStores(t *testing.T) (AdminAuth, Store) {
 	}
 	t.Cleanup(func() { adminDB.Close() })
 
+	// Seed demo scenario into admin DB.
+	sc, err := admin.SeedDemoScenario(ctx)
+	if err != nil {
+		t.Fatalf("seed demo scenario: %v", err)
+	}
+
 	// Client store.
 	clientDB, err := database.Open(ctx, ":memory:")
 	if err != nil {
@@ -37,8 +43,10 @@ func setupStores(t *testing.T) (AdminAuth, Store) {
 	if err != nil {
 		t.Fatalf("init doc store: %v", err)
 	}
-	if err := store.SeedDemo(ctx); err != nil {
-		t.Fatalf("seed demo: %v", err)
+	if sc != nil {
+		if err := store.SeedDemoGame(ctx, sc); err != nil {
+			t.Fatalf("seed demo game: %v", err)
+		}
 	}
 	t.Cleanup(func() { clientDB.Close() })
 

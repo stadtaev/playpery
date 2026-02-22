@@ -47,33 +47,37 @@ export function createClient(slug: string, name: string): Promise<ClientInfo> {
   })
 }
 
-export function listScenarios(client: string): Promise<ScenarioSummary[]> {
-  return request(`/clients/${client}/scenarios`)
+// Scenarios — global (not client-scoped).
+
+export function listScenarios(): Promise<ScenarioSummary[]> {
+  return request('/scenarios')
 }
 
-export function getScenario(client: string, id: string): Promise<ScenarioDetail> {
-  return request(`/clients/${client}/scenarios/${id}`)
+export function getScenario(id: string): Promise<ScenarioDetail> {
+  return request(`/scenarios/${id}`)
 }
 
-export function createScenario(client: string, data: ScenarioRequest): Promise<ScenarioDetail> {
-  return request(`/clients/${client}/scenarios`, {
+export function createScenario(data: ScenarioRequest): Promise<ScenarioDetail> {
+  return request('/scenarios', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   })
 }
 
-export function updateScenario(client: string, id: string, data: ScenarioRequest): Promise<ScenarioDetail> {
-  return request(`/clients/${client}/scenarios/${id}`, {
+export function updateScenario(id: string, data: ScenarioRequest): Promise<ScenarioDetail> {
+  return request(`/scenarios/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   })
 }
 
-export function deleteScenario(client: string, id: string): Promise<void> {
-  return request(`/clients/${client}/scenarios/${id}`, { method: 'DELETE' })
+export function deleteScenario(id: string): Promise<void> {
+  return request(`/scenarios/${id}`, { method: 'DELETE' })
 }
+
+// Games — per-client.
 
 export function listGames(client: string): Promise<GameSummary[]> {
   return request(`/clients/${client}/games`)

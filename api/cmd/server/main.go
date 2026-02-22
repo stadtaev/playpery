@@ -73,19 +73,8 @@ func run(ctx context.Context, stdout io.Writer) error {
 		logger.Info("client db ready", "slug", c.Slug)
 	}
 
-	// If no clients exist, create the demo client and seed it.
-	if len(existing) == 0 {
-		if err := admin.CreateClient(ctx, "demo", "Demo"); err != nil {
-			return fmt.Errorf("creating demo client: %w", err)
-		}
-		demoStore, err := clients.Create(ctx, "demo")
-		if err != nil {
-			return fmt.Errorf("opening demo store: %w", err)
-		}
-		if err := demoStore.SeedDemo(ctx); err != nil {
-			return fmt.Errorf("seeding demo data: %w", err)
-		}
-		logger.Info("demo client created and seeded")
+	if err := server.SeedDemo(ctx, logger, admin, clients); err != nil {
+		return fmt.Errorf("seeding demo: %w", err)
 	}
 
 	srv := server.New(cfg.HTTPAddr, logger, admin, clients, adminDB, cfg.SPADir)

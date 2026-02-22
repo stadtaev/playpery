@@ -42,6 +42,7 @@ type AdminTeamItem struct {
 
 type AdminGameRequest struct {
 	ScenarioID   string `json:"scenarioId"`
+	ScenarioName string `json:"-"` // set by handler after validation
 	Status       string `json:"status"`
 	TimerMinutes int    `json:"timerMinutes"`
 }
@@ -110,7 +111,7 @@ func handleAdminListGames() http.HandlerFunc {
 	}
 }
 
-func handleAdminCreateGame() http.HandlerFunc {
+func handleAdminCreateGame(admin AdminAuth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		store := clientStore(r)
 
@@ -124,7 +125,7 @@ func handleAdminCreateGame() http.HandlerFunc {
 			return
 		}
 
-		scenarioName, err := store.ScenarioName(r.Context(), req.ScenarioID)
+		scenario, err := admin.GetScenario(r.Context(), req.ScenarioID)
 		if errors.Is(err, ErrNotFound) {
 			writeError(w, http.StatusBadRequest, "scenario not found")
 			return
@@ -133,13 +134,13 @@ func handleAdminCreateGame() http.HandlerFunc {
 			writeError(w, http.StatusInternalServerError, "internal error")
 			return
 		}
+		req.ScenarioName = scenario.Name
 
-		game, err := store.CreateGame(r.Context(), req)
+		game, err := store.CreateGame(r.Context(), req, scenario.Stages)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "internal error")
 			return
 		}
-		game.ScenarioName = scenarioName
 
 		writeJSON(w, http.StatusCreated, game)
 	}
@@ -164,7 +165,7 @@ func handleAdminGetGame() http.HandlerFunc {
 	}
 }
 
-func handleAdminUpdateGame() http.HandlerFunc {
+func handleAdminUpdateGame(admin AdminAuth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		store := clientStore(r)
 		gameID := chi.URLParam(r, "gameID")
@@ -179,7 +180,7 @@ func handleAdminUpdateGame() http.HandlerFunc {
 			return
 		}
 
-		scenarioName, err := store.ScenarioName(r.Context(), req.ScenarioID)
+		scenario, err := admin.GetScenario(r.Context(), req.ScenarioID)
 		if errors.Is(err, ErrNotFound) {
 			writeError(w, http.StatusBadRequest, "scenario not found")
 			return
@@ -188,6 +189,7 @@ func handleAdminUpdateGame() http.HandlerFunc {
 			writeError(w, http.StatusInternalServerError, "internal error")
 			return
 		}
+		_ = scenario // validate scenario exists
 
 		game, err := store.UpdateGame(r.Context(), gameID, req)
 		if errors.Is(err, ErrNotFound) {
@@ -198,7 +200,6 @@ func handleAdminUpdateGame() http.HandlerFunc {
 			writeError(w, http.StatusInternalServerError, "internal error")
 			return
 		}
-		game.ScenarioName = scenarioName
 
 		teams, err := store.ListTeams(r.Context(), gameID)
 		if err != nil {

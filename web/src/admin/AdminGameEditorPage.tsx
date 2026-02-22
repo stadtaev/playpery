@@ -27,7 +27,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
 
   useEffect(() => {
     const loads: Promise<void>[] = [
-      listScenarios(client).then((s) => {
+      listScenarios().then((s) => {
         setScenarios(s)
         if (!id && s.length > 0) setScenarioId(s[0].id)
       }),

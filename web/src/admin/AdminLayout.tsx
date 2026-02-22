@@ -42,11 +42,11 @@ export function AdminLayout({ client, children }: { client?: string; children: R
               CityQuiz Admin
             </a>
           </h1>
+          <a href="/admin/scenarios" onClick={(e) => { e.preventDefault(); navigate('/admin/scenarios') }}>Scenarios</a>
           {client && (
             <>
               <span style={{ color: 'var(--pico-muted-color)' }}>/</span>
               <strong>{client}</strong>
-              <a href={`/admin/clients/${client}/scenarios`} onClick={(e) => { e.preventDefault(); navigate(`/admin/clients/${client}/scenarios`) }}>Scenarios</a>
               <a href={`/admin/clients/${client}/games`} onClick={(e) => { e.preventDefault(); navigate(`/admin/clients/${client}/games`) }}>Games</a>
             </>
           )}

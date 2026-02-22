@@ -71,11 +71,9 @@ func (req *AdminScenarioRequest) validate() string {
 	return ""
 }
 
-func handleAdminListScenarios() http.HandlerFunc {
+func handleAdminListScenarios(admin AdminAuth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		store := clientStore(r)
-
-		scenarios, err := store.ListScenarios(r.Context())
+		scenarios, err := admin.ListScenarios(r.Context())
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "internal error")
 			return
@@ -88,10 +86,8 @@ func handleAdminListScenarios() http.HandlerFunc {
 	}
 }
 
-func handleAdminCreateScenario() http.HandlerFunc {
+func handleAdminCreateScenario(admin AdminAuth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		store := clientStore(r)
-
 		var req AdminScenarioRequest
 		if err := readJSON(r, &req); err != nil {
 			writeError(w, http.StatusBadRequest, "invalid request body")
@@ -102,7 +98,7 @@ func handleAdminCreateScenario() http.HandlerFunc {
 			return
 		}
 
-		scenario, err := store.CreateScenario(r.Context(), req)
+		scenario, err := admin.CreateScenario(r.Context(), req)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "internal error")
 			return
@@ -112,12 +108,11 @@ func handleAdminCreateScenario() http.HandlerFunc {
 	}
 }
 
-func handleAdminGetScenario() http.HandlerFunc {
+func handleAdminGetScenario(admin AdminAuth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		store := clientStore(r)
 		id := chi.URLParam(r, "id")
 
-		scenario, err := store.GetScenario(r.Context(), id)
+		scenario, err := admin.GetScenario(r.Context(), id)
 		if errors.Is(err, ErrNotFound) {
 			writeError(w, http.StatusNotFound, "scenario not found")
 			return
@@ -131,9 +126,8 @@ func handleAdminGetScenario() http.HandlerFunc {
 	}
 }
 
-func handleAdminUpdateScenario() http.HandlerFunc {
+func handleAdminUpdateScenario(admin AdminAuth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		store := clientStore(r)
 		id := chi.URLParam(r, "id")
 
 		var req AdminScenarioRequest
@@ -146,7 +140,7 @@ func handleAdminUpdateScenario() http.HandlerFunc {
 			return
 		}
 
-		scenario, err := store.UpdateScenario(r.Context(), id, req)
+		scenario, err := admin.UpdateScenario(r.Context(), id, req)
 		if errors.Is(err, ErrNotFound) {
 			writeError(w, http.StatusNotFound, "scenario not found")
 			return
@@ -160,12 +154,11 @@ func handleAdminUpdateScenario() http.HandlerFunc {
 	}
 }
 
-func handleAdminDeleteScenario() http.HandlerFunc {
+func handleAdminDeleteScenario(admin AdminAuth, clients *Registry) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		store := clientStore(r)
 		id := chi.URLParam(r, "id")
 
-		hasGames, err := store.ScenarioHasGames(r.Context(), id)
+		hasGames, err := admin.ScenarioHasGames(r.Context(), id, clients)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "internal error")
 			return
@@ -175,7 +168,7 @@ func handleAdminDeleteScenario() http.HandlerFunc {
 			return
 		}
 
-		if err := store.DeleteScenario(r.Context(), id); err != nil {
+		if err := admin.DeleteScenario(r.Context(), id); err != nil {
 			if errors.Is(err, ErrNotFound) {
 				writeError(w, http.StatusNotFound, "scenario not found")
 				return
