@@ -186,9 +186,16 @@ func (s *DocStore) allGames(ctx context.Context) ([]gameDoc, error) {
 }
 
 // getGame is a convenience wrapper that returns the gameDoc by ID.
+// Backfills defaults for documents created before new fields existed.
 func (s *DocStore) getGame(ctx context.Context, id string) (gameDoc, error) {
 	var g gameDoc
 	err := s.get(ctx, "games", id, &g)
+	if err == nil && !g.TimerEnabled && g.TimerMinutes > 0 {
+		g.TimerEnabled = true
+		if g.StageTimerMinutes == 0 {
+			g.StageTimerMinutes = 10
+		}
+	}
 	return g, err
 }
 

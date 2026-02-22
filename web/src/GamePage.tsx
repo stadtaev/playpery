@@ -67,22 +67,24 @@ export function GamePage() {
   useGameEvents(client, fetchState)
 
   // Compute timer deadlines.
-  const gameDeadline = state?.game.timerEnabled && state.game.startedAt && state.game.status === 'active'
+  const timerActive = state?.game.timerEnabled && state.game.status === 'active'
+
+  const gameDeadline = timerActive && state.game.startedAt
     ? new Date(state.game.startedAt).getTime() + state.game.timerMinutes * 60000
     : null
 
   const stageDeadline = (() => {
-    if (!state?.game.timerEnabled || state.game.status !== 'active' || !state.currentStage) return null
+    if (!timerActive || !state.currentStage || !state.game.stageTimerMinutes) return null
     const { completedStages } = state
-    // Stage starts when previous stage was completed, or when the game started for stage 1.
+    // Stage started when previous stage was completed, or when the game started for stage 1.
+    let stageStart: string | null = null
     if (completedStages.length > 0) {
-      const lastCompleted = completedStages[completedStages.length - 1]
-      return new Date(lastCompleted.answeredAt).getTime() + state.game.stageTimerMinutes * 60000
+      stageStart = completedStages[completedStages.length - 1].answeredAt
+    } else {
+      stageStart = state.game.startedAt
     }
-    if (state.game.startedAt) {
-      return new Date(state.game.startedAt).getTime() + state.game.stageTimerMinutes * 60000
-    }
-    return null
+    if (!stageStart) return null
+    return new Date(stageStart).getTime() + state.game.stageTimerMinutes * 60000
   })()
 
   const gameRemaining = useCountdown(gameDeadline)
