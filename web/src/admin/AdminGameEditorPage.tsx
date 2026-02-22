@@ -171,17 +171,24 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
               <thead>
                 <tr>
                   <th>Name</th>
-                  <th>Join Token</th>
+                  <th>Join Link</th>
                   <th>Guide</th>
                   <th>Players</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody>
-                {teams.map((t) => (
+                {teams.map((t) => {
+                  const joinPath = `/join/${client}/${t.joinToken}`
+                  const joinUrl = `${window.location.origin}${joinPath}`
+                  return (
                   <tr key={t.id}>
                     <td>{t.name}</td>
-                    <td><code>{t.joinToken}</code></td>
+                    <td>
+                      <a href={joinPath} target="_blank" rel="noopener noreferrer" style={{ fontSize: 'small', wordBreak: 'break-all' }}>
+                        {joinUrl}
+                      </a>
+                    </td>
                     <td>{t.guideName || '-'}</td>
                     <td>{t.playerCount}</td>
                     <td style={{ whiteSpace: 'nowrap' }}>
@@ -203,7 +210,8 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
                       </button>
                     </td>
                   </tr>
-                ))}
+                  )
+                })}
               </tbody>
             </table>
           )}
