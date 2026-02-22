@@ -15,7 +15,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
   const [status, setStatus] = useState('draft')
   const [timerMinutes, setTimerMinutes] = useState(120)
   const [teams, setTeams] = useState<TeamItem[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(!!id)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -62,6 +62,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
         setTeams(updated.teams)
       } else {
         const created = await createGame(client, data)
+        setSaving(false)
         navigate(`/admin/clients/${client}/games/${created.id}/edit`)
         return
       }
@@ -123,7 +124,14 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
 
   return (
     <>
-      <h2>{id ? 'Edit Game' : 'New Game'}</h2>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: '1rem' }}>
+        <h2 style={{ margin: 0 }}>{id ? 'Edit Game' : 'New Game'}</h2>
+        {id && (
+          <button className="outline" style={{ width: 'auto', padding: '0.25rem 0.75rem', fontSize: 'small' }} onClick={() => navigate(`/admin/clients/${client}/games/${id}/status`)}>
+            View Status
+          </button>
+        )}
+      </div>
       {error && <p role="alert" style={{ color: 'var(--pico-color-red-500)' }}>{error}</p>}
       <form onSubmit={handleSubmit}>
         <label>

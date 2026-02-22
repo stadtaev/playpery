@@ -41,4 +41,5 @@ type Store interface {
 	DeleteTeam(ctx context.Context, gameID, teamID string) error
 	TeamHasPlayers(ctx context.Context, gameID, teamID string) (bool, error)
 	GameExists(ctx context.Context, gameID string) (bool, error)
+	GameStatus(ctx context.Context, gameID string) (AdminGameStatus, error)
 }

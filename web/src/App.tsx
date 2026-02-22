@@ -8,6 +8,7 @@ import { AdminScenariosPage } from './admin/AdminScenariosPage'
 import { AdminScenarioEditorPage } from './admin/AdminScenarioEditorPage'
 import { AdminGamesPage } from './admin/AdminGamesPage'
 import { AdminGameEditorPage } from './admin/AdminGameEditorPage'
+import { AdminGameStatusPage } from './admin/AdminGameStatusPage'
 
 type Route =
   | { page: 'join'; client: string; token: string }
@@ -21,6 +22,7 @@ type Route =
   | { page: 'admin-games'; client: string }
   | { page: 'admin-game-new'; client: string }
   | { page: 'admin-game-edit'; client: string; id: string }
+  | { page: 'admin-game-status'; client: string; id: string }
 
 function getRoute(): Route {
   const path = window.location.pathname
@@ -51,6 +53,9 @@ function getRoute(): Route {
 
   const gameNewMatch = path.match(/^\/admin\/clients\/([^/]+)\/games\/new$/)
   if (gameNewMatch) return { page: 'admin-game-new', client: gameNewMatch[1] }
+
+  const gameStatusMatch = path.match(/^\/admin\/clients\/([^/]+)\/games\/(.+)\/status$/)
+  if (gameStatusMatch) return { page: 'admin-game-status', client: gameStatusMatch[1], id: gameStatusMatch[2] }
 
   const gameEditMatch = path.match(/^\/admin\/clients\/([^/]+)\/games\/(.+)\/edit$/)
   if (gameEditMatch) return { page: 'admin-game-edit', client: gameEditMatch[1], id: gameEditMatch[2] }
@@ -88,6 +93,8 @@ export default function App() {
       return <AdminLayout client={route.client}><AdminGamesPage client={route.client} /></AdminLayout>
     case 'admin-game-new':
       return <AdminLayout client={route.client}><AdminGameEditorPage client={route.client} /></AdminLayout>
+    case 'admin-game-status':
+      return <AdminLayout client={route.client}><AdminGameStatusPage client={route.client} id={route.id} /></AdminLayout>
     case 'admin-game-edit':
       return <AdminLayout client={route.client}><AdminGameEditorPage client={route.client} id={route.id} /></AdminLayout>
     default:

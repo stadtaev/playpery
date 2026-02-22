@@ -9,7 +9,7 @@ import (
 
 type Config struct {
 	HTTPAddr string     `env:"HTTP_ADDR" envDefault:":8080"`
-	DBPath   string     `env:"DB_PATH" envDefault:"local.db"`
+	DBPath   string     `env:"DB_PATH" envDefault:"db/local.db"`
 	LogLevel slog.Level `env:"LOG_LEVEL" envDefault:"INFO"`
 	SPADir   string     `env:"SPA_DIR" envDefault:"../web/dist"`
 }

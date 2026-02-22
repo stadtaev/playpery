@@ -1,4 +1,4 @@
-import type { AdminMe, ScenarioSummary, ScenarioDetail, ScenarioRequest, GameSummary, GameDetail, GameRequest, TeamItem, TeamRequest } from './adminTypes'
+import type { AdminMe, ScenarioSummary, ScenarioDetail, ScenarioRequest, GameSummary, GameDetail, GameRequest, GameStatus, TeamItem, TeamRequest } from './adminTypes'
 
 const BASE = '/api/admin'
 
@@ -105,6 +105,10 @@ export function updateGame(client: string, id: string, data: GameRequest): Promi
 
 export function deleteGame(client: string, id: string): Promise<void> {
   return request(`/clients/${client}/games/${id}`, { method: 'DELETE' })
+}
+
+export function getGameStatus(client: string, id: string): Promise<GameStatus> {
+  return request(`/clients/${client}/games/${id}/status`)
 }
 
 export function createTeam(client: string, gameId: string, data: TeamRequest): Promise<TeamItem> {

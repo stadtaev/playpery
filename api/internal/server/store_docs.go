@@ -695,6 +695,49 @@ func (s *DocStore) GameExists(ctx context.Context, gameID string) (bool, error) 
 	return err == nil, err
 }
 
+func (s *DocStore) GameStatus(ctx context.Context, gameID string) (AdminGameStatus, error) {
+	g, err := s.getGame(ctx, gameID)
+	if err != nil {
+		return AdminGameStatus{}, err
+	}
+
+	teams := make([]AdminTeamStatus, len(g.Teams))
+	for i, t := range g.Teams {
+		players := make([]AdminPlayerStatus, len(t.Players))
+		for j, p := range t.Players {
+			players[j] = AdminPlayerStatus{
+				Name:     p.Name,
+				JoinedAt: p.JoinedAt,
+			}
+		}
+
+		completed := 0
+		for _, r := range t.Results {
+			if r.IsCorrect {
+				completed++
+			}
+		}
+
+		teams[i] = AdminTeamStatus{
+			ID:              t.ID,
+			Name:            t.Name,
+			GuideName:       t.GuideName,
+			CompletedStages: completed,
+			Players:         players,
+		}
+	}
+
+	return AdminGameStatus{
+		ID:           g.ID,
+		ScenarioName: g.ScenarioName,
+		Status:       g.Status,
+		TimerMinutes: g.TimerMinutes,
+		StartedAt:    g.StartedAt,
+		TotalStages:  len(g.Stages),
+		Teams:        teams,
+	}, nil
+}
+
 // SeedDemoGame creates the demo game if no games exist, snapshotting the given scenario stages.
 func (s *DocStore) SeedDemoGame(ctx context.Context, sc *scenarioDoc) error {
 	var count int

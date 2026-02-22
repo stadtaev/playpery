@@ -78,3 +78,26 @@ export interface TeamRequest {
   joinToken: string
   guideName: string
 }
+
+export interface GameStatus {
+  id: string
+  scenarioName: string
+  status: string
+  timerMinutes: number
+  startedAt: string | null
+  totalStages: number
+  teams: TeamStatus[]
+}
+
+export interface TeamStatus {
+  id: string
+  name: string
+  guideName: string
+  completedStages: number
+  players: PlayerStatus[]
+}
+
+export interface PlayerStatus {
+  name: string
+  joinedAt: string
+}

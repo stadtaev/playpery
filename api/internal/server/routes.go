@@ -54,6 +54,7 @@ func addRoutes(r chi.Router, logger *slog.Logger, admin AdminAuth, clients *Regi
 		r.Get("/games/{gameID}", handleAdminGetGame())
 		r.Put("/games/{gameID}", handleAdminUpdateGame(admin))
 		r.Delete("/games/{gameID}", handleAdminDeleteGame())
+		r.Get("/games/{gameID}/status", handleAdminGameStatus())
 		r.Get("/games/{gameID}/teams", handleAdminListTeams())
 		r.Post("/games/{gameID}/teams", handleAdminCreateTeam())
 		r.Put("/games/{gameID}/teams/{teamID}", handleAdminUpdateTeam())

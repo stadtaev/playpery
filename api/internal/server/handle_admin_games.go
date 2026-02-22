@@ -53,6 +53,29 @@ type AdminTeamRequest struct {
 	GuideName string `json:"guideName"`
 }
 
+type AdminGameStatus struct {
+	ID           string            `json:"id"`
+	ScenarioName string            `json:"scenarioName"`
+	Status       string            `json:"status"`
+	TimerMinutes int               `json:"timerMinutes"`
+	StartedAt    *string           `json:"startedAt"`
+	TotalStages  int               `json:"totalStages"`
+	Teams        []AdminTeamStatus `json:"teams"`
+}
+
+type AdminTeamStatus struct {
+	ID              string              `json:"id"`
+	Name            string              `json:"name"`
+	GuideName       string              `json:"guideName"`
+	CompletedStages int                 `json:"completedStages"`
+	Players         []AdminPlayerStatus `json:"players"`
+}
+
+type AdminPlayerStatus struct {
+	Name     string `json:"name"`
+	JoinedAt string `json:"joinedAt"`
+}
+
 var validGameStatuses = map[string]bool{
 	"draft":  true,
 	"active": true,
@@ -370,5 +393,24 @@ func handleAdminDeleteTeam() http.HandlerFunc {
 		}
 
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+	}
+}
+
+func handleAdminGameStatus() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		store := clientStore(r)
+		gameID := chi.URLParam(r, "gameID")
+
+		status, err := store.GameStatus(r.Context(), gameID)
+		if errors.Is(err, ErrNotFound) {
+			writeError(w, http.StatusNotFound, "game not found")
+			return
+		}
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "internal error")
+			return
+		}
+
+		writeJSON(w, http.StatusOK, status)
 	}
 }

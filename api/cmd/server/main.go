@@ -42,6 +42,9 @@ func run(ctx context.Context, stdout io.Writer) error {
 	if dbDir == "." {
 		dbDir = "."
 	}
+	if err := os.MkdirAll(dbDir, 0o755); err != nil {
+		return fmt.Errorf("creating db directory: %w", err)
+	}
 
 	// Open admin DB (sits alongside the client DBs).
 	adminDBPath := filepath.Join(dbDir, "_admin.db")
