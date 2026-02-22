@@ -21,7 +21,7 @@ type AdminMeResponse struct {
 	Email string `json:"email"`
 }
 
-func handleAdminLogin(store Store) http.HandlerFunc {
+func handleAdminLogin(admin AdminAuth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req AdminLoginRequest
 		if err := readJSON(r, &req); err != nil {
@@ -35,7 +35,7 @@ func handleAdminLogin(store Store) http.HandlerFunc {
 			return
 		}
 
-		adminID, passwordHash, err := store.AdminByEmail(r.Context(), req.Email)
+		adminID, passwordHash, err := admin.AdminByEmail(r.Context(), req.Email)
 		if errors.Is(err, ErrNotFound) {
 			writeError(w, http.StatusUnauthorized, "invalid credentials")
 			return
@@ -50,8 +50,7 @@ func handleAdminLogin(store Store) http.HandlerFunc {
 			return
 		}
 
-		// Create session.
-		sessionID, err := store.CreateAdminSession(r.Context(), adminID)
+		sessionID, err := admin.CreateAdminSession(r.Context(), adminID)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "internal error")
 			return
@@ -73,16 +72,98 @@ func handleAdminLogin(store Store) http.HandlerFunc {
 	}
 }
 
-func handleAdminMe(store Store) http.HandlerFunc {
+func handleAdminMe(admin AdminAuth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		sess, err := adminFromRequest(r, store)
+		cookie, err := r.Cookie(adminCookieName)
+		if err != nil || cookie.Value == "" {
+			writeError(w, http.StatusUnauthorized, "not authenticated")
+			return
+		}
+
+		sess, err := admin.AdminFromSession(r.Context(), cookie.Value)
 		if err != nil {
 			writeError(w, http.StatusUnauthorized, "not authenticated")
 			return
 		}
+
 		writeJSON(w, http.StatusOK, AdminMeResponse{
 			ID:    sess.AdminID,
 			Email: sess.Email,
 		})
+	}
+}
+
+func handleAdminListClients(admin AdminAuth) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie(adminCookieName)
+		if err != nil || cookie.Value == "" {
+			writeError(w, http.StatusUnauthorized, "not authenticated")
+			return
+		}
+
+		if _, err := admin.AdminFromSession(r.Context(), cookie.Value); err != nil {
+			writeError(w, http.StatusUnauthorized, "not authenticated")
+			return
+		}
+
+		clients, err := admin.ListClients(r.Context())
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "internal error")
+			return
+		}
+		if clients == nil {
+			clients = []ClientInfo{}
+		}
+
+		writeJSON(w, http.StatusOK, clients)
+	}
+}
+
+type CreateClientRequest struct {
+	Slug string `json:"slug"`
+	Name string `json:"name"`
+}
+
+func handleAdminCreateClient(admin AdminAuth, clients *Registry) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie(adminCookieName)
+		if err != nil || cookie.Value == "" {
+			writeError(w, http.StatusUnauthorized, "not authenticated")
+			return
+		}
+
+		if _, err := admin.AdminFromSession(r.Context(), cookie.Value); err != nil {
+			writeError(w, http.StatusUnauthorized, "not authenticated")
+			return
+		}
+
+		var req CreateClientRequest
+		if err := readJSON(r, &req); err != nil {
+			writeError(w, http.StatusBadRequest, "invalid request body")
+			return
+		}
+
+		req.Slug = strings.TrimSpace(req.Slug)
+		req.Name = strings.TrimSpace(req.Name)
+		if req.Slug == "" || req.Name == "" {
+			writeError(w, http.StatusBadRequest, "slug and name are required")
+			return
+		}
+
+		if err := admin.CreateClient(r.Context(), req.Slug, req.Name); err != nil {
+			if strings.Contains(err.Error(), "UNIQUE") {
+				writeError(w, http.StatusConflict, "client slug already exists")
+				return
+			}
+			writeError(w, http.StatusInternalServerError, "internal error")
+			return
+		}
+
+		if _, err := clients.Create(r.Context(), req.Slug); err != nil {
+			writeError(w, http.StatusInternalServerError, "internal error")
+			return
+		}
+
+		writeJSON(w, http.StatusCreated, ClientInfo{Slug: req.Slug, Name: req.Name})
 	}
 }

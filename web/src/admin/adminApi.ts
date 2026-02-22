@@ -30,78 +30,95 @@ export function getMe(): Promise<AdminMe> {
   return request('/me')
 }
 
-export function listScenarios(): Promise<ScenarioSummary[]> {
-  return request('/scenarios')
+export interface ClientInfo {
+  slug: string
+  name: string
 }
 
-export function getScenario(id: string): Promise<ScenarioDetail> {
-  return request(`/scenarios/${id}`)
+export function listClients(): Promise<ClientInfo[]> {
+  return request('/clients')
 }
 
-export function createScenario(data: ScenarioRequest): Promise<ScenarioDetail> {
-  return request('/scenarios', {
+export function createClient(slug: string, name: string): Promise<ClientInfo> {
+  return request('/clients', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ slug, name }),
+  })
+}
+
+export function listScenarios(client: string): Promise<ScenarioSummary[]> {
+  return request(`/clients/${client}/scenarios`)
+}
+
+export function getScenario(client: string, id: string): Promise<ScenarioDetail> {
+  return request(`/clients/${client}/scenarios/${id}`)
+}
+
+export function createScenario(client: string, data: ScenarioRequest): Promise<ScenarioDetail> {
+  return request(`/clients/${client}/scenarios`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   })
 }
 
-export function updateScenario(id: string, data: ScenarioRequest): Promise<ScenarioDetail> {
-  return request(`/scenarios/${id}`, {
+export function updateScenario(client: string, id: string, data: ScenarioRequest): Promise<ScenarioDetail> {
+  return request(`/clients/${client}/scenarios/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   })
 }
 
-export function deleteScenario(id: string): Promise<void> {
-  return request(`/scenarios/${id}`, { method: 'DELETE' })
+export function deleteScenario(client: string, id: string): Promise<void> {
+  return request(`/clients/${client}/scenarios/${id}`, { method: 'DELETE' })
 }
 
-export function listGames(): Promise<GameSummary[]> {
-  return request('/games')
+export function listGames(client: string): Promise<GameSummary[]> {
+  return request(`/clients/${client}/games`)
 }
 
-export function getGame(id: string): Promise<GameDetail> {
-  return request(`/games/${id}`)
+export function getGame(client: string, id: string): Promise<GameDetail> {
+  return request(`/clients/${client}/games/${id}`)
 }
 
-export function createGame(data: GameRequest): Promise<GameDetail> {
-  return request('/games', {
+export function createGame(client: string, data: GameRequest): Promise<GameDetail> {
+  return request(`/clients/${client}/games`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   })
 }
 
-export function updateGame(id: string, data: GameRequest): Promise<GameDetail> {
-  return request(`/games/${id}`, {
+export function updateGame(client: string, id: string, data: GameRequest): Promise<GameDetail> {
+  return request(`/clients/${client}/games/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   })
 }
 
-export function deleteGame(id: string): Promise<void> {
-  return request(`/games/${id}`, { method: 'DELETE' })
+export function deleteGame(client: string, id: string): Promise<void> {
+  return request(`/clients/${client}/games/${id}`, { method: 'DELETE' })
 }
 
-export function createTeam(gameId: string, data: TeamRequest): Promise<TeamItem> {
-  return request(`/games/${gameId}/teams`, {
+export function createTeam(client: string, gameId: string, data: TeamRequest): Promise<TeamItem> {
+  return request(`/clients/${client}/games/${gameId}/teams`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   })
 }
 
-export function updateTeam(gameId: string, teamId: string, data: TeamRequest): Promise<TeamItem> {
-  return request(`/games/${gameId}/teams/${teamId}`, {
+export function updateTeam(client: string, gameId: string, teamId: string, data: TeamRequest): Promise<TeamItem> {
+  return request(`/clients/${client}/games/${gameId}/teams/${teamId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   })
 }
 
-export function deleteTeam(gameId: string, teamId: string): Promise<void> {
-  return request(`/games/${gameId}/teams/${teamId}`, { method: 'DELETE' })
+export function deleteTeam(client: string, gameId: string, teamId: string): Promise<void> {
+  return request(`/clients/${client}/games/${gameId}/teams/${teamId}`, { method: 'DELETE' })
 }

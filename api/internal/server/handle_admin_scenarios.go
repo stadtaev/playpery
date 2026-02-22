@@ -71,12 +71,9 @@ func (req *AdminScenarioRequest) validate() string {
 	return ""
 }
 
-func handleAdminListScenarios(store Store) http.HandlerFunc {
+func handleAdminListScenarios() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if _, err := adminFromRequest(r, store); err != nil {
-			writeError(w, http.StatusUnauthorized, "not authenticated")
-			return
-		}
+		store := clientStore(r)
 
 		scenarios, err := store.ListScenarios(r.Context())
 		if err != nil {
@@ -91,12 +88,9 @@ func handleAdminListScenarios(store Store) http.HandlerFunc {
 	}
 }
 
-func handleAdminCreateScenario(store Store) http.HandlerFunc {
+func handleAdminCreateScenario() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if _, err := adminFromRequest(r, store); err != nil {
-			writeError(w, http.StatusUnauthorized, "not authenticated")
-			return
-		}
+		store := clientStore(r)
 
 		var req AdminScenarioRequest
 		if err := readJSON(r, &req); err != nil {
@@ -118,13 +112,9 @@ func handleAdminCreateScenario(store Store) http.HandlerFunc {
 	}
 }
 
-func handleAdminGetScenario(store Store) http.HandlerFunc {
+func handleAdminGetScenario() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if _, err := adminFromRequest(r, store); err != nil {
-			writeError(w, http.StatusUnauthorized, "not authenticated")
-			return
-		}
-
+		store := clientStore(r)
 		id := chi.URLParam(r, "id")
 
 		scenario, err := store.GetScenario(r.Context(), id)
@@ -141,13 +131,9 @@ func handleAdminGetScenario(store Store) http.HandlerFunc {
 	}
 }
 
-func handleAdminUpdateScenario(store Store) http.HandlerFunc {
+func handleAdminUpdateScenario() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if _, err := adminFromRequest(r, store); err != nil {
-			writeError(w, http.StatusUnauthorized, "not authenticated")
-			return
-		}
-
+		store := clientStore(r)
 		id := chi.URLParam(r, "id")
 
 		var req AdminScenarioRequest
@@ -174,13 +160,9 @@ func handleAdminUpdateScenario(store Store) http.HandlerFunc {
 	}
 }
 
-func handleAdminDeleteScenario(store Store) http.HandlerFunc {
+func handleAdminDeleteScenario() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if _, err := adminFromRequest(r, store); err != nil {
-			writeError(w, http.StatusUnauthorized, "not authenticated")
-			return
-		}
-
+		store := clientStore(r)
 		id := chi.URLParam(r, "id")
 
 		hasGames, err := store.ScenarioHasGames(r.Context(), id)

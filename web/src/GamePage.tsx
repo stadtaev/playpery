@@ -24,6 +24,7 @@ function TimeRemaining({ startedAt, timerMinutes }: { startedAt: string; timerMi
 }
 
 export function GamePage() {
+  const client = localStorage.getItem('client') || 'demo'
   const [state, setState] = useState<GameState | null>(null)
   const [answer, setAnswer] = useState('')
   const [feedback, setFeedback] = useState<{ correct: boolean; message: string } | null>(null)
@@ -31,19 +32,19 @@ export function GamePage() {
   const [error, setError] = useState('')
 
   const fetchState = useCallback(() => {
-    getGameState()
+    getGameState(client)
       .then((s) => {
         setState(s)
         setError('')
       })
       .catch((e) => setError(e.message))
-  }, [])
+  }, [client])
 
   useEffect(() => {
     fetchState()
   }, [fetchState])
 
-  useGameEvents(fetchState)
+  useGameEvents(client, fetchState)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -51,7 +52,7 @@ export function GamePage() {
     setSubmitting(true)
     setFeedback(null)
     try {
-      const resp = await submitAnswer(answer.trim())
+      const resp = await submitAnswer(client, answer.trim())
       if (resp.isCorrect) {
         setFeedback({ correct: true, message: `Stage ${resp.stageNumber} complete!` })
         setAnswer('')
@@ -70,6 +71,7 @@ export function GamePage() {
   function handleLogout() {
     localStorage.removeItem('session_token')
     localStorage.removeItem('team_name')
+    localStorage.removeItem('client')
     window.history.replaceState(null, '', '/')
     window.dispatchEvent(new PopStateEvent('popstate'))
   }

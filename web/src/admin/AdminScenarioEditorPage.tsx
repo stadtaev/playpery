@@ -11,7 +11,7 @@ function emptyStage(): Stage {
   return { stageNumber: 0, location: '', clue: '', question: '', correctAnswer: '', lat: 0, lng: 0 }
 }
 
-export function AdminScenarioEditorPage({ id }: { id?: string }) {
+export function AdminScenarioEditorPage({ client, id }: { client: string; id?: string }) {
   const [name, setName] = useState('')
   const [city, setCity] = useState('')
   const [description, setDescription] = useState('')
@@ -22,7 +22,7 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
 
   useEffect(() => {
     if (!id) return
-    getScenario(id)
+    getScenario(client, id)
       .then((s) => {
         setName(s.name)
         setCity(s.city)
@@ -31,7 +31,7 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
-  }, [id])
+  }, [client, id])
 
   function updateStage(index: number, field: keyof Stage, value: string | number) {
     setStages((prev) => prev.map((s, i) => (i === index ? { ...s, [field]: value } : s)))
@@ -69,11 +69,11 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
 
     try {
       if (id) {
-        await updateScenario(id, data)
+        await updateScenario(client, id, data)
       } else {
-        await createScenario(data)
+        await createScenario(client, data)
       }
-      navigate('/admin/scenarios')
+      navigate(`/admin/clients/${client}/scenarios`)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Save failed')
       setSaving(false)
@@ -158,7 +158,7 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
           <button type="submit" disabled={saving} aria-busy={saving}>
             {saving ? 'Saving...' : id ? 'Update Scenario' : 'Create Scenario'}
           </button>
-          <button type="button" className="secondary" onClick={() => navigate('/admin/scenarios')}>
+          <button type="button" className="secondary" onClick={() => navigate(`/admin/clients/${client}/scenarios`)}>
             Cancel
           </button>
         </div>

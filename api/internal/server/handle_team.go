@@ -11,11 +11,13 @@ type TeamLookupResponse struct {
 	ID       string `json:"id"`
 	Name     string `json:"name"`
 	GameName string `json:"gameName"`
+	GameID   string `json:"-"`
 }
 
-func handleTeamLookup(store Store) http.HandlerFunc {
+func handleTeamLookup() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		token := chi.URLParam(r, "joinToken")
+		store := clientStore(r)
 
 		resp, err := store.TeamLookup(r.Context(), token)
 		if errors.Is(err, ErrNotFound) {

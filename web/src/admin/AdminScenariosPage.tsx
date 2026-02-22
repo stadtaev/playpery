@@ -7,22 +7,22 @@ function navigate(path: string) {
   window.dispatchEvent(new PopStateEvent('popstate'))
 }
 
-export function AdminScenariosPage() {
+export function AdminScenariosPage({ client }: { client: string }) {
   const [scenarios, setScenarios] = useState<ScenarioSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    listScenarios()
+    listScenarios(client)
       .then(setScenarios)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
-  }, [])
+  }, [client])
 
   async function handleDelete(id: string, name: string) {
     if (!confirm(`Delete scenario "${name}"?`)) return
     try {
-      await deleteScenario(id)
+      await deleteScenario(client, id)
       setScenarios((prev) => prev.filter((s) => s.id !== id))
     } catch (e) {
       alert(e instanceof Error ? e.message : 'Delete failed')
@@ -41,7 +41,7 @@ export function AdminScenariosPage() {
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
         <h2 style={{ margin: 0 }}>Scenarios</h2>
-        <button onClick={() => navigate('/admin/scenarios/new')} style={{ width: 'auto' }}>
+        <button onClick={() => navigate(`/admin/clients/${client}/scenarios/new`)} style={{ width: 'auto' }}>
           New Scenario
         </button>
       </div>
@@ -64,8 +64,8 @@ export function AdminScenariosPage() {
               <tr key={s.id}>
                 <td>
                   <a
-                    href={`/admin/scenarios/${s.id}/edit`}
-                    onClick={(e) => { e.preventDefault(); navigate(`/admin/scenarios/${s.id}/edit`) }}
+                    href={`/admin/clients/${client}/scenarios/${s.id}/edit`}
+                    onClick={(e) => { e.preventDefault(); navigate(`/admin/clients/${client}/scenarios/${s.id}/edit`) }}
                   >
                     {s.name}
                   </a>

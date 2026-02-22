@@ -14,22 +14,22 @@ const statusLabels: Record<string, string> = {
   ended: 'Ended',
 }
 
-export function AdminGamesPage() {
+export function AdminGamesPage({ client }: { client: string }) {
   const [games, setGames] = useState<GameSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    listGames()
+    listGames(client)
       .then(setGames)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
-  }, [])
+  }, [client])
 
   async function handleDelete(id: string, scenarioName: string) {
     if (!confirm(`Delete game "${scenarioName}"?`)) return
     try {
-      await deleteGame(id)
+      await deleteGame(client, id)
       setGames((prev) => prev.filter((g) => g.id !== id))
     } catch (e) {
       alert(e instanceof Error ? e.message : 'Delete failed')
@@ -48,7 +48,7 @@ export function AdminGamesPage() {
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
         <h2 style={{ margin: 0 }}>Games</h2>
-        <button onClick={() => navigate('/admin/games/new')} style={{ width: 'auto' }}>
+        <button onClick={() => navigate(`/admin/clients/${client}/games/new`)} style={{ width: 'auto' }}>
           New Game
         </button>
       </div>
@@ -72,8 +72,8 @@ export function AdminGamesPage() {
               <tr key={g.id}>
                 <td>
                   <a
-                    href={`/admin/games/${g.id}/edit`}
-                    onClick={(e) => { e.preventDefault(); navigate(`/admin/games/${g.id}/edit`) }}
+                    href={`/admin/clients/${client}/games/${g.id}/edit`}
+                    onClick={(e) => { e.preventDefault(); navigate(`/admin/clients/${client}/games/${g.id}/edit`) }}
                   >
                     {g.scenarioName}
                   </a>

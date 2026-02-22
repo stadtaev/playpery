@@ -2,17 +2,17 @@ import { useState, useEffect } from 'react'
 import { lookupTeam, joinTeam } from './api'
 import type { TeamLookup } from './types'
 
-export function JoinPage({ joinToken }: { joinToken: string }) {
+export function JoinPage({ client, joinToken }: { client: string; joinToken: string }) {
   const [team, setTeam] = useState<TeamLookup | null>(null)
   const [error, setError] = useState('')
   const [name, setName] = useState('')
   const [joining, setJoining] = useState(false)
 
   useEffect(() => {
-    lookupTeam(joinToken)
+    lookupTeam(client, joinToken)
       .then(setTeam)
       .catch((e) => setError(e.message))
-  }, [joinToken])
+  }, [client, joinToken])
 
   async function handleJoin(e: React.FormEvent) {
     e.preventDefault()
@@ -20,9 +20,10 @@ export function JoinPage({ joinToken }: { joinToken: string }) {
     setJoining(true)
     setError('')
     try {
-      const resp = await joinTeam(joinToken, name.trim())
+      const resp = await joinTeam(client, joinToken, name.trim())
       localStorage.setItem('session_token', resp.token)
       localStorage.setItem('team_name', resp.teamName)
+      localStorage.setItem('client', client)
       window.history.replaceState(null, '', '/game')
       window.dispatchEvent(new PopStateEvent('popstate'))
     } catch (e) {

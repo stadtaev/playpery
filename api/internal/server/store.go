@@ -17,20 +17,15 @@ type gameStateData struct {
 
 type Store interface {
 	PlayerFromToken(ctx context.Context, token string) (playerSession, error)
-	AdminFromSession(ctx context.Context, sessionID string) (adminSession, error)
 
 	TeamLookup(ctx context.Context, joinToken string) (TeamLookupResponse, error)
-	JoinTeam(ctx context.Context, teamID, playerName string) (playerID, sessionID string, err error)
+	JoinTeam(ctx context.Context, gameID, teamID, playerName string) (playerID, sessionID string, err error)
 	GameState(ctx context.Context, gameID, teamID string) (gameStateData, error)
 	ExpireGame(ctx context.Context, gameID string) error
 	CountCorrectAnswers(ctx context.Context, gameID, teamID string) (int, error)
 	RecordAnswer(ctx context.Context, gameID, teamID string, stageNumber int, answer string, isCorrect bool) error
-	ListPlayers(ctx context.Context, teamID string) ([]PlayerInfo, error)
+	ListPlayers(ctx context.Context, gameID, teamID string) ([]PlayerInfo, error)
 	ListCompletedStages(ctx context.Context, gameID, teamID string) ([]CompletedStage, error)
-
-	AdminByEmail(ctx context.Context, email string) (adminID, passwordHash string, err error)
-	CreateAdminSession(ctx context.Context, adminID string) (sessionID string, err error)
-	DeleteAdminSession(ctx context.Context, sessionID string) error
 
 	ListScenarios(ctx context.Context) ([]AdminScenarioSummary, error)
 	CreateScenario(ctx context.Context, req AdminScenarioRequest) (AdminScenarioDetail, error)

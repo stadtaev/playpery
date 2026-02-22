@@ -6,13 +6,15 @@ import (
 	"time"
 )
 
-func handleEvents(store Store, broker *Broker) http.HandlerFunc {
+func handleEvents(broker *Broker) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		token := r.URL.Query().Get("token")
 		if token == "" {
 			writeError(w, http.StatusUnauthorized, "token query parameter required")
 			return
 		}
+
+		store := clientStore(r)
 
 		sess, err := store.PlayerFromToken(r.Context(), token)
 		if err != nil {

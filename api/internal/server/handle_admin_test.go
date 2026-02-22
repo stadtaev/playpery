@@ -2,6 +2,7 @@ package server
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -12,30 +13,51 @@ import (
 
 func adminRouter(t *testing.T) (*chi.Mux, func() []*http.Cookie) {
 	t.Helper()
-	store := setupStore(t)
+	admin, store := setupStores(t)
 
 	r := chi.NewRouter()
-	r.Post("/api/admin/login", handleAdminLogin(store))
-	r.Post("/api/admin/logout", handleAdminLogout(store))
-	r.Get("/api/admin/me", handleAdminMe(store))
-	r.Get("/api/admin/scenarios", handleAdminListScenarios(store))
-	r.Post("/api/admin/scenarios", handleAdminCreateScenario(store))
-	r.Get("/api/admin/scenarios/{id}", handleAdminGetScenario(store))
-	r.Put("/api/admin/scenarios/{id}", handleAdminUpdateScenario(store))
-	r.Delete("/api/admin/scenarios/{id}", handleAdminDeleteScenario(store))
-	r.Get("/api/admin/games", handleAdminListGames(store))
-	r.Post("/api/admin/games", handleAdminCreateGame(store))
-	r.Get("/api/admin/games/{gameID}", handleAdminGetGame(store))
-	r.Put("/api/admin/games/{gameID}", handleAdminUpdateGame(store))
-	r.Delete("/api/admin/games/{gameID}", handleAdminDeleteGame(store))
-	r.Get("/api/admin/games/{gameID}/teams", handleAdminListTeams(store))
-	r.Post("/api/admin/games/{gameID}/teams", handleAdminCreateTeam(store))
-	r.Put("/api/admin/games/{gameID}/teams/{teamID}", handleAdminUpdateTeam(store))
-	r.Delete("/api/admin/games/{gameID}/teams/{teamID}", handleAdminDeleteTeam(store))
 
-	// Also register the join endpoint for player tests.
+	// Inject store into context for client-scoped routes.
+	injectStore := func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := context.WithValue(r.Context(), ctxKeyStore, Store(store))
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+
+	// Admin auth routes (shared DB).
+	r.Post("/api/admin/login", handleAdminLogin(admin))
+	r.Post("/api/admin/logout", handleAdminLogout(admin))
+	r.Get("/api/admin/me", handleAdminMe(admin))
+
+	// Admin CRUD — per-client (inject store + admin middleware).
+	r.Route("/api/admin/clients/{client}", func(r chi.Router) {
+		r.Use(adminAuthMiddleware(admin))
+		r.Use(injectStore)
+
+		r.Get("/scenarios", handleAdminListScenarios())
+		r.Post("/scenarios", handleAdminCreateScenario())
+		r.Get("/scenarios/{id}", handleAdminGetScenario())
+		r.Put("/scenarios/{id}", handleAdminUpdateScenario())
+		r.Delete("/scenarios/{id}", handleAdminDeleteScenario())
+
+		r.Get("/games", handleAdminListGames())
+		r.Post("/games", handleAdminCreateGame())
+		r.Get("/games/{gameID}", handleAdminGetGame())
+		r.Put("/games/{gameID}", handleAdminUpdateGame())
+		r.Delete("/games/{gameID}", handleAdminDeleteGame())
+		r.Get("/games/{gameID}/teams", handleAdminListTeams())
+		r.Post("/games/{gameID}/teams", handleAdminCreateTeam())
+		r.Put("/games/{gameID}/teams/{teamID}", handleAdminUpdateTeam())
+		r.Delete("/games/{gameID}/teams/{teamID}", handleAdminDeleteTeam())
+	})
+
+	// Player join (for tests that need to add players).
 	broker := NewBroker()
-	r.Post("/api/join", handleJoin(store, broker))
+	r.Route("/api/{client}", func(r chi.Router) {
+		r.Use(injectStore)
+		r.Post("/join", handleJoin(broker))
+	})
 
 	// Login helper that returns cookies.
 	login := func() []*http.Cookie {
@@ -183,7 +205,7 @@ func TestAdminScenarioCRUD(t *testing.T) {
 	}
 
 	// List scenarios — should have the seeded one.
-	req := httptest.NewRequest(http.MethodGet, "/api/admin/scenarios", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/admin/clients/demo/scenarios", nil)
 	addCookies(req)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
@@ -208,7 +230,7 @@ func TestAdminScenarioCRUD(t *testing.T) {
 		},
 	}
 	body, _ := json.Marshal(createReq)
-	req = httptest.NewRequest(http.MethodPost, "/api/admin/scenarios", bytes.NewReader(body))
+	req = httptest.NewRequest(http.MethodPost, "/api/admin/clients/demo/scenarios", bytes.NewReader(body))
 	addCookies(req)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
@@ -233,7 +255,7 @@ func TestAdminScenarioCRUD(t *testing.T) {
 	}
 
 	// Get by ID.
-	req = httptest.NewRequest(http.MethodGet, "/api/admin/scenarios/"+created.ID, nil)
+	req = httptest.NewRequest(http.MethodGet, "/api/admin/clients/demo/scenarios/"+created.ID, nil)
 	addCookies(req)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
@@ -258,7 +280,7 @@ func TestAdminScenarioCRUD(t *testing.T) {
 		},
 	}
 	body, _ = json.Marshal(updateReq)
-	req = httptest.NewRequest(http.MethodPut, "/api/admin/scenarios/"+created.ID, bytes.NewReader(body))
+	req = httptest.NewRequest(http.MethodPut, "/api/admin/clients/demo/scenarios/"+created.ID, bytes.NewReader(body))
 	addCookies(req)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
@@ -277,7 +299,7 @@ func TestAdminScenarioCRUD(t *testing.T) {
 	}
 
 	// Delete — should succeed (no games reference it).
-	req = httptest.NewRequest(http.MethodDelete, "/api/admin/scenarios/"+created.ID, nil)
+	req = httptest.NewRequest(http.MethodDelete, "/api/admin/clients/demo/scenarios/"+created.ID, nil)
 	addCookies(req)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
@@ -287,7 +309,7 @@ func TestAdminScenarioCRUD(t *testing.T) {
 	}
 
 	// Verify it's gone.
-	req = httptest.NewRequest(http.MethodGet, "/api/admin/scenarios/"+created.ID, nil)
+	req = httptest.NewRequest(http.MethodGet, "/api/admin/clients/demo/scenarios/"+created.ID, nil)
 	addCookies(req)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
@@ -308,7 +330,7 @@ func TestAdminDeleteScenarioWithGames(t *testing.T) {
 	}
 
 	// The seeded scenario has a game referencing it. Get its ID.
-	req := httptest.NewRequest(http.MethodGet, "/api/admin/scenarios", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/admin/clients/demo/scenarios", nil)
 	addCookies(req)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
@@ -329,7 +351,7 @@ func TestAdminDeleteScenarioWithGames(t *testing.T) {
 	}
 
 	// Try to delete — should fail with 409.
-	req = httptest.NewRequest(http.MethodDelete, "/api/admin/scenarios/"+seededID, nil)
+	req = httptest.NewRequest(http.MethodDelete, "/api/admin/clients/demo/scenarios/"+seededID, nil)
 	addCookies(req)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
@@ -346,11 +368,11 @@ func TestAdminScenariosUnauthenticated(t *testing.T) {
 		method string
 		path   string
 	}{
-		{http.MethodGet, "/api/admin/scenarios"},
-		{http.MethodPost, "/api/admin/scenarios"},
-		{http.MethodGet, "/api/admin/scenarios/someid"},
-		{http.MethodPut, "/api/admin/scenarios/someid"},
-		{http.MethodDelete, "/api/admin/scenarios/someid"},
+		{http.MethodGet, "/api/admin/clients/demo/scenarios"},
+		{http.MethodPost, "/api/admin/clients/demo/scenarios"},
+		{http.MethodGet, "/api/admin/clients/demo/scenarios/someid"},
+		{http.MethodPut, "/api/admin/clients/demo/scenarios/someid"},
+		{http.MethodDelete, "/api/admin/clients/demo/scenarios/someid"},
 	}
 
 	for _, ep := range endpoints {
@@ -375,7 +397,7 @@ func TestAdminGameCRUD(t *testing.T) {
 	}
 
 	// List games — should have the seeded one.
-	req := httptest.NewRequest(http.MethodGet, "/api/admin/games", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/admin/clients/demo/games", nil)
 	addCookies(req)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
@@ -405,7 +427,7 @@ func TestAdminGameCRUD(t *testing.T) {
 		},
 	}
 	body, _ := json.Marshal(scenarioReq)
-	req = httptest.NewRequest(http.MethodPost, "/api/admin/scenarios", bytes.NewReader(body))
+	req = httptest.NewRequest(http.MethodPost, "/api/admin/clients/demo/scenarios", bytes.NewReader(body))
 	addCookies(req)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
@@ -422,7 +444,7 @@ func TestAdminGameCRUD(t *testing.T) {
 		TimerMinutes: 90,
 	}
 	body, _ = json.Marshal(gameReq)
-	req = httptest.NewRequest(http.MethodPost, "/api/admin/games", bytes.NewReader(body))
+	req = httptest.NewRequest(http.MethodPost, "/api/admin/clients/demo/games", bytes.NewReader(body))
 	addCookies(req)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
@@ -446,7 +468,7 @@ func TestAdminGameCRUD(t *testing.T) {
 	}
 
 	// Get game by ID.
-	req = httptest.NewRequest(http.MethodGet, "/api/admin/games/"+game.ID, nil)
+	req = httptest.NewRequest(http.MethodGet, "/api/admin/clients/demo/games/"+game.ID, nil)
 	addCookies(req)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
@@ -467,7 +489,7 @@ func TestAdminGameCRUD(t *testing.T) {
 	gameReq.Status = "active"
 	gameReq.TimerMinutes = 60
 	body, _ = json.Marshal(gameReq)
-	req = httptest.NewRequest(http.MethodPut, "/api/admin/games/"+game.ID, bytes.NewReader(body))
+	req = httptest.NewRequest(http.MethodPut, "/api/admin/clients/demo/games/"+game.ID, bytes.NewReader(body))
 	addCookies(req)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
@@ -475,19 +497,19 @@ func TestAdminGameCRUD(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Fatalf("update game: expected 200, got %d: %s", w.Code, w.Body.String())
 	}
-	var updated AdminGameDetail
-	json.NewDecoder(w.Body).Decode(&updated)
-	if updated.Status != "active" {
-		t.Errorf("update game: expected status 'active', got %q", updated.Status)
+	var updatedGame AdminGameDetail
+	json.NewDecoder(w.Body).Decode(&updatedGame)
+	if updatedGame.Status != "active" {
+		t.Errorf("update game: expected status 'active', got %q", updatedGame.Status)
 	}
-	if updated.TimerMinutes != 60 {
-		t.Errorf("update game: expected 60 minutes, got %d", updated.TimerMinutes)
+	if updatedGame.TimerMinutes != 60 {
+		t.Errorf("update game: expected 60 minutes, got %d", updatedGame.TimerMinutes)
 	}
 
 	// Add a team.
 	teamReq := AdminTeamRequest{Name: "Los Alpacas", GuideName: "Pedro"}
 	body, _ = json.Marshal(teamReq)
-	req = httptest.NewRequest(http.MethodPost, "/api/admin/games/"+game.ID+"/teams", bytes.NewReader(body))
+	req = httptest.NewRequest(http.MethodPost, "/api/admin/clients/demo/games/"+game.ID+"/teams", bytes.NewReader(body))
 	addCookies(req)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
@@ -508,7 +530,7 @@ func TestAdminGameCRUD(t *testing.T) {
 	}
 
 	// List teams.
-	req = httptest.NewRequest(http.MethodGet, "/api/admin/games/"+game.ID+"/teams", nil)
+	req = httptest.NewRequest(http.MethodGet, "/api/admin/clients/demo/games/"+game.ID+"/teams", nil)
 	addCookies(req)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
@@ -526,7 +548,7 @@ func TestAdminGameCRUD(t *testing.T) {
 	teamReq.Name = "Los Alpacas Updated"
 	teamReq.GuideName = "Pedro Jr"
 	body, _ = json.Marshal(teamReq)
-	req = httptest.NewRequest(http.MethodPut, "/api/admin/games/"+game.ID+"/teams/"+team.ID, bytes.NewReader(body))
+	req = httptest.NewRequest(http.MethodPut, "/api/admin/clients/demo/games/"+game.ID+"/teams/"+team.ID, bytes.NewReader(body))
 	addCookies(req)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
@@ -541,7 +563,7 @@ func TestAdminGameCRUD(t *testing.T) {
 	}
 
 	// Delete team (no players, should succeed).
-	req = httptest.NewRequest(http.MethodDelete, "/api/admin/games/"+game.ID+"/teams/"+team.ID, nil)
+	req = httptest.NewRequest(http.MethodDelete, "/api/admin/clients/demo/games/"+game.ID+"/teams/"+team.ID, nil)
 	addCookies(req)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
@@ -551,7 +573,7 @@ func TestAdminGameCRUD(t *testing.T) {
 	}
 
 	// Delete game (no players, should succeed).
-	req = httptest.NewRequest(http.MethodDelete, "/api/admin/games/"+game.ID, nil)
+	req = httptest.NewRequest(http.MethodDelete, "/api/admin/clients/demo/games/"+game.ID, nil)
 	addCookies(req)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
@@ -561,7 +583,7 @@ func TestAdminGameCRUD(t *testing.T) {
 	}
 
 	// Verify it's gone.
-	req = httptest.NewRequest(http.MethodGet, "/api/admin/games/"+game.ID, nil)
+	req = httptest.NewRequest(http.MethodGet, "/api/admin/clients/demo/games/"+game.ID, nil)
 	addCookies(req)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
@@ -583,7 +605,7 @@ func TestAdminDeleteGameWithPlayers(t *testing.T) {
 
 	// Join a player to the seeded team.
 	joinBody, _ := json.Marshal(JoinRequest{JoinToken: "incas-2025", PlayerName: "TestPlayer"})
-	req := httptest.NewRequest(http.MethodPost, "/api/join", bytes.NewReader(joinBody))
+	req := httptest.NewRequest(http.MethodPost, "/api/demo/join", bytes.NewReader(joinBody))
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	if w.Code != http.StatusOK {
@@ -591,7 +613,7 @@ func TestAdminDeleteGameWithPlayers(t *testing.T) {
 	}
 
 	// Try to delete the seeded game — should fail with 409.
-	req = httptest.NewRequest(http.MethodDelete, "/api/admin/games/g0000000deadbeef", nil)
+	req = httptest.NewRequest(http.MethodDelete, "/api/admin/clients/demo/games/g0000000deadbeef", nil)
 	addCookies(req)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
@@ -613,7 +635,7 @@ func TestAdminDeleteTeamWithPlayers(t *testing.T) {
 
 	// Join a player to the seeded team.
 	joinBody, _ := json.Marshal(JoinRequest{JoinToken: "condores-2025", PlayerName: "TestPlayer2"})
-	req := httptest.NewRequest(http.MethodPost, "/api/join", bytes.NewReader(joinBody))
+	req := httptest.NewRequest(http.MethodPost, "/api/demo/join", bytes.NewReader(joinBody))
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	if w.Code != http.StatusOK {
@@ -621,7 +643,7 @@ func TestAdminDeleteTeamWithPlayers(t *testing.T) {
 	}
 
 	// Try to delete the team — should fail with 409.
-	req = httptest.NewRequest(http.MethodDelete, "/api/admin/games/g0000000deadbeef/teams/t00000000condor", nil)
+	req = httptest.NewRequest(http.MethodDelete, "/api/admin/clients/demo/games/g0000000deadbeef/teams/t00000000condor", nil)
 	addCookies(req)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
@@ -644,7 +666,7 @@ func TestAdminCreateTeamDuplicateToken(t *testing.T) {
 	// Create a team with a custom token that already exists (incas-2025).
 	teamReq := AdminTeamRequest{Name: "Duplicate Team", JoinToken: "incas-2025"}
 	body, _ := json.Marshal(teamReq)
-	req := httptest.NewRequest(http.MethodPost, "/api/admin/games/g0000000deadbeef/teams", bytes.NewReader(body))
+	req := httptest.NewRequest(http.MethodPost, "/api/admin/clients/demo/games/g0000000deadbeef/teams", bytes.NewReader(body))
 	addCookies(req)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
@@ -661,15 +683,15 @@ func TestAdminGamesUnauthenticated(t *testing.T) {
 		method string
 		path   string
 	}{
-		{http.MethodGet, "/api/admin/games"},
-		{http.MethodPost, "/api/admin/games"},
-		{http.MethodGet, "/api/admin/games/someid"},
-		{http.MethodPut, "/api/admin/games/someid"},
-		{http.MethodDelete, "/api/admin/games/someid"},
-		{http.MethodGet, "/api/admin/games/someid/teams"},
-		{http.MethodPost, "/api/admin/games/someid/teams"},
-		{http.MethodPut, "/api/admin/games/someid/teams/someteam"},
-		{http.MethodDelete, "/api/admin/games/someid/teams/someteam"},
+		{http.MethodGet, "/api/admin/clients/demo/games"},
+		{http.MethodPost, "/api/admin/clients/demo/games"},
+		{http.MethodGet, "/api/admin/clients/demo/games/someid"},
+		{http.MethodPut, "/api/admin/clients/demo/games/someid"},
+		{http.MethodDelete, "/api/admin/clients/demo/games/someid"},
+		{http.MethodGet, "/api/admin/clients/demo/games/someid/teams"},
+		{http.MethodPost, "/api/admin/clients/demo/games/someid/teams"},
+		{http.MethodPut, "/api/admin/clients/demo/games/someid/teams/someteam"},
+		{http.MethodDelete, "/api/admin/clients/demo/games/someid/teams/someteam"},
 	}
 
 	for _, ep := range endpoints {

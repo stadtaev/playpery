@@ -9,41 +9,51 @@ import (
 	"github.com/swaggest/swgui/v5emb"
 )
 
-func addRoutes(r chi.Router, logger *slog.Logger, store Store, db *sql.DB, spaDir string) {
+func addRoutes(r chi.Router, logger *slog.Logger, admin AdminAuth, clients *Registry, adminDB *sql.DB, spaDir string) {
 	broker := NewBroker()
 
 	r.Get("/openapi.json", handleOpenAPI())
 	r.Mount("/docs", v5emb.New("CityQuiz API", "/openapi.json", "/docs"))
-	r.Get("/healthz", handleHealth(logger, db))
+	r.Get("/healthz", handleHealth(logger, adminDB))
 	r.Get("/ws/echo", handleWSEcho(logger))
 
-	r.Route("/api", func(r chi.Router) {
-		r.Get("/teams/{joinToken}", handleTeamLookup(store))
-		r.Post("/join", handleJoin(store, broker))
-		r.Get("/game/state", handleGameState(store))
-		r.Post("/game/answer", handleAnswer(store, broker))
-		r.Get("/game/events", handleEvents(store, broker))
+	// Player routes — {client} resolved by clientMiddleware.
+	r.Route("/api/{client}", func(r chi.Router) {
+		r.Use(clientMiddleware(clients))
+		r.Get("/teams/{joinToken}", handleTeamLookup())
+		r.Post("/join", handleJoin(broker))
+		r.Get("/game/state", handleGameState())
+		r.Post("/game/answer", handleAnswer(broker))
+		r.Get("/game/events", handleEvents(broker))
+	})
 
-		r.Route("/admin", func(r chi.Router) {
-			r.Post("/login", handleAdminLogin(store))
-			r.Post("/logout", handleAdminLogout(store))
-			r.Get("/me", handleAdminMe(store))
-			r.Get("/scenarios", handleAdminListScenarios(store))
-			r.Post("/scenarios", handleAdminCreateScenario(store))
-			r.Get("/scenarios/{id}", handleAdminGetScenario(store))
-			r.Put("/scenarios/{id}", handleAdminUpdateScenario(store))
-			r.Delete("/scenarios/{id}", handleAdminDeleteScenario(store))
+	// Admin auth — shared DB.
+	r.Post("/api/admin/login", handleAdminLogin(admin))
+	r.Post("/api/admin/logout", handleAdminLogout(admin))
+	r.Get("/api/admin/me", handleAdminMe(admin))
+	r.Get("/api/admin/clients", handleAdminListClients(admin))
+	r.Post("/api/admin/clients", handleAdminCreateClient(admin, clients))
 
-			r.Get("/games", handleAdminListGames(store))
-			r.Post("/games", handleAdminCreateGame(store))
-			r.Get("/games/{gameID}", handleAdminGetGame(store))
-			r.Put("/games/{gameID}", handleAdminUpdateGame(store))
-			r.Delete("/games/{gameID}", handleAdminDeleteGame(store))
-			r.Get("/games/{gameID}/teams", handleAdminListTeams(store))
-			r.Post("/games/{gameID}/teams", handleAdminCreateTeam(store))
-			r.Put("/games/{gameID}/teams/{teamID}", handleAdminUpdateTeam(store))
-			r.Delete("/games/{gameID}/teams/{teamID}", handleAdminDeleteTeam(store))
-		})
+	// Admin CRUD — per-client, requires admin auth.
+	r.Route("/api/admin/clients/{client}", func(r chi.Router) {
+		r.Use(adminAuthMiddleware(admin))
+		r.Use(clientMiddleware(clients))
+
+		r.Get("/scenarios", handleAdminListScenarios())
+		r.Post("/scenarios", handleAdminCreateScenario())
+		r.Get("/scenarios/{id}", handleAdminGetScenario())
+		r.Put("/scenarios/{id}", handleAdminUpdateScenario())
+		r.Delete("/scenarios/{id}", handleAdminDeleteScenario())
+
+		r.Get("/games", handleAdminListGames())
+		r.Post("/games", handleAdminCreateGame())
+		r.Get("/games/{gameID}", handleAdminGetGame())
+		r.Put("/games/{gameID}", handleAdminUpdateGame())
+		r.Delete("/games/{gameID}", handleAdminDeleteGame())
+		r.Get("/games/{gameID}/teams", handleAdminListTeams())
+		r.Post("/games/{gameID}/teams", handleAdminCreateTeam())
+		r.Put("/games/{gameID}/teams/{teamID}", handleAdminUpdateTeam())
+		r.Delete("/games/{gameID}/teams/{teamID}", handleAdminDeleteTeam())
 	})
 
 	if spaDir != "" {

@@ -18,7 +18,7 @@ type JoinResponse struct {
 	TeamName string `json:"teamName"`
 }
 
-func handleJoin(store Store, broker *Broker) http.HandlerFunc {
+func handleJoin(broker *Broker) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req JoinRequest
 		if err := readJSON(r, &req); err != nil {
@@ -32,6 +32,8 @@ func handleJoin(store Store, broker *Broker) http.HandlerFunc {
 			return
 		}
 
+		store := clientStore(r)
+
 		team, err := store.TeamLookup(r.Context(), req.JoinToken)
 		if errors.Is(err, ErrNotFound) {
 			writeError(w, http.StatusNotFound, "team not found or game not active")
@@ -42,7 +44,7 @@ func handleJoin(store Store, broker *Broker) http.HandlerFunc {
 			return
 		}
 
-		playerID, sessionID, err := store.JoinTeam(r.Context(), team.ID, req.PlayerName)
+		playerID, sessionID, err := store.JoinTeam(r.Context(), team.GameID, team.ID, req.PlayerName)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "internal error")
 			return

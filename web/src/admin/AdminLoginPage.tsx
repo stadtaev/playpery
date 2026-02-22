@@ -13,7 +13,7 @@ export function AdminLoginPage() {
     setError('')
     try {
       await login(email, password)
-      window.history.replaceState(null, '', '/admin/scenarios')
+      window.history.replaceState(null, '', '/admin/clients')
       window.dispatchEvent(new PopStateEvent('popstate'))
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Login failed')

@@ -93,12 +93,9 @@ func generateJoinToken() string {
 	return "team-" + hex.EncodeToString(b)
 }
 
-func handleAdminListGames(store Store) http.HandlerFunc {
+func handleAdminListGames() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if _, err := adminFromRequest(r, store); err != nil {
-			writeError(w, http.StatusUnauthorized, "not authenticated")
-			return
-		}
+		store := clientStore(r)
 
 		games, err := store.ListGames(r.Context())
 		if err != nil {
@@ -113,12 +110,9 @@ func handleAdminListGames(store Store) http.HandlerFunc {
 	}
 }
 
-func handleAdminCreateGame(store Store) http.HandlerFunc {
+func handleAdminCreateGame() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if _, err := adminFromRequest(r, store); err != nil {
-			writeError(w, http.StatusUnauthorized, "not authenticated")
-			return
-		}
+		store := clientStore(r)
 
 		var req AdminGameRequest
 		if err := readJSON(r, &req); err != nil {
@@ -151,13 +145,9 @@ func handleAdminCreateGame(store Store) http.HandlerFunc {
 	}
 }
 
-func handleAdminGetGame(store Store) http.HandlerFunc {
+func handleAdminGetGame() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if _, err := adminFromRequest(r, store); err != nil {
-			writeError(w, http.StatusUnauthorized, "not authenticated")
-			return
-		}
-
+		store := clientStore(r)
 		gameID := chi.URLParam(r, "gameID")
 
 		game, err := store.GetGame(r.Context(), gameID)
@@ -174,13 +164,9 @@ func handleAdminGetGame(store Store) http.HandlerFunc {
 	}
 }
 
-func handleAdminUpdateGame(store Store) http.HandlerFunc {
+func handleAdminUpdateGame() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if _, err := adminFromRequest(r, store); err != nil {
-			writeError(w, http.StatusUnauthorized, "not authenticated")
-			return
-		}
-
+		store := clientStore(r)
 		gameID := chi.URLParam(r, "gameID")
 
 		var req AdminGameRequest
@@ -225,13 +211,9 @@ func handleAdminUpdateGame(store Store) http.HandlerFunc {
 	}
 }
 
-func handleAdminDeleteGame(store Store) http.HandlerFunc {
+func handleAdminDeleteGame() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if _, err := adminFromRequest(r, store); err != nil {
-			writeError(w, http.StatusUnauthorized, "not authenticated")
-			return
-		}
-
+		store := clientStore(r)
 		gameID := chi.URLParam(r, "gameID")
 
 		hasPlayers, err := store.GameHasPlayers(r.Context(), gameID)
@@ -262,13 +244,9 @@ func handleAdminDeleteGame(store Store) http.HandlerFunc {
 	}
 }
 
-func handleAdminListTeams(store Store) http.HandlerFunc {
+func handleAdminListTeams() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if _, err := adminFromRequest(r, store); err != nil {
-			writeError(w, http.StatusUnauthorized, "not authenticated")
-			return
-		}
-
+		store := clientStore(r)
 		gameID := chi.URLParam(r, "gameID")
 
 		exists, err := store.GameExists(r.Context(), gameID)
@@ -291,13 +269,9 @@ func handleAdminListTeams(store Store) http.HandlerFunc {
 	}
 }
 
-func handleAdminCreateTeam(store Store) http.HandlerFunc {
+func handleAdminCreateTeam() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if _, err := adminFromRequest(r, store); err != nil {
-			writeError(w, http.StatusUnauthorized, "not authenticated")
-			return
-		}
-
+		store := clientStore(r)
 		gameID := chi.URLParam(r, "gameID")
 
 		var req AdminTeamRequest
@@ -339,13 +313,9 @@ func handleAdminCreateTeam(store Store) http.HandlerFunc {
 	}
 }
 
-func handleAdminUpdateTeam(store Store) http.HandlerFunc {
+func handleAdminUpdateTeam() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if _, err := adminFromRequest(r, store); err != nil {
-			writeError(w, http.StatusUnauthorized, "not authenticated")
-			return
-		}
-
+		store := clientStore(r)
 		gameID := chi.URLParam(r, "gameID")
 		teamID := chi.URLParam(r, "teamID")
 
@@ -373,13 +343,9 @@ func handleAdminUpdateTeam(store Store) http.HandlerFunc {
 	}
 }
 
-func handleAdminDeleteTeam(store Store) http.HandlerFunc {
+func handleAdminDeleteTeam() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if _, err := adminFromRequest(r, store); err != nil {
-			writeError(w, http.StatusUnauthorized, "not authenticated")
-			return
-		}
-
+		store := clientStore(r)
 		gameID := chi.URLParam(r, "gameID")
 		teamID := chi.URLParam(r, "teamID")
 

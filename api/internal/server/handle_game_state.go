@@ -52,13 +52,15 @@ type scenarioStage struct {
 	CorrectAnswer string `json:"correctAnswer"`
 }
 
-func handleGameState(store Store) http.HandlerFunc {
+func handleGameState() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		sess, err := playerFromRequest(r, store)
+		sess, err := playerFromRequest(r)
 		if err != nil {
 			writeError(w, http.StatusUnauthorized, "invalid or missing session token")
 			return
 		}
+
+		store := clientStore(r)
 
 		data, err := store.GameState(r.Context(), sess.GameID, sess.TeamID)
 		if err != nil {
@@ -95,7 +97,7 @@ func handleGameState(store Store) http.HandlerFunc {
 			}
 		}
 
-		players, err := store.ListPlayers(r.Context(), sess.TeamID)
+		players, err := store.ListPlayers(r.Context(), sess.GameID, sess.TeamID)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "internal error")
 			return

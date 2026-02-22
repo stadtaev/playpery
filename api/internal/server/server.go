@@ -19,8 +19,7 @@ type Server struct {
 	logger *slog.Logger
 }
 
-func New(addr string, logger *slog.Logger, db *sql.DB, spaDir string) *Server {
-	store := NewSQLiteStore(db)
+func New(addr string, logger *slog.Logger, admin AdminAuth, clients *Registry, adminDB *sql.DB, spaDir string) *Server {
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
@@ -28,7 +27,7 @@ func New(addr string, logger *slog.Logger, db *sql.DB, spaDir string) *Server {
 	r.Use(newStructuredLogger(logger))
 	r.Use(middleware.Recoverer)
 
-	addRoutes(r, logger, store, db, spaDir)
+	addRoutes(r, logger, admin, clients, adminDB, spaDir)
 
 	return &Server{
 		srv: &http.Server{

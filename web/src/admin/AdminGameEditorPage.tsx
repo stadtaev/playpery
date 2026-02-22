@@ -9,7 +9,7 @@ function navigate(path: string) {
 
 const statuses = ['draft', 'active', 'paused', 'ended'] as const
 
-export function AdminGameEditorPage({ id }: { id?: string }) {
+export function AdminGameEditorPage({ client, id }: { client: string; id?: string }) {
   const [scenarios, setScenarios] = useState<ScenarioSummary[]>([])
   const [scenarioId, setScenarioId] = useState('')
   const [status, setStatus] = useState('draft')
@@ -27,7 +27,7 @@ export function AdminGameEditorPage({ id }: { id?: string }) {
 
   useEffect(() => {
     const loads: Promise<void>[] = [
-      listScenarios().then((s) => {
+      listScenarios(client).then((s) => {
         setScenarios(s)
         if (!id && s.length > 0) setScenarioId(s[0].id)
       }),
@@ -35,7 +35,7 @@ export function AdminGameEditorPage({ id }: { id?: string }) {
 
     if (id) {
       loads.push(
-        getGame(id).then((g) => {
+        getGame(client, id).then((g) => {
           setScenarioId(g.scenarioId)
           setStatus(g.status)
           setTimerMinutes(g.timerMinutes)
@@ -47,7 +47,7 @@ export function AdminGameEditorPage({ id }: { id?: string }) {
     Promise.all(loads)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
-  }, [id])
+  }, [client, id])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -58,14 +58,14 @@ export function AdminGameEditorPage({ id }: { id?: string }) {
 
     try {
       if (id) {
-        const updated = await updateGame(id, data)
+        const updated = await updateGame(client, id, data)
         setTeams(updated.teams)
       } else {
-        const created = await createGame(data)
-        navigate(`/admin/games/${created.id}/edit`)
+        const created = await createGame(client, data)
+        navigate(`/admin/clients/${client}/games/${created.id}/edit`)
         return
       }
-      navigate('/admin/games')
+      navigate(`/admin/clients/${client}/games`)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Save failed')
       setSaving(false)
@@ -80,7 +80,7 @@ export function AdminGameEditorPage({ id }: { id?: string }) {
 
     const data: TeamRequest = { name: newTeamName, joinToken: newTeamToken, guideName: newTeamGuide }
     try {
-      const team = await createTeam(id, data)
+      const team = await createTeam(client, id, data)
       setTeams((prev) => [...prev, team])
       setNewTeamName('')
       setNewTeamToken('')
@@ -99,7 +99,7 @@ export function AdminGameEditorPage({ id }: { id?: string }) {
     const guideName = prompt('Guide name:', team.guideName) ?? ''
 
     try {
-      const updated = await updateTeam(id, team.id, { name: name.trim(), joinToken: team.joinToken, guideName: guideName.trim() })
+      const updated = await updateTeam(client, id, team.id, { name: name.trim(), joinToken: team.joinToken, guideName: guideName.trim() })
       setTeams((prev) => prev.map((t) => (t.id === team.id ? updated : t)))
     } catch (e) {
       alert(e instanceof Error ? e.message : 'Update failed')
@@ -110,7 +110,7 @@ export function AdminGameEditorPage({ id }: { id?: string }) {
     if (!id) return
     if (!confirm(`Delete team "${team.name}"?`)) return
     try {
-      await deleteTeam(id, team.id)
+      await deleteTeam(client, id, team.id)
       setTeams((prev) => prev.filter((t) => t.id !== team.id))
     } catch (e) {
       alert(e instanceof Error ? e.message : 'Delete failed')
@@ -153,7 +153,7 @@ export function AdminGameEditorPage({ id }: { id?: string }) {
           <button type="submit" disabled={saving} aria-busy={saving}>
             {saving ? 'Saving...' : id ? 'Update Game' : 'Create Game'}
           </button>
-          <button type="button" className="secondary" onClick={() => navigate('/admin/games')}>
+          <button type="button" className="secondary" onClick={() => navigate(`/admin/clients/${client}/games`)}>
             Cancel
           </button>
         </div>

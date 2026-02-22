@@ -19,9 +19,9 @@ type AnswerResponse struct {
 	CorrectAnswer string     `json:"correctAnswer,omitempty"`
 }
 
-func handleAnswer(store Store, broker *Broker) http.HandlerFunc {
+func handleAnswer(broker *Broker) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		sess, err := playerFromRequest(r, store)
+		sess, err := playerFromRequest(r)
 		if err != nil {
 			writeError(w, http.StatusUnauthorized, "invalid or missing session token")
 			return
@@ -37,6 +37,8 @@ func handleAnswer(store Store, broker *Broker) http.HandlerFunc {
 			writeError(w, http.StatusBadRequest, "answer is required")
 			return
 		}
+
+		store := clientStore(r)
 
 		data, err := store.GameState(r.Context(), sess.GameID, sess.TeamID)
 		if err != nil {

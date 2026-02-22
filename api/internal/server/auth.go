@@ -14,11 +14,11 @@ type playerSession struct {
 
 var errNoSession = errors.New("no valid session")
 
-func playerFromRequest(r *http.Request, store Store) (playerSession, error) {
+func playerFromRequest(r *http.Request) (playerSession, error) {
 	auth := r.Header.Get("Authorization")
 	token, found := strings.CutPrefix(auth, "Bearer ")
 	if !found || token == "" {
 		return playerSession{}, errNoSession
 	}
-	return store.PlayerFromToken(r.Context(), token)
+	return clientStore(r).PlayerFromToken(r.Context(), token)
 }

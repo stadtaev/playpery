@@ -1,11 +1,11 @@
 import { useEffect } from 'react'
 
-export function useGameEvents(onEvent: () => void) {
+export function useGameEvents(client: string, onEvent: () => void) {
   useEffect(() => {
     const token = localStorage.getItem('session_token')
     if (!token) return
 
-    const es = new EventSource(`/api/game/events?token=${token}`)
+    const es = new EventSource(`/api/${client}/game/events?token=${token}`)
 
     es.addEventListener('state', () => {
       onEvent()
@@ -16,5 +16,5 @@ export function useGameEvents(onEvent: () => void) {
     }
 
     return () => es.close()
-  }, [onEvent])
+  }, [client, onEvent])
 }

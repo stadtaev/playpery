@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react'
 import { getMe, logout } from './adminApi'
 
-export function AdminLayout({ children }: { children: React.ReactNode }) {
+function navigate(path: string) {
+  window.history.pushState(null, '', path)
+  window.dispatchEvent(new PopStateEvent('popstate'))
+}
+
+export function AdminLayout({ client, children }: { client?: string; children: React.ReactNode }) {
   const [authed, setAuthed] = useState<boolean | null>(null)
 
   useEffect(() => {
@@ -9,15 +14,13 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
       .then(() => setAuthed(true))
       .catch(() => {
         setAuthed(false)
-        window.history.replaceState(null, '', '/admin/login')
-        window.dispatchEvent(new PopStateEvent('popstate'))
+        navigate('/admin/login')
       })
   }, [])
 
   async function handleLogout() {
     await logout().catch(() => {})
-    window.history.replaceState(null, '', '/admin/login')
-    window.dispatchEvent(new PopStateEvent('popstate'))
+    navigate('/admin/login')
   }
 
   if (authed === null) {
@@ -35,12 +38,18 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
       <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
           <h1 style={{ margin: 0 }}>
-            <a href="/admin/scenarios" onClick={(e) => { e.preventDefault(); window.history.pushState(null, '', '/admin/scenarios'); window.dispatchEvent(new PopStateEvent('popstate')) }} style={{ textDecoration: 'none' }}>
+            <a href="/admin/clients" onClick={(e) => { e.preventDefault(); navigate('/admin/clients') }} style={{ textDecoration: 'none' }}>
               CityQuiz Admin
             </a>
           </h1>
-          <a href="/admin/scenarios" onClick={(e) => { e.preventDefault(); window.history.pushState(null, '', '/admin/scenarios'); window.dispatchEvent(new PopStateEvent('popstate')) }}>Scenarios</a>
-          <a href="/admin/games" onClick={(e) => { e.preventDefault(); window.history.pushState(null, '', '/admin/games'); window.dispatchEvent(new PopStateEvent('popstate')) }}>Games</a>
+          {client && (
+            <>
+              <span style={{ color: 'var(--pico-muted-color)' }}>/</span>
+              <strong>{client}</strong>
+              <a href={`/admin/clients/${client}/scenarios`} onClick={(e) => { e.preventDefault(); navigate(`/admin/clients/${client}/scenarios`) }}>Scenarios</a>
+              <a href={`/admin/clients/${client}/games`} onClick={(e) => { e.preventDefault(); navigate(`/admin/clients/${client}/games`) }}>Games</a>
+            </>
+          )}
         </div>
         <button className="outline secondary" onClick={handleLogout} style={{ width: 'auto' }}>
           Log out

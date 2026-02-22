@@ -4,11 +4,11 @@ import (
 	"net/http"
 )
 
-func handleAdminLogout(store Store) http.HandlerFunc {
+func handleAdminLogout(admin AdminAuth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie(adminCookieName)
 		if err == nil && cookie.Value != "" {
-			store.DeleteAdminSession(r.Context(), cookie.Value)
+			admin.DeleteAdminSession(r.Context(), cookie.Value)
 		}
 
 		http.SetCookie(w, &http.Cookie{
