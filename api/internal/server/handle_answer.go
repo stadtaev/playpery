@@ -46,7 +46,7 @@ func handleAnswer(broker *Broker) http.HandlerFunc {
 			return
 		}
 
-		if data.Status == "active" && data.StartedAt != nil {
+		if data.TimerEnabled && data.Status == "active" && data.StartedAt != nil {
 			start, _ := time.Parse(time.RFC3339Nano, *data.StartedAt)
 			if time.Since(start) > time.Duration(data.TimerMinutes)*time.Minute {
 				store.ExpireGame(r.Context(), sess.GameID)

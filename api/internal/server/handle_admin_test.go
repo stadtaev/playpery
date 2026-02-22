@@ -451,6 +451,7 @@ func TestAdminGameCRUD(t *testing.T) {
 	gameReq := AdminGameRequest{
 		ScenarioID:   scenario.ID,
 		Status:       "draft",
+		TimerEnabled: true,
 		TimerMinutes: 90,
 	}
 	body, _ = json.Marshal(gameReq)

@@ -23,16 +23,18 @@ type scenarioDoc struct {
 }
 
 type gameDoc struct {
-	ID           string       `json:"id"`
-	ScenarioID   string       `json:"scenarioId"`
-	ScenarioName string       `json:"scenarioName"`
-	Status       string       `json:"status"`
-	TimerMinutes int          `json:"timerMinutes"`
-	Stages       []AdminStage `json:"stages"`
-	StartedAt    *string      `json:"startedAt"`
-	EndedAt      *string      `json:"endedAt"`
-	CreatedAt    string       `json:"createdAt"`
-	Teams        []teamDoc    `json:"teams"`
+	ID                string       `json:"id"`
+	ScenarioID        string       `json:"scenarioId"`
+	ScenarioName      string       `json:"scenarioName"`
+	Status            string       `json:"status"`
+	TimerEnabled      bool         `json:"timerEnabled"`
+	TimerMinutes      int          `json:"timerMinutes"`
+	StageTimerMinutes int          `json:"stageTimerMinutes"`
+	Stages            []AdminStage `json:"stages"`
+	StartedAt         *string      `json:"startedAt"`
+	EndedAt           *string      `json:"endedAt"`
+	CreatedAt         string       `json:"createdAt"`
+	Teams             []teamDoc    `json:"teams"`
 }
 
 type teamDoc struct {
@@ -340,7 +342,9 @@ func (s *DocStore) GameState(ctx context.Context, gameID, teamID string) (gameSt
 
 	var d gameStateData
 	d.Status = g.Status
+	d.TimerEnabled = g.TimerEnabled
 	d.TimerMinutes = g.TimerMinutes
+	d.StageTimerMinutes = g.StageTimerMinutes
 	d.StartedAt = g.StartedAt
 	d.StagesJSON = string(stagesJSON)
 	d.TeamName = teamName
@@ -446,13 +450,15 @@ func (s *DocStore) ListGames(ctx context.Context) ([]AdminGameSummary, error) {
 	var games []AdminGameSummary
 	for _, g := range allGames {
 		games = append(games, AdminGameSummary{
-			ID:           g.ID,
-			ScenarioID:   g.ScenarioID,
-			ScenarioName: g.ScenarioName,
-			Status:       g.Status,
-			TimerMinutes: g.TimerMinutes,
-			TeamCount:    len(g.Teams),
-			CreatedAt:    g.CreatedAt,
+			ID:                g.ID,
+			ScenarioID:        g.ScenarioID,
+			ScenarioName:      g.ScenarioName,
+			Status:            g.Status,
+			TimerEnabled:      g.TimerEnabled,
+			TimerMinutes:      g.TimerMinutes,
+			StageTimerMinutes: g.StageTimerMinutes,
+			TeamCount:         len(g.Teams),
+			CreatedAt:         g.CreatedAt,
 		})
 	}
 	// Sort newest first.
@@ -466,26 +472,30 @@ func (s *DocStore) CreateGame(ctx context.Context, req AdminGameRequest, stages 
 	id := newID()
 	now := nowUTC()
 	doc := gameDoc{
-		ID:           id,
-		ScenarioID:   req.ScenarioID,
-		ScenarioName: req.ScenarioName,
-		Status:       req.Status,
-		TimerMinutes: req.TimerMinutes,
-		Stages:       stages,
-		CreatedAt:    now,
-		Teams:        []teamDoc{},
+		ID:                id,
+		ScenarioID:        req.ScenarioID,
+		ScenarioName:      req.ScenarioName,
+		Status:            req.Status,
+		TimerEnabled:      req.TimerEnabled,
+		TimerMinutes:      req.TimerMinutes,
+		StageTimerMinutes: req.StageTimerMinutes,
+		Stages:            stages,
+		CreatedAt:         now,
+		Teams:             []teamDoc{},
 	}
 	if err := s.putGame(ctx, doc); err != nil {
 		return AdminGameDetail{}, err
 	}
 	return AdminGameDetail{
-		ID:           id,
-		ScenarioID:   req.ScenarioID,
-		ScenarioName: req.ScenarioName,
-		Status:       req.Status,
-		TimerMinutes: req.TimerMinutes,
-		Teams:        []AdminTeamItem{},
-		CreatedAt:    now,
+		ID:                id,
+		ScenarioID:        req.ScenarioID,
+		ScenarioName:      req.ScenarioName,
+		Status:            req.Status,
+		TimerEnabled:      req.TimerEnabled,
+		TimerMinutes:      req.TimerMinutes,
+		StageTimerMinutes: req.StageTimerMinutes,
+		Teams:             []AdminTeamItem{},
+		CreatedAt:         now,
 	}, nil
 }
 
@@ -508,13 +518,15 @@ func (s *DocStore) GetGame(ctx context.Context, id string) (AdminGameDetail, err
 	}
 
 	return AdminGameDetail{
-		ID:           g.ID,
-		ScenarioID:   g.ScenarioID,
-		ScenarioName: g.ScenarioName,
-		Status:       g.Status,
-		TimerMinutes: g.TimerMinutes,
-		Teams:        teams,
-		CreatedAt:    g.CreatedAt,
+		ID:                g.ID,
+		ScenarioID:        g.ScenarioID,
+		ScenarioName:      g.ScenarioName,
+		Status:            g.Status,
+		TimerEnabled:      g.TimerEnabled,
+		TimerMinutes:      g.TimerMinutes,
+		StageTimerMinutes: g.StageTimerMinutes,
+		Teams:             teams,
+		CreatedAt:         g.CreatedAt,
 	}, nil
 }
 
@@ -525,16 +537,20 @@ func (s *DocStore) UpdateGame(ctx context.Context, id string, req AdminGameReque
 	}
 	g.ScenarioID = req.ScenarioID
 	g.Status = req.Status
+	g.TimerEnabled = req.TimerEnabled
 	g.TimerMinutes = req.TimerMinutes
+	g.StageTimerMinutes = req.StageTimerMinutes
 	if err := s.putGame(ctx, g); err != nil {
 		return AdminGameDetail{}, err
 	}
 	return AdminGameDetail{
-		ID:           id,
-		ScenarioID:   req.ScenarioID,
-		Status:       req.Status,
-		TimerMinutes: req.TimerMinutes,
-		CreatedAt:    g.CreatedAt,
+		ID:                id,
+		ScenarioID:        req.ScenarioID,
+		Status:            req.Status,
+		TimerEnabled:      req.TimerEnabled,
+		TimerMinutes:      req.TimerMinutes,
+		StageTimerMinutes: req.StageTimerMinutes,
+		CreatedAt:         g.CreatedAt,
 	}, nil
 }
 
@@ -728,13 +744,15 @@ func (s *DocStore) GameStatus(ctx context.Context, gameID string) (AdminGameStat
 	}
 
 	return AdminGameStatus{
-		ID:           g.ID,
-		ScenarioName: g.ScenarioName,
-		Status:       g.Status,
-		TimerMinutes: g.TimerMinutes,
-		StartedAt:    g.StartedAt,
-		TotalStages:  len(g.Stages),
-		Teams:        teams,
+		ID:                g.ID,
+		ScenarioName:      g.ScenarioName,
+		Status:            g.Status,
+		TimerEnabled:      g.TimerEnabled,
+		TimerMinutes:      g.TimerMinutes,
+		StageTimerMinutes: g.StageTimerMinutes,
+		StartedAt:         g.StartedAt,
+		TotalStages:       len(g.Stages),
+		Teams:             teams,
 	}, nil
 }
 
@@ -751,11 +769,13 @@ func (s *DocStore) SeedDemoGame(ctx context.Context, sc *scenarioDoc) error {
 
 	now := nowUTC()
 	game := gameDoc{
-		ID:           "g0000000deadbeef",
-		ScenarioID:   sc.ID,
-		ScenarioName: sc.Name,
-		Status:       "active",
-		TimerMinutes: 120,
+		ID:                "g0000000deadbeef",
+		ScenarioID:        sc.ID,
+		ScenarioName:      sc.Name,
+		Status:            "active",
+		TimerEnabled:      true,
+		TimerMinutes:      120,
+		StageTimerMinutes: 10,
 		Stages:       sc.Stages,
 		StartedAt:    &now,
 		CreatedAt:    now,

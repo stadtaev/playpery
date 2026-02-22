@@ -12,23 +12,27 @@ import (
 )
 
 type AdminGameSummary struct {
-	ID           string `json:"id"`
-	ScenarioID   string `json:"scenarioId"`
-	ScenarioName string `json:"scenarioName"`
-	Status       string `json:"status"`
-	TimerMinutes int    `json:"timerMinutes"`
-	TeamCount    int    `json:"teamCount"`
-	CreatedAt    string `json:"createdAt"`
+	ID                string `json:"id"`
+	ScenarioID        string `json:"scenarioId"`
+	ScenarioName      string `json:"scenarioName"`
+	Status            string `json:"status"`
+	TimerEnabled      bool   `json:"timerEnabled"`
+	TimerMinutes      int    `json:"timerMinutes"`
+	StageTimerMinutes int    `json:"stageTimerMinutes"`
+	TeamCount         int    `json:"teamCount"`
+	CreatedAt         string `json:"createdAt"`
 }
 
 type AdminGameDetail struct {
-	ID           string          `json:"id"`
-	ScenarioID   string          `json:"scenarioId"`
-	ScenarioName string          `json:"scenarioName"`
-	Status       string          `json:"status"`
-	TimerMinutes int             `json:"timerMinutes"`
-	Teams        []AdminTeamItem `json:"teams"`
-	CreatedAt    string          `json:"createdAt"`
+	ID                string          `json:"id"`
+	ScenarioID        string          `json:"scenarioId"`
+	ScenarioName      string          `json:"scenarioName"`
+	Status            string          `json:"status"`
+	TimerEnabled      bool            `json:"timerEnabled"`
+	TimerMinutes      int             `json:"timerMinutes"`
+	StageTimerMinutes int             `json:"stageTimerMinutes"`
+	Teams             []AdminTeamItem `json:"teams"`
+	CreatedAt         string          `json:"createdAt"`
 }
 
 type AdminTeamItem struct {
@@ -41,10 +45,12 @@ type AdminTeamItem struct {
 }
 
 type AdminGameRequest struct {
-	ScenarioID   string `json:"scenarioId"`
-	ScenarioName string `json:"-"` // set by handler after validation
-	Status       string `json:"status"`
-	TimerMinutes int    `json:"timerMinutes"`
+	ScenarioID        string `json:"scenarioId"`
+	ScenarioName      string `json:"-"` // set by handler after validation
+	Status            string `json:"status"`
+	TimerEnabled      bool   `json:"timerEnabled"`
+	TimerMinutes      int    `json:"timerMinutes"`
+	StageTimerMinutes int    `json:"stageTimerMinutes"`
 }
 
 type AdminTeamRequest struct {
@@ -54,13 +60,15 @@ type AdminTeamRequest struct {
 }
 
 type AdminGameStatus struct {
-	ID           string            `json:"id"`
-	ScenarioName string            `json:"scenarioName"`
-	Status       string            `json:"status"`
-	TimerMinutes int               `json:"timerMinutes"`
-	StartedAt    *string           `json:"startedAt"`
-	TotalStages  int               `json:"totalStages"`
-	Teams        []AdminTeamStatus `json:"teams"`
+	ID                string            `json:"id"`
+	ScenarioName      string            `json:"scenarioName"`
+	Status            string            `json:"status"`
+	TimerEnabled      bool              `json:"timerEnabled"`
+	TimerMinutes      int               `json:"timerMinutes"`
+	StageTimerMinutes int               `json:"stageTimerMinutes"`
+	StartedAt         *string           `json:"startedAt"`
+	TotalStages       int               `json:"totalStages"`
+	Teams             []AdminTeamStatus `json:"teams"`
 }
 
 type AdminTeamStatus struct {
@@ -95,8 +103,16 @@ func (req *AdminGameRequest) validate() string {
 	if !validGameStatuses[req.Status] {
 		return "status must be draft, active, paused, or ended"
 	}
-	if req.TimerMinutes <= 0 {
-		req.TimerMinutes = 120
+	if req.TimerEnabled {
+		if req.TimerMinutes <= 0 {
+			req.TimerMinutes = 120
+		}
+		if req.StageTimerMinutes <= 0 {
+			req.StageTimerMinutes = 10
+		}
+	} else {
+		req.TimerMinutes = 0
+		req.StageTimerMinutes = 0
 	}
 	return ""
 }

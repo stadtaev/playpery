@@ -7,10 +7,12 @@ import (
 )
 
 type GameInfo struct {
-	Status       string  `json:"status"`
-	TimerMinutes int     `json:"timerMinutes"`
-	StartedAt    *string `json:"startedAt"`
-	TotalStages  int     `json:"totalStages"`
+	Status            string  `json:"status"`
+	TimerEnabled      bool    `json:"timerEnabled"`
+	TimerMinutes      int     `json:"timerMinutes"`
+	StageTimerMinutes int     `json:"stageTimerMinutes"`
+	StartedAt         *string `json:"startedAt"`
+	TotalStages       int     `json:"totalStages"`
 }
 
 type TeamInfo struct {
@@ -68,7 +70,7 @@ func handleGameState() http.HandlerFunc {
 			return
 		}
 
-		if data.Status == "active" && data.StartedAt != nil {
+		if data.TimerEnabled && data.Status == "active" && data.StartedAt != nil {
 			start, _ := time.Parse(time.RFC3339Nano, *data.StartedAt)
 			if time.Since(start) > time.Duration(data.TimerMinutes)*time.Minute {
 				data.Status = "ended"
@@ -105,10 +107,12 @@ func handleGameState() http.HandlerFunc {
 
 		resp := GameStateResponse{
 			Game: GameInfo{
-				Status:       data.Status,
-				TimerMinutes: data.TimerMinutes,
-				StartedAt:    data.StartedAt,
-				TotalStages:  len(stages),
+				Status:            data.Status,
+				TimerEnabled:      data.TimerEnabled,
+				TimerMinutes:      data.TimerMinutes,
+				StageTimerMinutes: data.StageTimerMinutes,
+				StartedAt:         data.StartedAt,
+				TotalStages:       len(stages),
 			},
 			Team: TeamInfo{
 				ID:   sess.TeamID,

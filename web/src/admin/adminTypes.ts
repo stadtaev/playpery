@@ -43,7 +43,9 @@ export interface GameSummary {
   scenarioId: string
   scenarioName: string
   status: string
+  timerEnabled: boolean
   timerMinutes: number
+  stageTimerMinutes: number
   teamCount: number
   createdAt: string
 }
@@ -62,7 +64,9 @@ export interface GameDetail {
   scenarioId: string
   scenarioName: string
   status: string
+  timerEnabled: boolean
   timerMinutes: number
+  stageTimerMinutes: number
   teams: TeamItem[]
   createdAt: string
 }
@@ -70,7 +74,9 @@ export interface GameDetail {
 export interface GameRequest {
   scenarioId: string
   status: string
+  timerEnabled: boolean
   timerMinutes: number
+  stageTimerMinutes: number
 }
 
 export interface TeamRequest {
@@ -83,7 +89,9 @@ export interface GameStatus {
   id: string
   scenarioName: string
   status: string
+  timerEnabled: boolean
   timerMinutes: number
+  stageTimerMinutes: number
   startedAt: string | null
   totalStages: number
   teams: TeamStatus[]

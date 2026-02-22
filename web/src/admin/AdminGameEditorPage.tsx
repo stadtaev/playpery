@@ -13,7 +13,9 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
   const [scenarios, setScenarios] = useState<ScenarioSummary[]>([])
   const [scenarioId, setScenarioId] = useState('')
   const [status, setStatus] = useState('draft')
+  const [timerEnabled, setTimerEnabled] = useState(false)
   const [timerMinutes, setTimerMinutes] = useState(120)
+  const [stageTimerMinutes, setStageTimerMinutes] = useState(10)
   const [teams, setTeams] = useState<TeamItem[]>([])
   const [loading, setLoading] = useState(!!id)
   const [saving, setSaving] = useState(false)
@@ -38,7 +40,9 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
         getGame(client, id).then((g) => {
           setScenarioId(g.scenarioId)
           setStatus(g.status)
-          setTimerMinutes(g.timerMinutes)
+          setTimerEnabled(g.timerEnabled)
+          setTimerMinutes(g.timerMinutes || 120)
+          setStageTimerMinutes(g.stageTimerMinutes || 10)
           setTeams(g.teams)
         })
       )
@@ -54,7 +58,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
     setSaving(true)
     setError('')
 
-    const data: GameRequest = { scenarioId, status, timerMinutes }
+    const data: GameRequest = { scenarioId, status, timerEnabled, timerMinutes, stageTimerMinutes }
 
     try {
       if (id) {
@@ -142,20 +146,30 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
             ))}
           </select>
         </label>
-        <div className="grid">
-          <label>
-            Status
-            <select value={status} onChange={(e) => setStatus(e.target.value)}>
-              {statuses.map((s) => (
-                <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Timer (minutes)
-            <input type="number" min="1" value={timerMinutes} onChange={(e) => setTimerMinutes(parseInt(e.target.value) || 120)} required />
-          </label>
-        </div>
+        <label>
+          Status
+          <select value={status} onChange={(e) => setStatus(e.target.value)}>
+            {statuses.map((s) => (
+              <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+            ))}
+          </select>
+        </label>
+        <label>
+          <input type="checkbox" checked={timerEnabled} onChange={(e) => setTimerEnabled(e.target.checked)} />
+          Enable timer
+        </label>
+        {timerEnabled && (
+          <div className="grid">
+            <label>
+              Game timer (minutes)
+              <input type="number" min="1" value={timerMinutes} onChange={(e) => setTimerMinutes(parseInt(e.target.value) || 120)} required />
+            </label>
+            <label>
+              Stage timer (minutes)
+              <input type="number" min="1" value={stageTimerMinutes} onChange={(e) => setStageTimerMinutes(parseInt(e.target.value) || 10)} required />
+            </label>
+          </div>
+        )}
 
         <div style={{ display: 'flex', gap: '1rem' }}>
           <button type="submit" disabled={saving} aria-busy={saving}>

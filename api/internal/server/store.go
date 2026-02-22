@@ -8,11 +8,13 @@ import (
 var ErrNotFound = errors.New("not found")
 
 type gameStateData struct {
-	Status       string
-	TimerMinutes int
-	StartedAt    *string
-	StagesJSON   string
-	TeamName     string
+	Status            string
+	TimerEnabled      bool
+	TimerMinutes      int
+	StageTimerMinutes int
+	StartedAt         *string
+	StagesJSON        string
+	TeamName          string
 }
 
 type Store interface {

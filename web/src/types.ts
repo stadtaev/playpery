@@ -13,7 +13,9 @@ export interface JoinResponse {
 
 export interface GameInfo {
   status: string
+  timerEnabled: boolean
   timerMinutes: number
+  stageTimerMinutes: number
   startedAt: string | null
   totalStages: number
 }

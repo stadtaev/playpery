@@ -3,24 +3,44 @@ import { getGameState, submitAnswer } from './api'
 import { useGameEvents } from './useGameEvents'
 import type { GameState } from './types'
 
-function TimeRemaining({ startedAt, timerMinutes }: { startedAt: string; timerMinutes: number }) {
-  const [remaining, setRemaining] = useState('')
+function useCountdown(deadline: number | null) {
+  const [remaining, setRemaining] = useState<number | null>(null)
 
   useEffect(() => {
+    if (deadline === null) { setRemaining(null); return }
     function update() {
-      const start = new Date(startedAt).getTime()
-      const end = start + timerMinutes * 60 * 1000
-      const left = Math.max(0, end - Date.now())
-      const mins = Math.floor(left / 60000)
-      const secs = Math.floor((left % 60000) / 1000)
-      setRemaining(`${mins}:${secs.toString().padStart(2, '0')}`)
+      setRemaining(Math.max(0, deadline! - Date.now()))
     }
     update()
     const id = setInterval(update, 1000)
     return () => clearInterval(id)
-  }, [startedAt, timerMinutes])
+  }, [deadline])
 
-  return <span>{remaining}</span>
+  return remaining
+}
+
+function formatTime(ms: number): string {
+  const mins = Math.floor(ms / 60000)
+  const secs = Math.floor((ms % 60000) / 1000)
+  return `${mins}:${secs.toString().padStart(2, '0')}`
+}
+
+function TimerDisplay({ gameRemaining, stageRemaining }: { gameRemaining: number | null; stageRemaining: number | null }) {
+  if (gameRemaining === null && stageRemaining === null) return null
+
+  const minRemaining = Math.min(
+    gameRemaining ?? Infinity,
+    stageRemaining ?? Infinity,
+  )
+  const isUrgent = minRemaining <= 60000
+  const color = isUrgent ? '#e53e3e' : '#38a169'
+
+  return (
+    <div style={{ position: 'fixed', top: '0.75rem', left: '0.75rem', zIndex: 1000, fontFamily: 'monospace', fontSize: '1.1rem', fontWeight: 'bold', color }}>
+      {gameRemaining !== null && <div>Game: {formatTime(gameRemaining)}</div>}
+      {stageRemaining !== null && <div>Stage: {formatTime(stageRemaining)}</div>}
+    </div>
+  )
 }
 
 export function GamePage() {
@@ -45,6 +65,28 @@ export function GamePage() {
   }, [fetchState])
 
   useGameEvents(client, fetchState)
+
+  // Compute timer deadlines.
+  const gameDeadline = state?.game.timerEnabled && state.game.startedAt && state.game.status === 'active'
+    ? new Date(state.game.startedAt).getTime() + state.game.timerMinutes * 60000
+    : null
+
+  const stageDeadline = (() => {
+    if (!state?.game.timerEnabled || state.game.status !== 'active' || !state.currentStage) return null
+    const { completedStages } = state
+    // Stage starts when previous stage was completed, or when the game started for stage 1.
+    if (completedStages.length > 0) {
+      const lastCompleted = completedStages[completedStages.length - 1]
+      return new Date(lastCompleted.answeredAt).getTime() + state.game.stageTimerMinutes * 60000
+    }
+    if (state.game.startedAt) {
+      return new Date(state.game.startedAt).getTime() + state.game.stageTimerMinutes * 60000
+    }
+    return null
+  })()
+
+  const gameRemaining = useCountdown(gameDeadline)
+  const stageRemaining = useCountdown(stageDeadline)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -99,14 +141,12 @@ export function GamePage() {
 
   return (
     <main className="container" style={{ maxWidth: 600 }}>
+      {game.timerEnabled && !isEnded && (
+        <TimerDisplay gameRemaining={gameRemaining} stageRemaining={stageRemaining} />
+      )}
       <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1 style={{ margin: 0 }}>CityQuest</h1>
-        <small>
-          {team.name} &middot;{' '}
-          {game.startedAt && (
-            <TimeRemaining startedAt={game.startedAt} timerMinutes={game.timerMinutes} />
-          )}
-        </small>
+        <small>{team.name}</small>
       </nav>
 
       {isEnded && (
