@@ -94,14 +94,13 @@ export function GamePage() {
     setFeedback(null)
     try {
       const resp = await submitAnswer(client, answer.trim())
+      setAnswer('')
       if (resp.isCorrect) {
         setFeedback({ correct: true, message: `Stage ${resp.stageNumber} complete!` })
-        setAnswer('')
         setStageStartedAt(null)
         fetchState()
       } else {
-        console.log('[debug] correct answer:', resp.correctAnswer)
-        setFeedback({ correct: false, message: 'Wrong answer, try again!' })
+        setFeedback({ correct: false, message: `Incorrect — the correct answer was: ${resp.correctAnswer}` })
       }
     } catch (e) {
       setFeedback({ correct: false, message: e instanceof Error ? e.message : 'Error' })
@@ -153,7 +152,7 @@ export function GamePage() {
         <article>
           <header>Game Over!</header>
           <p>
-            Your team completed {completedStages.length} of {game.totalStages} stages.
+            Your team answered {completedStages.filter((s) => s.isCorrect).length} of {game.totalStages} correctly.
           </p>
         </article>
       )}
@@ -177,24 +176,35 @@ export function GamePage() {
           </header>
           <p><strong>Clue:</strong> {currentStage.clue}</p>
           <p><strong>Question:</strong> {currentStage.question}</p>
-          <form onSubmit={handleSubmit}>
-            <input
-              type="text"
-              value={answer}
-              onChange={(e) => setAnswer(e.target.value)}
-              placeholder="Your answer..."
-              autoFocus
-              required
-            />
-            {feedback && (
-              <small style={{ color: feedback.correct ? 'var(--pico-color-green-500)' : 'var(--pico-color-red-500)' }}>
+          {feedback && !feedback.correct ? (
+            <>
+              <p style={{ color: 'var(--pico-color-red-500)' }}>
                 {feedback.message}
-              </small>
-            )}
-            <button type="submit" disabled={submitting} aria-busy={submitting}>
-              Submit Answer
-            </button>
-          </form>
+              </p>
+              <button onClick={() => { setFeedback(null); setStageStartedAt(null); fetchState() }}>
+                Continue
+              </button>
+            </>
+          ) : (
+            <form onSubmit={handleSubmit}>
+              <input
+                type="text"
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
+                placeholder="Your answer..."
+                autoFocus
+                required
+              />
+              {feedback && (
+                <small style={{ color: 'var(--pico-color-green-500)' }}>
+                  {feedback.message}
+                </small>
+              )}
+              <button type="submit" disabled={submitting} aria-busy={submitting}>
+                Submit Answer
+              </button>
+            </form>
+          )}
         </article>
       )}
 
@@ -203,7 +213,9 @@ export function GamePage() {
           <summary>Completed Stages ({completedStages.length})</summary>
           <ul>
             {completedStages.map((s) => (
-              <li key={s.stageNumber}>Stage {s.stageNumber} &mdash; completed</li>
+              <li key={s.stageNumber} style={{ color: s.isCorrect ? 'var(--pico-color-green-500)' : 'var(--pico-color-red-500)' }}>
+                Stage {s.stageNumber} &mdash; {s.isCorrect ? 'correct' : 'incorrect'}
+              </li>
             ))}
           </ul>
         </details>

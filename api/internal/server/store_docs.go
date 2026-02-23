@@ -395,6 +395,19 @@ func (s *DocStore) ExpireGame(ctx context.Context, gameID string) error {
 	})
 }
 
+func (s *DocStore) CountAnsweredStages(ctx context.Context, gameID, teamID string) (int, error) {
+	g, err := s.getGame(ctx, gameID)
+	if err != nil {
+		return 0, err
+	}
+	for _, t := range g.Teams {
+		if t.ID == teamID {
+			return len(t.Results), nil
+		}
+	}
+	return 0, nil
+}
+
 func (s *DocStore) CountCorrectAnswers(ctx context.Context, gameID, teamID string) (int, error) {
 	g, err := s.getGame(ctx, gameID)
 	if err != nil {
@@ -458,13 +471,11 @@ func (s *DocStore) ListCompletedStages(ctx context.Context, gameID, teamID strin
 		if t.ID == teamID {
 			var completed []CompletedStage
 			for _, r := range t.Results {
-				if r.IsCorrect {
-					completed = append(completed, CompletedStage{
-						StageNumber: r.StageNumber,
-						IsCorrect:   true,
-						AnsweredAt:  r.AnsweredAt,
-					})
-				}
+				completed = append(completed, CompletedStage{
+					StageNumber: r.StageNumber,
+					IsCorrect:   r.IsCorrect,
+					AnsweredAt:  r.AnsweredAt,
+				})
 			}
 			return completed, nil
 		}

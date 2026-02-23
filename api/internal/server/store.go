@@ -31,6 +31,7 @@ type Store interface {
 	JoinTeam(ctx context.Context, gameID, teamID, playerName, role string) (playerID, sessionID string, err error)
 	GameState(ctx context.Context, gameID, teamID string) (gameStateData, error)
 	ExpireGame(ctx context.Context, gameID string) error
+	CountAnsweredStages(ctx context.Context, gameID, teamID string) (int, error)
 	CountCorrectAnswers(ctx context.Context, gameID, teamID string) (int, error)
 	RecordAnswer(ctx context.Context, gameID, teamID string, stageNumber int, answer string, isCorrect bool) error
 	ListPlayers(ctx context.Context, gameID, teamID string) ([]PlayerInfo, error)

@@ -174,7 +174,7 @@ func TestAnswerFlow(t *testing.T) {
 	json.NewDecoder(w.Body).Decode(&joinResp)
 	token := joinResp.Token
 
-	// Wrong answer.
+	// Wrong answer for stage 1 — one attempt, advances to stage 2.
 	body, _ = json.Marshal(AnswerRequest{Answer: "1900"})
 	req = httptest.NewRequest(http.MethodPost, "/api/demo/game/answer", bytes.NewReader(body))
 	req.Header.Set("Authorization", "Bearer "+token)
@@ -193,9 +193,36 @@ func TestAnswerFlow(t *testing.T) {
 	if ansResp.StageNumber != 1 {
 		t.Errorf("wrong answer: expected stage 1, got %d", ansResp.StageNumber)
 	}
+	if ansResp.CorrectAnswer != "1651" {
+		t.Errorf("wrong answer: expected correctAnswer '1651', got %q", ansResp.CorrectAnswer)
+	}
+	if ansResp.NextStage == nil {
+		t.Fatal("wrong answer: expected nextStage (advances to stage 2)")
+	}
+	if ansResp.NextStage.StageNumber != 2 {
+		t.Errorf("wrong answer: expected next stage 2, got %d", ansResp.NextStage.StageNumber)
+	}
 
-	// Correct answer for stage 1.
-	body, _ = json.Marshal(AnswerRequest{Answer: "1651"})
+	// Verify state shows stage 2 and 1 completed (incorrect) stage.
+	req = httptest.NewRequest(http.MethodGet, "/api/demo/game/state", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	w = httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	var state GameStateResponse
+	json.NewDecoder(w.Body).Decode(&state)
+	if state.CurrentStage.StageNumber != 2 {
+		t.Errorf("state after wrong: expected stage 2, got %d", state.CurrentStage.StageNumber)
+	}
+	if len(state.CompletedStages) != 1 {
+		t.Errorf("state after wrong: expected 1 completed stage, got %d", len(state.CompletedStages))
+	}
+	if state.CompletedStages[0].IsCorrect {
+		t.Error("state after wrong: expected completed stage to be incorrect")
+	}
+
+	// Correct answer for stage 2.
+	body, _ = json.Marshal(AnswerRequest{Answer: "catacombs"})
 	req = httptest.NewRequest(http.MethodPost, "/api/demo/game/answer", bytes.NewReader(body))
 	req.Header.Set("Authorization", "Bearer "+token)
 	w = httptest.NewRecorder()
@@ -208,23 +235,22 @@ func TestAnswerFlow(t *testing.T) {
 	if ansResp.NextStage == nil {
 		t.Fatal("correct answer: expected nextStage")
 	}
-	if ansResp.NextStage.StageNumber != 2 {
-		t.Errorf("correct answer: expected next stage 2, got %d", ansResp.NextStage.StageNumber)
+	if ansResp.NextStage.StageNumber != 3 {
+		t.Errorf("correct answer: expected next stage 3, got %d", ansResp.NextStage.StageNumber)
 	}
 
-	// Verify state advances to stage 2.
+	// Verify state shows 2 completed stages (1 incorrect, 1 correct).
 	req = httptest.NewRequest(http.MethodGet, "/api/demo/game/state", nil)
 	req.Header.Set("Authorization", "Bearer "+token)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
-	var state GameStateResponse
 	json.NewDecoder(w.Body).Decode(&state)
-	if state.CurrentStage.StageNumber != 2 {
-		t.Errorf("state after correct: expected stage 2, got %d", state.CurrentStage.StageNumber)
+	if state.CurrentStage.StageNumber != 3 {
+		t.Errorf("state after correct: expected stage 3, got %d", state.CurrentStage.StageNumber)
 	}
-	if len(state.CompletedStages) != 1 {
-		t.Errorf("state after correct: expected 1 completed stage, got %d", len(state.CompletedStages))
+	if len(state.CompletedStages) != 2 {
+		t.Errorf("state after correct: expected 2 completed stages, got %d", len(state.CompletedStages))
 	}
 }
 

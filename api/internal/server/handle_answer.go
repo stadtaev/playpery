@@ -63,13 +63,13 @@ func handleAnswer(broker *Broker) http.HandlerFunc {
 		var stages []scenarioStage
 		json.Unmarshal([]byte(data.StagesJSON), &stages)
 
-		correctCount, err := store.CountCorrectAnswers(r.Context(), sess.GameID, sess.TeamID)
+		answeredCount, err := store.CountAnsweredStages(r.Context(), sess.GameID, sess.TeamID)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "internal error")
 			return
 		}
 
-		currentStageNum := correctCount + 1
+		currentStageNum := answeredCount + 1
 		if currentStageNum > len(stages) {
 			writeError(w, http.StatusConflict, "all stages completed")
 			return
@@ -91,20 +91,21 @@ func handleAnswer(broker *Broker) http.HandlerFunc {
 			StageNumber: currentStageNum,
 		}
 
-		if isCorrect {
-			nextStageNum := currentStageNum + 1
-			if nextStageNum <= len(stages) {
-				s := stages[nextStageNum-1]
-				resp.NextStage = &StageInfo{
-					StageNumber: s.StageNumber,
-					Clue:        s.Clue,
-					Question:    s.Question,
-					Location:    s.Location,
-				}
-			} else {
-				resp.GameComplete = true
+		// Both correct and incorrect answers advance to the next stage.
+		nextStageNum := currentStageNum + 1
+		if nextStageNum <= len(stages) {
+			s := stages[nextStageNum-1]
+			resp.NextStage = &StageInfo{
+				StageNumber: s.StageNumber,
+				Clue:        s.Clue,
+				Question:    s.Question,
+				Location:    s.Location,
 			}
+		} else {
+			resp.GameComplete = true
+		}
 
+		if isCorrect {
 			broker.Publish(sess.TeamID, SSEEvent{
 				Type:        "stage_completed",
 				StageNumber: currentStageNum,
