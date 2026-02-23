@@ -67,6 +67,7 @@ export interface GameDetail {
   timerEnabled: boolean
   timerMinutes: number
   stageTimerMinutes: number
+  startedAt: string | null
   teams: TeamItem[]
   createdAt: string
 }

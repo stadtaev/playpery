@@ -31,6 +31,7 @@ type AdminGameDetail struct {
 	TimerEnabled      bool            `json:"timerEnabled"`
 	TimerMinutes      int             `json:"timerMinutes"`
 	StageTimerMinutes int             `json:"stageTimerMinutes"`
+	StartedAt         *string         `json:"startedAt"`
 	Teams             []AdminTeamItem `json:"teams"`
 	CreatedAt         string          `json:"createdAt"`
 }

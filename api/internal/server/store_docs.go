@@ -532,6 +532,7 @@ func (s *DocStore) GetGame(ctx context.Context, id string) (AdminGameDetail, err
 		TimerEnabled:      g.TimerEnabled,
 		TimerMinutes:      g.TimerMinutes,
 		StageTimerMinutes: g.StageTimerMinutes,
+		StartedAt:         g.StartedAt,
 		Teams:             teams,
 		CreatedAt:         g.CreatedAt,
 	}, nil
@@ -542,11 +543,30 @@ func (s *DocStore) UpdateGame(ctx context.Context, id string, req AdminGameReque
 	if err != nil {
 		return AdminGameDetail{}, err
 	}
+
+	oldStatus := g.Status
 	g.ScenarioID = req.ScenarioID
 	g.Status = req.Status
 	g.TimerEnabled = req.TimerEnabled
 	g.TimerMinutes = req.TimerMinutes
 	g.StageTimerMinutes = req.StageTimerMinutes
+
+	// Handle status transition timestamps.
+	if req.Status != oldStatus {
+		now := nowUTC()
+		switch req.Status {
+		case "active":
+			if g.StartedAt == nil {
+				g.StartedAt = &now
+			}
+		case "ended":
+			g.EndedAt = &now
+		case "draft":
+			g.StartedAt = nil
+			g.EndedAt = nil
+		}
+	}
+
 	if err := s.putGame(ctx, g); err != nil {
 		return AdminGameDetail{}, err
 	}
@@ -557,6 +577,7 @@ func (s *DocStore) UpdateGame(ctx context.Context, id string, req AdminGameReque
 		TimerEnabled:      req.TimerEnabled,
 		TimerMinutes:      req.TimerMinutes,
 		StageTimerMinutes: req.StageTimerMinutes,
+		StartedAt:         g.StartedAt,
 		CreatedAt:         g.CreatedAt,
 	}, nil
 }

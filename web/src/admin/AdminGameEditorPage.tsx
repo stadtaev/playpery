@@ -16,6 +16,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
   const [timerEnabled, setTimerEnabled] = useState(false)
   const [timerMinutes, setTimerMinutes] = useState(120)
   const [stageTimerMinutes, setStageTimerMinutes] = useState(10)
+  const [startedAt, setStartedAt] = useState<string | null>(null)
   const [teams, setTeams] = useState<TeamItem[]>([])
   const [loading, setLoading] = useState(!!id)
   const [saving, setSaving] = useState(false)
@@ -43,6 +44,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
           setTimerEnabled(g.timerEnabled)
           setTimerMinutes(g.timerMinutes || 120)
           setStageTimerMinutes(g.stageTimerMinutes || 10)
+          setStartedAt(g.startedAt)
           setTeams(g.teams)
         })
       )
@@ -63,6 +65,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
     try {
       if (id) {
         const updated = await updateGame(client, id, data)
+        setStartedAt(updated.startedAt)
         setTeams(updated.teams)
       } else {
         const created = await createGame(client, data)
@@ -137,14 +140,18 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
         )}
       </div>
       {error && <p role="alert" style={{ color: 'var(--pico-color-red-500)' }}>{error}</p>}
+      {startedAt && (
+        <p><small>Started: {new Date(startedAt).toLocaleString()}</small></p>
+      )}
       <form onSubmit={handleSubmit}>
         <label>
           Scenario
-          <select value={scenarioId} onChange={(e) => setScenarioId(e.target.value)} required>
+          <select value={scenarioId} onChange={(e) => setScenarioId(e.target.value)} required disabled={!!id && status !== 'draft'}>
             {scenarios.map((s) => (
               <option key={s.id} value={s.id}>{s.name} ({s.city})</option>
             ))}
           </select>
+          {!!id && status !== 'draft' && <small>Scenario cannot be changed after game is activated</small>}
         </label>
         <label>
           Status
