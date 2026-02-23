@@ -26,15 +26,54 @@ The platform is designed as a SaaS — tourism companies anywhere in the world c
 
 1. **An operator creates a scenario** — a sequence of stages, each tied to a real-world location. Every stage has a clue (to get players to the right spot), a question (about what they'll find there), and a correct answer.
 
-2. **The operator creates a game** from that scenario, sets a timer (e.g. 2 hours), and generates teams with unique join links/QR codes.
+2. **The operator creates a game** from that scenario, optionally enables timers, and generates teams with unique join links/QR codes.
 
 3. **Players scan the QR code** on their phone, enter their name, and join their team. No account creation, no app download.
 
-4. **The game begins.** Each team sees their first clue. They walk to the location, find the answer, and submit it. Correct answer → next stage unlocked. Wrong answer → try again.
+4. **The game begins.** Each team sees their first clue. They walk to the location, find the answer, and submit it.
 
-5. **Real-time updates** keep the whole team in sync. When a teammate answers correctly, everyone's screen updates instantly via Server-Sent Events. New players joining mid-game see the current state immediately.
+5. **Real-time updates** keep the whole team in sync. When a teammate answers, everyone's screen updates instantly via Server-Sent Events. New players joining mid-game see the current state immediately.
 
-6. **The game ends** when the timer runs out or all stages are completed. Teams see their final score — how many stages they completed and how long it took.
+6. **The game ends** when the timer runs out or all stages are completed. Teams see their final score.
+
+### Answering Questions
+
+Teams progress through stages in order. At each stage, the team gets **one attempt** to answer:
+
+- **Correct answer** — the team earns a point and advances to the next stage.
+- **Wrong answer** — the correct answer is revealed, no point is earned, and the team advances to the next stage anyway.
+
+Answers are compared case-insensitively with whitespace trimmed. There are no retries — every stage is answered exactly once.
+
+### Scoring
+
+A team's score is the number of correctly answered stages out of the total. At game end, the summary shows "X of Y answered correctly." The completed stages list shows each stage color-coded as correct (green) or incorrect (red).
+
+### Game Types
+
+**Standard game** — all players join through the team's regular join link and have the same role.
+
+**Supervised game** — when a game is marked as supervised, each team gets two links: a regular join link and a supervisor link. Players who join via the supervisor link are assigned the "supervisor" role; all others are "player." The role is stored on the session and visible in admin views. (Supervisor-specific permissions are reserved for future use.)
+
+### Timers
+
+Games support two optional timers, enabled together via the "Enable timer" setting:
+
+- **Game timer** — a total time limit for the entire game (default 120 minutes). When the game timer expires, the game status changes to "ended" and no more answers are accepted.
+- **Stage timer** — a per-stage countdown (default 10 minutes) that resets when a new stage begins. This is a client-side display to create urgency; it does not auto-advance the stage server-side.
+
+Timer expiration is checked lazily on each API request. The frontend displays both countdowns and highlights them in red when under 60 seconds.
+
+### Game Lifecycle
+
+| Status | Meaning |
+|--------|---------|
+| `draft` | Game created, not yet playable. Teams can be added and configured. |
+| `active` | Game is live. Players can join teams and answer questions. |
+| `paused` | Temporarily halted. Players see "game is not active." |
+| `ended` | Game is over (manually ended or timer expired). Scores are final. |
+
+Transitioning to "active" records the start time. Transitioning to "ended" records the end time. Resetting to "draft" clears both timestamps.
 
 ## Tech Stack
 
