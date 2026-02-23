@@ -75,7 +75,7 @@ export function AdminGamesPage({ client }: { client: string }) {
                     href={`/admin/clients/${client}/games/${g.id}/edit`}
                     onClick={(e) => { e.preventDefault(); navigate(`/admin/clients/${client}/games/${g.id}/edit`) }}
                   >
-                    {g.scenarioName}
+                    {g.scenarioName}{g.supervised && ' (supervised)'}
                   </a>
                 </td>
                 <td>{statusLabels[g.status] || g.status}</td>

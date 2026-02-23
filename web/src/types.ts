@@ -2,6 +2,7 @@ export interface TeamLookup {
   id: string
   name: string
   gameName: string
+  role: string
 }
 
 export interface JoinResponse {
@@ -9,6 +10,7 @@ export interface JoinResponse {
   playerId: string
   teamId: string
   teamName: string
+  role: string
 }
 
 export interface GameInfo {
@@ -46,6 +48,7 @@ export interface PlayerInfo {
 export interface GameState {
   game: GameInfo
   team: TeamInfo
+  role: string
   currentStage: StageInfo | null
   completedStages: CompletedStage[]
   players: PlayerInfo[]

@@ -7,6 +7,13 @@ import (
 
 var ErrNotFound = errors.New("not found")
 
+type sessionInfo struct {
+	PlayerID string
+	TeamID   string
+	GameID   string
+	Role     string
+}
+
 type gameStateData struct {
 	Status            string
 	TimerEnabled      bool
@@ -18,10 +25,10 @@ type gameStateData struct {
 }
 
 type Store interface {
-	PlayerFromToken(ctx context.Context, token string) (playerSession, error)
+	PlayerFromToken(ctx context.Context, token string) (sessionInfo, error)
 
 	TeamLookup(ctx context.Context, joinToken string) (TeamLookupResponse, error)
-	JoinTeam(ctx context.Context, gameID, teamID, playerName string) (playerID, sessionID string, err error)
+	JoinTeam(ctx context.Context, gameID, teamID, playerName, role string) (playerID, sessionID string, err error)
 	GameState(ctx context.Context, gameID, teamID string) (gameStateData, error)
 	ExpireGame(ctx context.Context, gameID string) error
 	CountCorrectAnswers(ctx context.Context, gameID, teamID string) (int, error)

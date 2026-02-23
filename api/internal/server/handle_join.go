@@ -16,6 +16,7 @@ type JoinResponse struct {
 	PlayerID string `json:"playerId"`
 	TeamID   string `json:"teamId"`
 	TeamName string `json:"teamName"`
+	Role     string `json:"role"`
 }
 
 func handleJoin(broker *Broker) http.HandlerFunc {
@@ -44,7 +45,7 @@ func handleJoin(broker *Broker) http.HandlerFunc {
 			return
 		}
 
-		playerID, sessionID, err := store.JoinTeam(r.Context(), team.GameID, team.ID, req.PlayerName)
+		playerID, sessionID, err := store.JoinTeam(r.Context(), team.GameID, team.ID, req.PlayerName, team.Role)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "internal error")
 			return
@@ -60,6 +61,7 @@ func handleJoin(broker *Broker) http.HandlerFunc {
 			PlayerID: playerID,
 			TeamID:   team.ID,
 			TeamName: team.Name,
+			Role:     team.Role,
 		})
 	}
 }

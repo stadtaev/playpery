@@ -11,6 +11,7 @@ type TeamLookupResponse struct {
 	ID       string `json:"id"`
 	Name     string `json:"name"`
 	GameName string `json:"gameName"`
+	Role     string `json:"role"`
 	GameID   string `json:"-"`
 }
 

@@ -16,6 +16,7 @@ type AdminGameSummary struct {
 	ScenarioID        string `json:"scenarioId"`
 	ScenarioName      string `json:"scenarioName"`
 	Status            string `json:"status"`
+	Supervised        bool   `json:"supervised"`
 	TimerEnabled      bool   `json:"timerEnabled"`
 	TimerMinutes      int    `json:"timerMinutes"`
 	StageTimerMinutes int    `json:"stageTimerMinutes"`
@@ -28,6 +29,7 @@ type AdminGameDetail struct {
 	ScenarioID        string          `json:"scenarioId"`
 	ScenarioName      string          `json:"scenarioName"`
 	Status            string          `json:"status"`
+	Supervised        bool            `json:"supervised"`
 	TimerEnabled      bool            `json:"timerEnabled"`
 	TimerMinutes      int             `json:"timerMinutes"`
 	StageTimerMinutes int             `json:"stageTimerMinutes"`
@@ -37,18 +39,20 @@ type AdminGameDetail struct {
 }
 
 type AdminTeamItem struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	JoinToken   string `json:"joinToken"`
-	GuideName   string `json:"guideName"`
-	PlayerCount int    `json:"playerCount"`
-	CreatedAt   string `json:"createdAt"`
+	ID              string `json:"id"`
+	Name            string `json:"name"`
+	JoinToken       string `json:"joinToken"`
+	SupervisorToken string `json:"supervisorToken,omitempty"`
+	GuideName       string `json:"guideName"`
+	PlayerCount     int    `json:"playerCount"`
+	CreatedAt       string `json:"createdAt"`
 }
 
 type AdminGameRequest struct {
 	ScenarioID        string `json:"scenarioId"`
 	ScenarioName      string `json:"-"` // set by handler after validation
 	Status            string `json:"status"`
+	Supervised        bool   `json:"supervised"`
 	TimerEnabled      bool   `json:"timerEnabled"`
 	TimerMinutes      int    `json:"timerMinutes"`
 	StageTimerMinutes int    `json:"stageTimerMinutes"`
@@ -64,6 +68,7 @@ type AdminGameStatus struct {
 	ID                string            `json:"id"`
 	ScenarioName      string            `json:"scenarioName"`
 	Status            string            `json:"status"`
+	Supervised        bool              `json:"supervised"`
 	TimerEnabled      bool              `json:"timerEnabled"`
 	TimerMinutes      int               `json:"timerMinutes"`
 	StageTimerMinutes int               `json:"stageTimerMinutes"`
@@ -82,6 +87,7 @@ type AdminTeamStatus struct {
 
 type AdminPlayerStatus struct {
 	Name     string `json:"name"`
+	Role     string `json:"role"`
 	JoinedAt string `json:"joinedAt"`
 }
 
@@ -132,6 +138,12 @@ func generateJoinToken() string {
 	b := make([]byte, 4)
 	rand.Read(b)
 	return "team-" + hex.EncodeToString(b)
+}
+
+func generateSupervisorToken() string {
+	b := make([]byte, 4)
+	rand.Read(b)
+	return "super-" + hex.EncodeToString(b)
 }
 
 func handleAdminListGames() http.HandlerFunc {

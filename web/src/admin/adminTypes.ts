@@ -43,6 +43,7 @@ export interface GameSummary {
   scenarioId: string
   scenarioName: string
   status: string
+  supervised: boolean
   timerEnabled: boolean
   timerMinutes: number
   stageTimerMinutes: number
@@ -54,6 +55,7 @@ export interface TeamItem {
   id: string
   name: string
   joinToken: string
+  supervisorToken: string
   guideName: string
   playerCount: number
   createdAt: string
@@ -64,6 +66,7 @@ export interface GameDetail {
   scenarioId: string
   scenarioName: string
   status: string
+  supervised: boolean
   timerEnabled: boolean
   timerMinutes: number
   stageTimerMinutes: number
@@ -75,6 +78,7 @@ export interface GameDetail {
 export interface GameRequest {
   scenarioId: string
   status: string
+  supervised: boolean
   timerEnabled: boolean
   timerMinutes: number
   stageTimerMinutes: number
@@ -108,5 +112,6 @@ export interface TeamStatus {
 
 export interface PlayerStatus {
   name: string
+  role: string
   joinedAt: string
 }

@@ -13,7 +13,7 @@ import (
 
 // Document types stored as JSONB in per-model tables.
 
-type scenarioDoc struct {
+type scenario struct {
 	ID          string       `json:"id"`
 	Name        string       `json:"name"`
 	City        string       `json:"city"`
@@ -22,11 +22,12 @@ type scenarioDoc struct {
 	CreatedAt   string       `json:"createdAt"`
 }
 
-type gameDoc struct {
+type game struct {
 	ID                string       `json:"id"`
 	ScenarioID        string       `json:"scenarioId"`
 	ScenarioName      string       `json:"scenarioName"`
 	Status            string       `json:"status"`
+	Supervised        bool         `json:"supervised,omitempty"`
 	TimerEnabled      bool         `json:"timerEnabled"`
 	TimerMinutes      int          `json:"timerMinutes"`
 	StageTimerMinutes int          `json:"stageTimerMinutes"`
@@ -34,37 +35,40 @@ type gameDoc struct {
 	StartedAt         *string      `json:"startedAt"`
 	EndedAt           *string      `json:"endedAt"`
 	CreatedAt         string       `json:"createdAt"`
-	Teams             []teamDoc    `json:"teams"`
+	Teams             []team       `json:"teams"`
 }
 
-type teamDoc struct {
-	ID        string           `json:"id"`
-	Name      string           `json:"name"`
-	JoinToken string           `json:"joinToken"`
-	GuideName string           `json:"guideName"`
-	CreatedAt string           `json:"createdAt"`
-	Players   []playerDoc      `json:"players"`
-	Results   []stageResultDoc `json:"results"`
+type team struct {
+	ID              string        `json:"id"`
+	Name            string        `json:"name"`
+	JoinToken       string        `json:"joinToken"`
+	SupervisorToken string        `json:"supervisorToken,omitempty"`
+	GuideName       string        `json:"guideName"`
+	CreatedAt       string        `json:"createdAt"`
+	Players         []player      `json:"players"`
+	Results         []stageResult `json:"results"`
 }
 
-type playerDoc struct {
+type player struct {
 	ID        string `json:"id"`
 	Name      string `json:"name"`
+	Role      string `json:"role,omitempty"`
 	SessionID string `json:"sessionId"`
 	JoinedAt  string `json:"joinedAt"`
 }
 
-type stageResultDoc struct {
+type stageResult struct {
 	StageNumber int    `json:"stageNumber"`
 	Answer      string `json:"answer"`
 	IsCorrect   bool   `json:"isCorrect"`
 	AnsweredAt  string `json:"answeredAt"`
 }
 
-type playerSessionDoc struct {
+type playerSession struct {
 	PlayerID string `json:"playerId"`
 	TeamID   string `json:"teamId"`
 	GameID   string `json:"gameId"`
+	Role     string `json:"role,omitempty"`
 }
 
 // DocStore implements Store using per-model tables with JSONB data columns.
@@ -125,7 +129,7 @@ func (s *DocStore) del(ctx context.Context, table, id string) error {
 
 // Per-table put methods — different columns per table.
 
-func (s *DocStore) putGame(ctx context.Context, g gameDoc) error {
+func (s *DocStore) putGame(ctx context.Context, g game) error {
 	data, err := json.Marshal(g)
 	if err != nil {
 		return err
@@ -161,7 +165,7 @@ func nowUTC() string {
 }
 
 // allGames loads all game documents into memory.
-func (s *DocStore) allGames(ctx context.Context) ([]gameDoc, error) {
+func (s *DocStore) allGames(ctx context.Context) ([]game, error) {
 	rows, err := s.db.QueryContext(ctx,
 		`SELECT json(data) FROM games ORDER BY id`,
 	)
@@ -170,13 +174,13 @@ func (s *DocStore) allGames(ctx context.Context) ([]gameDoc, error) {
 	}
 	defer rows.Close()
 
-	var games []gameDoc
+	var games []game
 	for rows.Next() {
 		var data string
 		if err := rows.Scan(&data); err != nil {
 			return nil, err
 		}
-		var g gameDoc
+		var g game
 		if err := json.Unmarshal([]byte(data), &g); err != nil {
 			return nil, err
 		}
@@ -187,8 +191,8 @@ func (s *DocStore) allGames(ctx context.Context) ([]gameDoc, error) {
 
 // getGame is a convenience wrapper that returns the gameDoc by ID.
 // Backfills defaults for documents created before new fields existed.
-func (s *DocStore) getGame(ctx context.Context, id string) (gameDoc, error) {
-	var g gameDoc
+func (s *DocStore) getGame(ctx context.Context, id string) (game, error) {
+	var g game
 	err := s.get(ctx, "games", id, &g)
 	if err == nil && !g.TimerEnabled && g.TimerMinutes > 0 {
 		g.TimerEnabled = true
@@ -200,7 +204,7 @@ func (s *DocStore) getGame(ctx context.Context, id string) (gameDoc, error) {
 }
 
 // modifyGame loads a game, applies fn, and saves it in a transaction.
-func (s *DocStore) modifyGame(ctx context.Context, gameID string, fn func(*gameDoc) error) error {
+func (s *DocStore) modifyGame(ctx context.Context, gameID string, fn func(*game) error) error {
 	tx, err := s.db.BeginTx(ctx, &sql.TxOptions{})
 	if err != nil {
 		return err
@@ -218,7 +222,7 @@ func (s *DocStore) modifyGame(ctx context.Context, gameID string, fn func(*gameD
 		return err
 	}
 
-	var g gameDoc
+	var g game
 	if err := json.Unmarshal([]byte(data), &g); err != nil {
 		return err
 	}
@@ -244,16 +248,20 @@ func (s *DocStore) modifyGame(ctx context.Context, gameID string, fn func(*gameD
 
 // Player auth
 
-func (s *DocStore) PlayerFromToken(ctx context.Context, token string) (playerSession, error) {
-	var ps playerSessionDoc
+func (s *DocStore) PlayerFromToken(ctx context.Context, token string) (sessionInfo, error) {
+	var ps playerSession
 	err := s.get(ctx, "player_sessions", token, &ps)
 	if errors.Is(err, ErrNotFound) {
-		return playerSession{}, errNoSession
+		return sessionInfo{}, errNoSession
 	}
 	if err != nil {
-		return playerSession{}, err
+		return sessionInfo{}, err
 	}
-	return playerSession{PlayerID: ps.PlayerID, TeamID: ps.TeamID, GameID: ps.GameID}, nil
+	role := ps.Role
+	if role == "" {
+		role = "player"
+	}
+	return sessionInfo{PlayerID: ps.PlayerID, TeamID: ps.TeamID, GameID: ps.GameID, Role: role}, nil
 }
 
 // Player game flow
@@ -268,13 +276,13 @@ func (s *DocStore) TeamLookup(ctx context.Context, joinToken string) (TeamLookup
 	}
 	defer rows.Close()
 
-	var games []gameDoc
+	var games []game
 	for rows.Next() {
 		var data string
 		if err := rows.Scan(&data); err != nil {
 			return TeamLookupResponse{}, err
 		}
-		var g gameDoc
+		var g game
 		if err := json.Unmarshal([]byte(data), &g); err != nil {
 			return TeamLookupResponse{}, err
 		}
@@ -289,6 +297,16 @@ func (s *DocStore) TeamLookup(ctx context.Context, joinToken string) (TeamLookup
 					Name:     t.Name,
 					GameName: g.ScenarioName,
 					GameID:   g.ID,
+					Role:     "player",
+				}, nil
+			}
+			if g.Supervised && t.SupervisorToken != "" && t.SupervisorToken == joinToken {
+				return TeamLookupResponse{
+					ID:       t.ID,
+					Name:     t.Name,
+					GameName: g.ScenarioName,
+					GameID:   g.ID,
+					Role:     "supervisor",
 				}, nil
 			}
 		}
@@ -296,20 +314,24 @@ func (s *DocStore) TeamLookup(ctx context.Context, joinToken string) (TeamLookup
 	return TeamLookupResponse{}, ErrNotFound
 }
 
-func (s *DocStore) JoinTeam(ctx context.Context, gameID, teamID, playerName string) (string, string, error) {
+func (s *DocStore) JoinTeam(ctx context.Context, gameID, teamID, playerName, role string) (string, string, error) {
 	playerID := newID()
 	sessionID := newID()
 	now := nowUTC()
 
-	err := s.modifyGame(ctx, gameID, func(g *gameDoc) error {
+	err := s.modifyGame(ctx, gameID, func(g *game) error {
 		for i := range g.Teams {
 			if g.Teams[i].ID == teamID {
-				g.Teams[i].Players = append(g.Teams[i].Players, playerDoc{
+				p := player{
 					ID:        playerID,
 					Name:      playerName,
 					SessionID: sessionID,
 					JoinedAt:  now,
-				})
+				}
+				if role == "supervisor" {
+					p.Role = role
+				}
+				g.Teams[i].Players = append(g.Teams[i].Players, p)
 				return nil
 			}
 		}
@@ -319,11 +341,15 @@ func (s *DocStore) JoinTeam(ctx context.Context, gameID, teamID, playerName stri
 		return "", "", err
 	}
 
-	err = s.putSession(ctx, "player_sessions", sessionID, playerSessionDoc{
+	ps := playerSession{
 		PlayerID: playerID,
 		TeamID:   teamID,
 		GameID:   gameID,
-	})
+	}
+	if role == "supervisor" {
+		ps.Role = role
+	}
+	err = s.putSession(ctx, "player_sessions", sessionID, ps)
 	if err != nil {
 		return "", "", err
 	}
@@ -360,7 +386,7 @@ func (s *DocStore) GameState(ctx context.Context, gameID, teamID string) (gameSt
 
 func (s *DocStore) ExpireGame(ctx context.Context, gameID string) error {
 	now := nowUTC()
-	return s.modifyGame(ctx, gameID, func(g *gameDoc) error {
+	return s.modifyGame(ctx, gameID, func(g *game) error {
 		if g.Status == "active" {
 			g.Status = "ended"
 			g.EndedAt = &now
@@ -390,10 +416,10 @@ func (s *DocStore) CountCorrectAnswers(ctx context.Context, gameID, teamID strin
 
 func (s *DocStore) RecordAnswer(ctx context.Context, gameID, teamID string, stageNumber int, answer string, isCorrect bool) error {
 	now := nowUTC()
-	return s.modifyGame(ctx, gameID, func(g *gameDoc) error {
+	return s.modifyGame(ctx, gameID, func(g *game) error {
 		for i := range g.Teams {
 			if g.Teams[i].ID == teamID {
-				g.Teams[i].Results = append(g.Teams[i].Results, stageResultDoc{
+				g.Teams[i].Results = append(g.Teams[i].Results, stageResult{
 					StageNumber: stageNumber,
 					Answer:      answer,
 					IsCorrect:   isCorrect,
@@ -461,6 +487,7 @@ func (s *DocStore) ListGames(ctx context.Context) ([]AdminGameSummary, error) {
 			ScenarioID:        g.ScenarioID,
 			ScenarioName:      g.ScenarioName,
 			Status:            g.Status,
+			Supervised:        g.Supervised,
 			TimerEnabled:      g.TimerEnabled,
 			TimerMinutes:      g.TimerMinutes,
 			StageTimerMinutes: g.StageTimerMinutes,
@@ -478,17 +505,18 @@ func (s *DocStore) ListGames(ctx context.Context) ([]AdminGameSummary, error) {
 func (s *DocStore) CreateGame(ctx context.Context, req AdminGameRequest, stages []AdminStage) (AdminGameDetail, error) {
 	id := newID()
 	now := nowUTC()
-	doc := gameDoc{
+	doc := game{
 		ID:                id,
 		ScenarioID:        req.ScenarioID,
 		ScenarioName:      req.ScenarioName,
 		Status:            req.Status,
+		Supervised:        req.Supervised,
 		TimerEnabled:      req.TimerEnabled,
 		TimerMinutes:      req.TimerMinutes,
 		StageTimerMinutes: req.StageTimerMinutes,
 		Stages:            stages,
 		CreatedAt:         now,
-		Teams:             []teamDoc{},
+		Teams:             []team{},
 	}
 	if err := s.putGame(ctx, doc); err != nil {
 		return AdminGameDetail{}, err
@@ -498,6 +526,7 @@ func (s *DocStore) CreateGame(ctx context.Context, req AdminGameRequest, stages 
 		ScenarioID:        req.ScenarioID,
 		ScenarioName:      req.ScenarioName,
 		Status:            req.Status,
+		Supervised:        req.Supervised,
 		TimerEnabled:      req.TimerEnabled,
 		TimerMinutes:      req.TimerMinutes,
 		StageTimerMinutes: req.StageTimerMinutes,
@@ -515,12 +544,13 @@ func (s *DocStore) GetGame(ctx context.Context, id string) (AdminGameDetail, err
 	teams := make([]AdminTeamItem, len(g.Teams))
 	for i, t := range g.Teams {
 		teams[i] = AdminTeamItem{
-			ID:          t.ID,
-			Name:        t.Name,
-			JoinToken:   t.JoinToken,
-			GuideName:   t.GuideName,
-			PlayerCount: len(t.Players),
-			CreatedAt:   t.CreatedAt,
+			ID:              t.ID,
+			Name:            t.Name,
+			JoinToken:       t.JoinToken,
+			SupervisorToken: t.SupervisorToken,
+			GuideName:       t.GuideName,
+			PlayerCount:     len(t.Players),
+			CreatedAt:       t.CreatedAt,
 		}
 	}
 
@@ -529,6 +559,7 @@ func (s *DocStore) GetGame(ctx context.Context, id string) (AdminGameDetail, err
 		ScenarioID:        g.ScenarioID,
 		ScenarioName:      g.ScenarioName,
 		Status:            g.Status,
+		Supervised:        g.Supervised,
 		TimerEnabled:      g.TimerEnabled,
 		TimerMinutes:      g.TimerMinutes,
 		StageTimerMinutes: g.StageTimerMinutes,
@@ -547,6 +578,7 @@ func (s *DocStore) UpdateGame(ctx context.Context, id string, req AdminGameReque
 	oldStatus := g.Status
 	g.ScenarioID = req.ScenarioID
 	g.Status = req.Status
+	g.Supervised = req.Supervised
 	g.TimerEnabled = req.TimerEnabled
 	g.TimerMinutes = req.TimerMinutes
 	g.StageTimerMinutes = req.StageTimerMinutes
@@ -574,6 +606,7 @@ func (s *DocStore) UpdateGame(ctx context.Context, id string, req AdminGameReque
 		ID:                id,
 		ScenarioID:        req.ScenarioID,
 		Status:            req.Status,
+		Supervised:        req.Supervised,
 		TimerEnabled:      req.TimerEnabled,
 		TimerMinutes:      req.TimerMinutes,
 		StageTimerMinutes: req.StageTimerMinutes,
@@ -603,8 +636,8 @@ func (s *DocStore) GameHasPlayers(ctx context.Context, gameID string) (bool, err
 }
 
 func (s *DocStore) DeleteTeamsByGame(ctx context.Context, gameID string) error {
-	return s.modifyGame(ctx, gameID, func(g *gameDoc) error {
-		g.Teams = []teamDoc{}
+	return s.modifyGame(ctx, gameID, func(g *game) error {
+		g.Teams = []team{}
 		return nil
 	})
 }
@@ -622,12 +655,13 @@ func (s *DocStore) ListTeams(ctx context.Context, gameID string) ([]AdminTeamIte
 	teams := make([]AdminTeamItem, len(g.Teams))
 	for i, t := range g.Teams {
 		teams[i] = AdminTeamItem{
-			ID:          t.ID,
-			Name:        t.Name,
-			JoinToken:   t.JoinToken,
-			GuideName:   t.GuideName,
-			PlayerCount: len(t.Players),
-			CreatedAt:   t.CreatedAt,
+			ID:              t.ID,
+			Name:            t.Name,
+			JoinToken:       t.JoinToken,
+			SupervisorToken: t.SupervisorToken,
+			GuideName:       t.GuideName,
+			PlayerCount:     len(t.Players),
+			CreatedAt:       t.CreatedAt,
 		}
 	}
 	return teams, nil
@@ -647,19 +681,38 @@ func (s *DocStore) CreateTeam(ctx context.Context, gameID string, req AdminTeamR
 		}
 	}
 
+	// Look up game to check if supervised.
+	g, err := s.getGame(ctx, gameID)
+	if err != nil {
+		return AdminTeamItem{}, err
+	}
+
 	teamID := newID()
 	now := nowUTC()
-	newTeam := teamDoc{
+	newTeam := team{
 		ID:        teamID,
 		Name:      req.Name,
 		JoinToken: token,
 		GuideName: req.GuideName,
 		CreatedAt: now,
-		Players:   []playerDoc{},
-		Results:   []stageResultDoc{},
+		Players:   []player{},
+		Results:   []stageResult{},
+	}
+	if g.Supervised {
+		superToken := generateSupervisorToken()
+		// Verify uniqueness of supervisor token too.
+		for _, gg := range games {
+			for _, t := range gg.Teams {
+				if t.SupervisorToken == superToken || t.JoinToken == superToken {
+					// Regenerate on collision (extremely unlikely with random tokens).
+					superToken = generateSupervisorToken()
+				}
+			}
+		}
+		newTeam.SupervisorToken = superToken
 	}
 
-	err = s.modifyGame(ctx, gameID, func(g *gameDoc) error {
+	err = s.modifyGame(ctx, gameID, func(g *game) error {
 		g.Teams = append(g.Teams, newTeam)
 		return nil
 	})
@@ -668,29 +721,31 @@ func (s *DocStore) CreateTeam(ctx context.Context, gameID string, req AdminTeamR
 	}
 
 	return AdminTeamItem{
-		ID:          teamID,
-		Name:        req.Name,
-		JoinToken:   token,
-		GuideName:   req.GuideName,
-		PlayerCount: 0,
-		CreatedAt:   now,
+		ID:              teamID,
+		Name:            req.Name,
+		JoinToken:       token,
+		SupervisorToken: newTeam.SupervisorToken,
+		GuideName:       req.GuideName,
+		PlayerCount:     0,
+		CreatedAt:       now,
 	}, nil
 }
 
 func (s *DocStore) UpdateTeam(ctx context.Context, gameID, teamID string, req AdminTeamRequest) (AdminTeamItem, error) {
 	var result AdminTeamItem
-	err := s.modifyGame(ctx, gameID, func(g *gameDoc) error {
+	err := s.modifyGame(ctx, gameID, func(g *game) error {
 		for i := range g.Teams {
 			if g.Teams[i].ID == teamID {
 				g.Teams[i].Name = req.Name
 				g.Teams[i].GuideName = req.GuideName
 				result = AdminTeamItem{
-					ID:          teamID,
-					Name:        req.Name,
-					JoinToken:   g.Teams[i].JoinToken,
-					GuideName:   req.GuideName,
-					PlayerCount: len(g.Teams[i].Players),
-					CreatedAt:   g.Teams[i].CreatedAt,
+					ID:              teamID,
+					Name:            req.Name,
+					JoinToken:       g.Teams[i].JoinToken,
+					SupervisorToken: g.Teams[i].SupervisorToken,
+					GuideName:       req.GuideName,
+					PlayerCount:     len(g.Teams[i].Players),
+					CreatedAt:       g.Teams[i].CreatedAt,
 				}
 				return nil
 			}
@@ -701,7 +756,7 @@ func (s *DocStore) UpdateTeam(ctx context.Context, gameID, teamID string, req Ad
 }
 
 func (s *DocStore) DeleteTeam(ctx context.Context, gameID, teamID string) error {
-	return s.modifyGame(ctx, gameID, func(g *gameDoc) error {
+	return s.modifyGame(ctx, gameID, func(g *game) error {
 		for i := range g.Teams {
 			if g.Teams[i].ID == teamID {
 				g.Teams = append(g.Teams[:i], g.Teams[i+1:]...)
@@ -749,8 +804,13 @@ func (s *DocStore) GameStatus(ctx context.Context, gameID string) (AdminGameStat
 	for i, t := range g.Teams {
 		players := make([]AdminPlayerStatus, len(t.Players))
 		for j, p := range t.Players {
+			role := p.Role
+			if role == "" {
+				role = "player"
+			}
 			players[j] = AdminPlayerStatus{
 				Name:     p.Name,
+				Role:     role,
 				JoinedAt: p.JoinedAt,
 			}
 		}
@@ -775,6 +835,7 @@ func (s *DocStore) GameStatus(ctx context.Context, gameID string) (AdminGameStat
 		ID:                g.ID,
 		ScenarioName:      g.ScenarioName,
 		Status:            g.Status,
+		Supervised:        g.Supervised,
 		TimerEnabled:      g.TimerEnabled,
 		TimerMinutes:      g.TimerMinutes,
 		StageTimerMinutes: g.StageTimerMinutes,
@@ -785,7 +846,7 @@ func (s *DocStore) GameStatus(ctx context.Context, gameID string) (AdminGameStat
 }
 
 // SeedDemoGame creates the demo game if no games exist, snapshotting the given scenario stages.
-func (s *DocStore) SeedDemoGame(ctx context.Context, sc *scenarioDoc) error {
+func (s *DocStore) SeedDemoGame(ctx context.Context, sc *scenario) error {
 	var count int
 	err := s.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM games`).Scan(&count)
 	if err != nil {
@@ -796,7 +857,7 @@ func (s *DocStore) SeedDemoGame(ctx context.Context, sc *scenarioDoc) error {
 	}
 
 	now := nowUTC()
-	game := gameDoc{
+	game := game{
 		ID:                "g0000000deadbeef",
 		ScenarioID:        sc.ID,
 		ScenarioName:      sc.Name,
@@ -807,22 +868,22 @@ func (s *DocStore) SeedDemoGame(ctx context.Context, sc *scenarioDoc) error {
 		Stages:       sc.Stages,
 		StartedAt:    &now,
 		CreatedAt:    now,
-		Teams: []teamDoc{
+		Teams: []team{
 			{
 				ID:        "t000000000incas",
 				Name:      "Los Incas",
 				JoinToken: "incas-2025",
 				CreatedAt: now,
-				Players:   []playerDoc{},
-				Results:   []stageResultDoc{},
+				Players:   []player{},
+				Results:   []stageResult{},
 			},
 			{
 				ID:        "t00000000condor",
 				Name:      "Los Condores",
 				JoinToken: "condores-2025",
 				CreatedAt: now,
-				Players:   []playerDoc{},
-				Results:   []stageResultDoc{},
+				Players:   []player{},
+				Results:   []stageResult{},
 			},
 		},
 	}

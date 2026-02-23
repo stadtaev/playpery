@@ -221,7 +221,7 @@ func (s *AdminStore) ListScenarios(ctx context.Context) ([]AdminScenarioSummary,
 		if err := rows.Scan(&data); err != nil {
 			return nil, err
 		}
-		var sc scenarioDoc
+		var sc scenario
 		if err := json.Unmarshal([]byte(data), &sc); err != nil {
 			return nil, err
 		}
@@ -244,7 +244,7 @@ func (s *AdminStore) ListScenarios(ctx context.Context) ([]AdminScenarioSummary,
 func (s *AdminStore) CreateScenario(ctx context.Context, req AdminScenarioRequest) (AdminScenarioDetail, error) {
 	id := newID()
 	now := nowUTC()
-	doc := scenarioDoc{
+	doc := scenario{
 		ID:          id,
 		Name:        req.Name,
 		City:        req.City,
@@ -266,7 +266,7 @@ func (s *AdminStore) CreateScenario(ctx context.Context, req AdminScenarioReques
 }
 
 func (s *AdminStore) GetScenario(ctx context.Context, id string) (AdminScenarioDetail, error) {
-	var sc scenarioDoc
+	var sc scenario
 	if err := s.getDoc(ctx, "scenarios", id, &sc); err != nil {
 		return AdminScenarioDetail{}, err
 	}
@@ -285,7 +285,7 @@ func (s *AdminStore) GetScenario(ctx context.Context, id string) (AdminScenarioD
 }
 
 func (s *AdminStore) UpdateScenario(ctx context.Context, id string, req AdminScenarioRequest) (AdminScenarioDetail, error) {
-	var sc scenarioDoc
+	var sc scenario
 	if err := s.getDoc(ctx, "scenarios", id, &sc); err != nil {
 		return AdminScenarioDetail{}, err
 	}
@@ -359,7 +359,7 @@ func (s *AdminStore) getDoc(ctx context.Context, table, id string, dest any) err
 	return json.Unmarshal([]byte(data), dest)
 }
 
-func (s *AdminStore) putScenario(ctx context.Context, sc scenarioDoc) error {
+func (s *AdminStore) putScenario(ctx context.Context, sc scenario) error {
 	data, err := json.Marshal(sc)
 	if err != nil {
 		return err
@@ -373,7 +373,7 @@ func (s *AdminStore) putScenario(ctx context.Context, sc scenarioDoc) error {
 }
 
 // SeedDemoScenario creates the demo scenario in the admin DB if none exist.
-func (s *AdminStore) SeedDemoScenario(ctx context.Context) (*scenarioDoc, error) {
+func (s *AdminStore) SeedDemoScenario(ctx context.Context) (*scenario, error) {
 	var count int
 	err := s.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM scenarios`).Scan(&count)
 	if err != nil {
@@ -384,7 +384,7 @@ func (s *AdminStore) SeedDemoScenario(ctx context.Context) (*scenarioDoc, error)
 	}
 
 	now := nowUTC()
-	sc := scenarioDoc{
+	sc := scenario{
 		ID:          "s0000000deadbeef",
 		Name:        "Lima Centro Historico",
 		City:        "Lima",

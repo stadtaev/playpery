@@ -41,6 +41,7 @@ type PlayerInfo struct {
 type GameStateResponse struct {
 	Game            GameInfo         `json:"game"`
 	Team            TeamInfo         `json:"team"`
+	Role            string           `json:"role"`
 	CurrentStage    *StageInfo       `json:"currentStage"`
 	CompletedStages []CompletedStage `json:"completedStages"`
 	Players         []PlayerInfo     `json:"players"`
@@ -106,6 +107,7 @@ func handleGameState() http.HandlerFunc {
 		}
 
 		resp := GameStateResponse{
+			Role: sess.Role,
 			Game: GameInfo{
 				Status:            data.Status,
 				TimerEnabled:      data.TimerEnabled,

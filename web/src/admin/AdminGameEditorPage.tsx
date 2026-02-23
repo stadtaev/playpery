@@ -13,6 +13,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
   const [scenarios, setScenarios] = useState<ScenarioSummary[]>([])
   const [scenarioId, setScenarioId] = useState('')
   const [status, setStatus] = useState('draft')
+  const [supervised, setSupervised] = useState(false)
   const [timerEnabled, setTimerEnabled] = useState(false)
   const [timerMinutes, setTimerMinutes] = useState(120)
   const [stageTimerMinutes, setStageTimerMinutes] = useState(10)
@@ -41,6 +42,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
         getGame(client, id).then((g) => {
           setScenarioId(g.scenarioId)
           setStatus(g.status)
+          setSupervised(g.supervised)
           setTimerEnabled(g.timerEnabled)
           setTimerMinutes(g.timerMinutes || 120)
           setStageTimerMinutes(g.stageTimerMinutes || 10)
@@ -60,7 +62,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
     setSaving(true)
     setError('')
 
-    const data: GameRequest = { scenarioId, status, timerEnabled, timerMinutes, stageTimerMinutes }
+    const data: GameRequest = { scenarioId, status, supervised, timerEnabled, timerMinutes, stageTimerMinutes }
 
     try {
       if (id) {
@@ -162,6 +164,10 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
           </select>
         </label>
         <label>
+          <input type="checkbox" checked={supervised} onChange={(e) => setSupervised(e.target.checked)} />
+          Supervised game
+        </label>
+        <label>
           <input type="checkbox" checked={timerEnabled} onChange={(e) => setTimerEnabled(e.target.checked)} />
           Enable timer
         </label>
@@ -201,6 +207,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
                 <tr>
                   <th>Name</th>
                   <th>Join Link</th>
+                  {supervised && <th>Supervisor Link</th>}
                   <th>Guide</th>
                   <th>Players</th>
                   <th></th>
@@ -218,6 +225,19 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
                         {joinUrl}
                       </a>
                     </td>
+                    {supervised && (
+                      <td>
+                        {t.supervisorToken ? (() => {
+                          const superPath = `/join/${client}/${t.supervisorToken}`
+                          const superUrl = `${window.location.origin}${superPath}`
+                          return (
+                            <a href={superPath} target="_blank" rel="noopener noreferrer" style={{ fontSize: 'small', wordBreak: 'break-all' }}>
+                              {superUrl}
+                            </a>
+                          )
+                        })() : '-'}
+                      </td>
+                    )}
                     <td>{t.guideName || '-'}</td>
                     <td>{t.playerCount}</td>
                     <td style={{ whiteSpace: 'nowrap' }}>

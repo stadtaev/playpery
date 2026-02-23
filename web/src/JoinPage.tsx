@@ -23,6 +23,7 @@ export function JoinPage({ client, joinToken }: { client: string; joinToken: str
       const resp = await joinTeam(client, joinToken, name.trim())
       localStorage.setItem('session_token', resp.token)
       localStorage.setItem('team_name', resp.teamName)
+      localStorage.setItem('player_role', resp.role)
       localStorage.setItem('client', client)
       window.history.replaceState(null, '', '/game')
       window.dispatchEvent(new PopStateEvent('popstate'))
@@ -56,6 +57,9 @@ export function JoinPage({ client, joinToken }: { client: string; joinToken: str
         <h2>Join {team.name}</h2>
         <p>{team.gameName}</p>
       </hgroup>
+      {team.role === 'supervisor' && (
+        <p><mark>Joining as Supervisor</mark></p>
+      )}
       <form onSubmit={handleJoin}>
         <label>
           Your name
