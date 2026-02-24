@@ -15,6 +15,7 @@ export interface JoinResponse {
 
 export interface GameInfo {
   status: string
+  supervised: boolean
   timerEnabled: boolean
   timerMinutes: number
   stageTimerMinutes: number

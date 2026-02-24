@@ -135,8 +135,9 @@ export function GamePage() {
     )
   }
 
-  const { game, team, currentStage, completedStages, players } = state
+  const { game, team, role, currentStage, completedStages, players } = state
   const isEnded = game.status === 'ended' || (!currentStage && completedStages.length === game.totalStages)
+  const canAnswer = !game.supervised || role === 'supervisor'
 
   return (
     <main className="container" style={{ maxWidth: 600 }}>
@@ -185,7 +186,7 @@ export function GamePage() {
                 Continue
               </button>
             </>
-          ) : (
+          ) : canAnswer ? (
             <form onSubmit={handleSubmit}>
               <input
                 type="text"
@@ -204,6 +205,8 @@ export function GamePage() {
                 Submit Answer
               </button>
             </form>
+          ) : (
+            <p><em>Waiting for the supervisor to submit the answer...</em></p>
           )}
         </article>
       )}

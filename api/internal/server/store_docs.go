@@ -375,6 +375,7 @@ func (s *DocStore) GameState(ctx context.Context, gameID, teamID string) (gameSt
 
 	var d gameStateData
 	d.Status = g.Status
+	d.Supervised = g.Supervised
 	d.TimerEnabled = g.TimerEnabled
 	d.TimerMinutes = g.TimerMinutes
 	d.StageTimerMinutes = g.StageTimerMinutes
