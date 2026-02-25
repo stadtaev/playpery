@@ -187,6 +187,51 @@ web/                            # React frontend
     types.ts                    # TypeScript types
 ```
 
+## Deployment
+
+CityQuest deploys as a single Go binary behind Caddy (automatic HTTPS) on any Linux VPS. Two scripts handle everything.
+
+### Prerequisites
+
+- A Linux server (e.g. Hetzner) with SSH access as root
+- Your domain's DNS A record pointing to the server IP
+
+### First-time server setup
+
+Run once from your local machine to install Caddy, create the systemd service, and prepare directories:
+
+```bash
+./deploy/bootstrap.sh root@YOUR_SERVER_IP
+```
+
+This installs Caddy, creates a `cityquest` system user, sets up `/opt/cityquest/`, and enables the systemd service.
+
+### Deploy (first time and every update)
+
+```bash
+./deploy/deploy.sh root@YOUR_SERVER_IP
+```
+
+This builds the frontend, cross-compiles the Go binary for linux/amd64, uploads both to the server, and restarts the service. Run it every time you want to ship a new version.
+
+### What's running on the server
+
+```
+Caddy (:443) → reverse proxy → cityquest (:8080)
+```
+
+- Caddy handles TLS (auto Let's Encrypt) and proxies to the Go server
+- The Go binary at `/opt/cityquest/cityquest` serves the API and the SPA from `/opt/cityquest/web/`
+- SQLite databases live in `/opt/cityquest/data/`
+
+### Useful commands
+
+```bash
+ssh root@SERVER 'systemctl status cityquest'     # check service status
+ssh root@SERVER 'journalctl -u cityquest -f'     # live logs
+ssh root@SERVER 'systemctl restart cityquest'     # manual restart
+```
+
 ## License
 
-TBD
+[Business Source License 1.1](LICENSE) — you can read, fork, and modify the code, but you can't use it commercially without a license from us. On 2029-02-26 it converts to GPL v2.

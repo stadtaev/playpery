@@ -39,6 +39,22 @@ cd api && SPA_DIR=../web/dist go run ./cmd/server
 # Open http://localhost:8080/join/demo/incas-2025
 ```
 
+### Deployment
+
+```bash
+./deploy/bootstrap.sh root@SERVER   # one-time server setup (Caddy, systemd, dirs)
+./deploy/deploy.sh root@SERVER      # build + upload + restart (every deploy)
+```
+
+Production runs at `https://gocityquest.online`. Caddy reverse-proxies `:443` → `:8080` with auto TLS. Binary + SPA live at `/opt/cityquest/`, data at `/opt/cityquest/data/`.
+
+**Deploy files:**
+- `deploy/bootstrap.sh` — runs `setup.sh` on server via SSH (one-off)
+- `deploy/setup.sh` — installs Caddy, creates systemd service, creates dirs (runs on server)
+- `deploy/deploy.sh` — builds frontend + Go binary, rsyncs to server, restarts service
+- `deploy/Caddyfile` — Caddy config (domain → reverse proxy)
+- `deploy/cityquest.service` — systemd unit file
+
 ## Environment Variables
 
 | Var | Default | Notes |

@@ -1,0 +1,8 @@
+gocityquest.online {
+	reverse_proxy localhost:8080
+}
+
+# For testing without a domain (uncomment and comment the block above):
+# :80 {
+#     reverse_proxy localhost:8080
+# }

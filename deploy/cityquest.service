@@ -1,0 +1,23 @@
+[Unit]
+Description=CityQuest game server
+After=network.target
+
+[Service]
+Type=simple
+User=cityquest
+WorkingDirectory=/opt/cityquest
+ExecStart=/opt/cityquest/cityquest
+Restart=on-failure
+RestartSec=5
+
+Environment=DB_PATH=/opt/cityquest/data/local.db
+Environment=SPA_DIR=/opt/cityquest/web
+Environment=HTTP_ADDR=:8080
+
+# Hardening
+ProtectSystem=strict
+ReadWritePaths=/opt/cityquest/data
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
