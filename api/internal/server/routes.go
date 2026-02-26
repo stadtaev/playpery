@@ -24,6 +24,7 @@ func addRoutes(r chi.Router, logger *slog.Logger, admin AdminStore, clients *Reg
 		r.Post("/join", handleJoin(broker))
 		r.Get("/game/state", handleGameState())
 		r.Post("/game/answer", handleAnswer(broker))
+		r.Post("/game/unlock", handleUnlock(broker))
 		r.Get("/game/events", handleEvents(broker))
 	})
 

@@ -281,11 +281,11 @@ Set `Mode: "classic"` explicitly on demo scenario in `SeedDemoScenario`.
 
 ### Task 4: Unlock endpoint and routes
 
-- [ ] Create handle_unlock.go with UnlockRequest, UnlockResponse types
-- [ ] Implement handleUnlock with mode dispatch (qr_quiz, qr_hunt, math_puzzle, guided)
-- [ ] Wire /game/unlock route in routes.go
-- [ ] Add OpenAPI annotations for unlock endpoint
-- [ ] Set Mode="classic" on demo scenario in seed.go
+- [x] Create handle_unlock.go with UnlockRequest, UnlockResponse types
+- [x] Implement handleUnlock with mode dispatch (qr_quiz, qr_hunt, math_puzzle, guided)
+- [x] Wire /game/unlock route in routes.go
+- [x] Add OpenAPI annotations for unlock endpoint
+- [x] Set Mode="classic" on demo scenario in seed.go
 
 ### Task 5: Frontend types, API, and GamePage
 

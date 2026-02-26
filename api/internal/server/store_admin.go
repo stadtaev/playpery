@@ -409,6 +409,7 @@ func (s *AdminDocStore) SeedDemoScenario(ctx context.Context) (*scenario, error)
 		Name:        "Lima Centro Historico",
 		City:        "Lima",
 		Description: "Explore the historic center of Lima through four iconic landmarks.",
+		Mode:        "classic",
 		CreatedAt:   now,
 		Stages: []AdminStage{
 			{StageNumber: 1, Location: "Plaza Mayor", Clue: "Head to the main square where Pizarro founded the city. Look for the bronze fountain in the center.", Question: "What year was the fountain in Plaza Mayor built?", CorrectAnswer: "1651", Lat: -12.0464, Lng: -77.0300},
