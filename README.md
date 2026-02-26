@@ -24,9 +24,9 @@ The platform is designed as a SaaS — tourism companies anywhere in the world c
 
 ### How a Game Works
 
-1. **An operator creates a scenario** — a sequence of stages, each tied to a real-world location. Every stage has a clue (to get players to the right spot), a question (about what they'll find there), and a correct answer.
+1. **An operator creates a scenario** — a reusable template stored in the admin database. A scenario is a sequence of stages, each tied to a real-world location. Every stage has a clue (to get players to the right spot), a question (about what they'll find there), a correct answer, and GPS coordinates. Scenarios are global — any client can create games from them.
 
-2. **The operator creates a game** from that scenario, optionally enables timers, and generates teams with unique join links/QR codes.
+2. **The operator creates a game** from that scenario. The stages are **copied** into the game at creation time, so editing the scenario later won't affect games already in progress. The operator optionally enables timers and generates teams with unique join links/QR codes.
 
 3. **Players scan the QR code** on their phone, enter their name, and join their team. No account creation, no app download.
 
@@ -92,10 +92,37 @@ Browser (React SPA)
     ↕ HTTP + SSE
 Go server (:8080)
     ↕ SQL
-SQLite (local.db)
+SQLite (per-tenant .db files)
 ```
 
 That's it. The Go server handles everything: API requests, SSE streaming, and serving the built SPA as static files. In development, Vite runs on `:5173` and proxies API calls to the Go server on `:8080`.
+
+### Database Layout
+
+CityQuest is multi-tenant. Each client (tourism operator, event company, etc.) gets its own isolated SQLite database. A shared admin database manages the control plane.
+
+```
+data/
+  _admin.db          ← shared: admins, sessions, client registry, scenarios
+  demo.db            ← per-client: games, teams, players, progress
+  acme.db            ← one file per client
+```
+
+**Admin DB (`_admin.db`)** — one per installation:
+- `admins` — admin accounts (email, bcrypt password hash)
+- `admin_sessions` — login sessions for the admin panel
+- `clients` — registry of tenant slugs and display names
+- `scenarios` — quest templates (stages with questions, answers, coordinates)
+
+**Client DB (`{slug}.db`)** — one per tenant:
+- `games` — game instances created from a scenario (with a denormalized copy of the stages)
+- `teams` — teams within a game (join tokens, supervisor tokens, guide name)
+- `player_sessions` — players who joined a team
+- `team_progress` — answers submitted by each team at each stage
+
+Scenarios live in the admin DB because they're global resources — an admin creates a scenario once and any client can create games from it. Games, teams, and players live in client DBs because they're tenant-scoped — one client's data is completely isolated from another's.
+
+**Registry** — at startup, the server reads the client list from the admin DB and opens each client's SQLite file into an in-memory cache (`Registry`). When a request hits `/api/{client}/...`, middleware extracts the `{client}` slug from the URL, looks up the corresponding `DocStore` in the Registry, and injects it into the request context. Handlers call `clientStore(r)` to get the store — they never know which DB file they're talking to. New client DBs are opened lazily on first access.
 
 ## Getting Started
 
