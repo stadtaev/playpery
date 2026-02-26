@@ -289,11 +289,11 @@ Set `Mode: "classic"` explicitly on demo scenario in `SeedDemoScenario`.
 
 ### Task 5: Frontend types, API, and GamePage
 
-- [ ] Add mode/locked/teamSecret/UnlockResponse types to types.ts
-- [ ] Add unlockStage() to api.ts
-- [ ] Add mode/hasQuestions/unlockCode/locationNumber to adminTypes.ts
-- [ ] Implement phase state machine in GamePage.tsx (interstitial/unlocking/answering)
-- [ ] Handle SSE stage_unlocked event in useGameEvents.ts
+- [x] Add mode/locked/teamSecret/UnlockResponse types to types.ts
+- [x] Add unlockStage() to api.ts
+- [x] Add mode/hasQuestions/unlockCode/locationNumber to adminTypes.ts
+- [x] Implement phase state machine in GamePage.tsx (interstitial/unlocking/answering)
+- [x] Handle SSE stage_unlocked event in useGameEvents.ts
 
 ### Task 6: Admin UI and list pages
 

@@ -1,4 +1,4 @@
-import type { TeamLookup, JoinResponse, GameState, AnswerResponse } from './types'
+import type { TeamLookup, JoinResponse, GameState, AnswerResponse, UnlockResponse } from './types'
 
 async function request<T>(path: string, opts?: RequestInit): Promise<T> {
   const res = await fetch(path, opts)
@@ -35,5 +35,13 @@ export function submitAnswer(client: string, answer: string): Promise<AnswerResp
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify({ answer }),
+  })
+}
+
+export function unlockStage(client: string, code: string): Promise<UnlockResponse> {
+  return request(`/api/${client}/game/unlock`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify({ code }),
   })
 }

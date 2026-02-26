@@ -64,6 +64,7 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
       name,
       city,
       description,
+      mode: 'classic',
       stages: stages.map((s, i) => ({ ...s, stageNumber: i + 1 })),
     }
 
