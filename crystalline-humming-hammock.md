@@ -297,11 +297,11 @@ Set `Mode: "classic"` explicitly on demo scenario in `SeedDemoScenario`.
 
 ### Task 6: Admin UI and list pages
 
-- [ ] Add mode picker dropdown to AdminScenarioEditorPage.tsx
-- [ ] Add guided mode "Include questions" checkbox
-- [ ] Show/hide stage fields based on mode in scenario editor
-- [ ] Show mode label in AdminScenariosPage.tsx list
-- [ ] Show mode in AdminGamesPage.tsx list
+- [x] Add mode picker dropdown to AdminScenarioEditorPage.tsx
+- [x] Add guided mode "Include questions" checkbox
+- [x] Show/hide stage fields based on mode in scenario editor
+- [x] Show mode label in AdminScenariosPage.tsx list
+- [x] Show mode in AdminGamesPage.tsx list
 
 ## Verification
 
