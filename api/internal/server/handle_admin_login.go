@@ -21,7 +21,7 @@ type AdminMeResponse struct {
 	Email string `json:"email"`
 }
 
-func handleAdminLogin(admin AdminAuth) http.HandlerFunc {
+func handleAdminLogin(admin AdminStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req AdminLoginRequest
 		if err := readJSON(r, &req); err != nil {
@@ -72,7 +72,7 @@ func handleAdminLogin(admin AdminAuth) http.HandlerFunc {
 	}
 }
 
-func handleAdminMe(admin AdminAuth) http.HandlerFunc {
+func handleAdminMe(admin AdminStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie(adminCookieName)
 		if err != nil || cookie.Value == "" {
@@ -93,7 +93,7 @@ func handleAdminMe(admin AdminAuth) http.HandlerFunc {
 	}
 }
 
-func handleAdminListClients(admin AdminAuth) http.HandlerFunc {
+func handleAdminListClients(admin AdminStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie(adminCookieName)
 		if err != nil || cookie.Value == "" {
@@ -124,7 +124,7 @@ type CreateClientRequest struct {
 	Name string `json:"name"`
 }
 
-func handleAdminCreateClient(admin AdminAuth, clients *Registry) http.HandlerFunc {
+func handleAdminCreateClient(admin AdminStore, clients *Registry) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie(adminCookieName)
 		if err != nil || cookie.Value == "" {

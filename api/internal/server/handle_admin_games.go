@@ -163,7 +163,7 @@ func handleAdminListGames() http.HandlerFunc {
 	}
 }
 
-func handleAdminCreateGame(admin AdminAuth) http.HandlerFunc {
+func handleAdminCreateGame(admin AdminStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		store := clientStore(r)
 
@@ -217,7 +217,7 @@ func handleAdminGetGame() http.HandlerFunc {
 	}
 }
 
-func handleAdminUpdateGame(admin AdminAuth) http.HandlerFunc {
+func handleAdminUpdateGame(admin AdminStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		store := clientStore(r)
 		gameID := chi.URLParam(r, "gameID")

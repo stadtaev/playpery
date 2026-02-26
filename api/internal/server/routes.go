@@ -9,7 +9,7 @@ import (
 	"github.com/swaggest/swgui/v5emb"
 )
 
-func addRoutes(r chi.Router, logger *slog.Logger, admin AdminAuth, clients *Registry, adminDB *sql.DB, spaDir string) {
+func addRoutes(r chi.Router, logger *slog.Logger, admin AdminStore, clients *Registry, adminDB *sql.DB, spaDir string) {
 	broker := NewBroker()
 
 	r.Get("/openapi.json", handleOpenAPI())

@@ -13,7 +13,7 @@ import (
 	"github.com/playperu/cityquiz/internal/database"
 )
 
-func setupStores(t *testing.T) (*AdminStore, *DocStore) {
+func setupStores(t *testing.T) (*AdminDocStore, *DocStore) {
 	t.Helper()
 	ctx := context.Background()
 
@@ -22,7 +22,7 @@ func setupStores(t *testing.T) (*AdminStore, *DocStore) {
 	if err != nil {
 		t.Fatalf("open admin db: %v", err)
 	}
-	admin, err := NewAdminStore(ctx, adminDB)
+	admin, err := NewAdminDocStore(ctx, adminDB)
 	if err != nil {
 		t.Fatalf("init admin store: %v", err)
 	}

@@ -54,7 +54,7 @@ func run(ctx context.Context, stdout io.Writer) error {
 	}
 	defer adminDB.Close()
 
-	admin, err := server.NewAdminStore(ctx, adminDB)
+	admin, err := server.NewAdminDocStore(ctx, adminDB)
 	if err != nil {
 		return fmt.Errorf("initializing admin store: %w", err)
 	}

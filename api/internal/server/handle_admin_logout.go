@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-func handleAdminLogout(admin AdminAuth) http.HandlerFunc {
+func handleAdminLogout(admin AdminStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie(adminCookieName)
 		if err == nil && cookie.Value != "" {

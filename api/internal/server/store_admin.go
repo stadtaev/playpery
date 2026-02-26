@@ -8,7 +8,7 @@ import (
 	"fmt"
 )
 
-type AdminAuth interface {
+type AdminStore interface {
 	AdminByEmail(ctx context.Context, email string) (adminID, passwordHash string, err error)
 	CreateAdminSession(ctx context.Context, adminID string) (sessionID string, err error)
 	DeleteAdminSession(ctx context.Context, sessionID string) error
@@ -41,11 +41,11 @@ type adminSessionDoc struct {
 	Email   string `json:"email"`
 }
 
-type AdminStore struct {
+type AdminDocStore struct {
 	db *sql.DB
 }
 
-func NewAdminStore(ctx context.Context, db *sql.DB) (*AdminStore, error) {
+func NewAdminDocStore(ctx context.Context, db *sql.DB) (*AdminDocStore, error) {
 	for _, ddl := range []string{
 		`CREATE TABLE IF NOT EXISTS admins (
 			id    TEXT PRIMARY KEY,
@@ -71,14 +71,14 @@ func NewAdminStore(ctx context.Context, db *sql.DB) (*AdminStore, error) {
 		}
 	}
 
-	s := &AdminStore{db: db}
+	s := &AdminDocStore{db: db}
 	if err := s.seedIfEmpty(ctx); err != nil {
 		return nil, fmt.Errorf("seeding admin: %w", err)
 	}
 	return s, nil
 }
 
-func (s *AdminStore) seedIfEmpty(ctx context.Context) error {
+func (s *AdminDocStore) seedIfEmpty(ctx context.Context) error {
 	var count int
 	if err := s.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM admins`).Scan(&count); err != nil {
 		return err
@@ -103,7 +103,7 @@ func (s *AdminStore) seedIfEmpty(ctx context.Context) error {
 	return err
 }
 
-func (s *AdminStore) AdminByEmail(ctx context.Context, email string) (string, string, error) {
+func (s *AdminDocStore) AdminByEmail(ctx context.Context, email string) (string, string, error) {
 	var data string
 	err := s.db.QueryRowContext(ctx,
 		`SELECT json(data) FROM admins WHERE email = ?`, email,
@@ -121,7 +121,7 @@ func (s *AdminStore) AdminByEmail(ctx context.Context, email string) (string, st
 	return a.ID, a.PasswordHash, nil
 }
 
-func (s *AdminStore) CreateAdminSession(ctx context.Context, adminID string) (string, error) {
+func (s *AdminDocStore) CreateAdminSession(ctx context.Context, adminID string) (string, error) {
 	// Look up admin email.
 	var data string
 	err := s.db.QueryRowContext(ctx,
@@ -154,14 +154,14 @@ func (s *AdminStore) CreateAdminSession(ctx context.Context, adminID string) (st
 	return sessionID, err
 }
 
-func (s *AdminStore) DeleteAdminSession(ctx context.Context, sessionID string) error {
+func (s *AdminDocStore) DeleteAdminSession(ctx context.Context, sessionID string) error {
 	_, err := s.db.ExecContext(ctx,
 		`DELETE FROM admin_sessions WHERE id = ?`, sessionID,
 	)
 	return err
 }
 
-func (s *AdminStore) AdminFromSession(ctx context.Context, sessionID string) (adminSession, error) {
+func (s *AdminDocStore) AdminFromSession(ctx context.Context, sessionID string) (adminSession, error) {
 	var data string
 	err := s.db.QueryRowContext(ctx,
 		`SELECT json(data) FROM admin_sessions WHERE id = ?`, sessionID,
@@ -179,7 +179,7 @@ func (s *AdminStore) AdminFromSession(ctx context.Context, sessionID string) (ad
 	return adminSession{AdminID: as.AdminID, Email: as.Email}, nil
 }
 
-func (s *AdminStore) ListClients(ctx context.Context) ([]ClientInfo, error) {
+func (s *AdminDocStore) ListClients(ctx context.Context) ([]ClientInfo, error) {
 	rows, err := s.db.QueryContext(ctx, `SELECT slug, name FROM clients ORDER BY slug`)
 	if err != nil {
 		return nil, err
@@ -197,7 +197,7 @@ func (s *AdminStore) ListClients(ctx context.Context) ([]ClientInfo, error) {
 	return clients, nil
 }
 
-func (s *AdminStore) CreateClient(ctx context.Context, slug, name string) error {
+func (s *AdminDocStore) CreateClient(ctx context.Context, slug, name string) error {
 	_, err := s.db.ExecContext(ctx,
 		`INSERT INTO clients (slug, name) VALUES (?, ?)`, slug, name,
 	)
@@ -206,7 +206,7 @@ func (s *AdminStore) CreateClient(ctx context.Context, slug, name string) error 
 
 // Scenario CRUD — global, stored in admin DB.
 
-func (s *AdminStore) ListScenarios(ctx context.Context) ([]AdminScenarioSummary, error) {
+func (s *AdminDocStore) ListScenarios(ctx context.Context) ([]AdminScenarioSummary, error) {
 	rows, err := s.db.QueryContext(ctx,
 		`SELECT json(data) FROM scenarios ORDER BY id`,
 	)
@@ -241,7 +241,7 @@ func (s *AdminStore) ListScenarios(ctx context.Context) ([]AdminScenarioSummary,
 	return scenarios, nil
 }
 
-func (s *AdminStore) CreateScenario(ctx context.Context, req AdminScenarioRequest) (AdminScenarioDetail, error) {
+func (s *AdminDocStore) CreateScenario(ctx context.Context, req AdminScenarioRequest) (AdminScenarioDetail, error) {
 	id := newID()
 	now := nowUTC()
 	doc := scenario{
@@ -265,7 +265,7 @@ func (s *AdminStore) CreateScenario(ctx context.Context, req AdminScenarioReques
 	}, nil
 }
 
-func (s *AdminStore) GetScenario(ctx context.Context, id string) (AdminScenarioDetail, error) {
+func (s *AdminDocStore) GetScenario(ctx context.Context, id string) (AdminScenarioDetail, error) {
 	var sc scenario
 	if err := s.getDoc(ctx, "scenarios", id, &sc); err != nil {
 		return AdminScenarioDetail{}, err
@@ -284,7 +284,7 @@ func (s *AdminStore) GetScenario(ctx context.Context, id string) (AdminScenarioD
 	}, nil
 }
 
-func (s *AdminStore) UpdateScenario(ctx context.Context, id string, req AdminScenarioRequest) (AdminScenarioDetail, error) {
+func (s *AdminDocStore) UpdateScenario(ctx context.Context, id string, req AdminScenarioRequest) (AdminScenarioDetail, error) {
 	var sc scenario
 	if err := s.getDoc(ctx, "scenarios", id, &sc); err != nil {
 		return AdminScenarioDetail{}, err
@@ -306,7 +306,7 @@ func (s *AdminStore) UpdateScenario(ctx context.Context, id string, req AdminSce
 	}, nil
 }
 
-func (s *AdminStore) DeleteScenario(ctx context.Context, id string) error {
+func (s *AdminDocStore) DeleteScenario(ctx context.Context, id string) error {
 	result, err := s.db.ExecContext(ctx,
 		`DELETE FROM scenarios WHERE id = ?`, id,
 	)
@@ -320,7 +320,7 @@ func (s *AdminStore) DeleteScenario(ctx context.Context, id string) error {
 	return nil
 }
 
-func (s *AdminStore) ScenarioHasGames(ctx context.Context, scenarioID string, clients *Registry) (bool, error) {
+func (s *AdminDocStore) ScenarioHasGames(ctx context.Context, scenarioID string, clients *Registry) (bool, error) {
 	clients.mu.RLock()
 	stores := make([]*DocStore, 0, len(clients.stores))
 	for _, st := range clients.stores {
@@ -345,7 +345,7 @@ func (s *AdminStore) ScenarioHasGames(ctx context.Context, scenarioID string, cl
 
 // Internal helpers for scenario storage.
 
-func (s *AdminStore) getDoc(ctx context.Context, table, id string, dest any) error {
+func (s *AdminDocStore) getDoc(ctx context.Context, table, id string, dest any) error {
 	var data string
 	err := s.db.QueryRowContext(ctx,
 		fmt.Sprintf(`SELECT json(data) FROM %s WHERE id = ?`, table), id,
@@ -359,7 +359,7 @@ func (s *AdminStore) getDoc(ctx context.Context, table, id string, dest any) err
 	return json.Unmarshal([]byte(data), dest)
 }
 
-func (s *AdminStore) putScenario(ctx context.Context, sc scenario) error {
+func (s *AdminDocStore) putScenario(ctx context.Context, sc scenario) error {
 	data, err := json.Marshal(sc)
 	if err != nil {
 		return err
@@ -373,7 +373,7 @@ func (s *AdminStore) putScenario(ctx context.Context, sc scenario) error {
 }
 
 // SeedDemoScenario creates the demo scenario in the admin DB if none exist.
-func (s *AdminStore) SeedDemoScenario(ctx context.Context) (*scenario, error) {
+func (s *AdminDocStore) SeedDemoScenario(ctx context.Context) (*scenario, error) {
 	var count int
 	err := s.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM scenarios`).Scan(&count)
 	if err != nil {
@@ -403,4 +403,4 @@ func (s *AdminStore) SeedDemoScenario(ctx context.Context) (*scenario, error) {
 	return &sc, nil
 }
 
-var _ AdminAuth = (*AdminStore)(nil)
+var _ AdminStore = (*AdminDocStore)(nil)

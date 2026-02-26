@@ -7,7 +7,7 @@ import (
 
 // SeedDemo creates the demo client, scenario, and game if no clients exist.
 // Idempotent: does nothing if clients already exist.
-func SeedDemo(ctx context.Context, logger *slog.Logger, admin *AdminStore, clients *Registry) error {
+func SeedDemo(ctx context.Context, logger *slog.Logger, admin *AdminDocStore, clients *Registry) error {
 	existing, err := admin.ListClients(ctx)
 	if err != nil {
 		return err

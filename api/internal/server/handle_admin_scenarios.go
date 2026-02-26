@@ -71,7 +71,7 @@ func (req *AdminScenarioRequest) validate() string {
 	return ""
 }
 
-func handleAdminListScenarios(admin AdminAuth) http.HandlerFunc {
+func handleAdminListScenarios(admin AdminStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		scenarios, err := admin.ListScenarios(r.Context())
 		if err != nil {
@@ -86,7 +86,7 @@ func handleAdminListScenarios(admin AdminAuth) http.HandlerFunc {
 	}
 }
 
-func handleAdminCreateScenario(admin AdminAuth) http.HandlerFunc {
+func handleAdminCreateScenario(admin AdminStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req AdminScenarioRequest
 		if err := readJSON(r, &req); err != nil {
@@ -108,7 +108,7 @@ func handleAdminCreateScenario(admin AdminAuth) http.HandlerFunc {
 	}
 }
 
-func handleAdminGetScenario(admin AdminAuth) http.HandlerFunc {
+func handleAdminGetScenario(admin AdminStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := chi.URLParam(r, "id")
 
@@ -126,7 +126,7 @@ func handleAdminGetScenario(admin AdminAuth) http.HandlerFunc {
 	}
 }
 
-func handleAdminUpdateScenario(admin AdminAuth) http.HandlerFunc {
+func handleAdminUpdateScenario(admin AdminStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := chi.URLParam(r, "id")
 
@@ -154,7 +154,7 @@ func handleAdminUpdateScenario(admin AdminAuth) http.HandlerFunc {
 	}
 }
 
-func handleAdminDeleteScenario(admin AdminAuth, clients *Registry) http.HandlerFunc {
+func handleAdminDeleteScenario(admin AdminStore, clients *Registry) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := chi.URLParam(r, "id")
 

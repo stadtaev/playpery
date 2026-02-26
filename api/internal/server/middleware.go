@@ -35,7 +35,7 @@ func clientMiddleware(clients *Registry) func(http.Handler) http.Handler {
 	}
 }
 
-func adminAuthMiddleware(admin AdminAuth) func(http.Handler) http.Handler {
+func adminAuthMiddleware(admin AdminStore) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			cookie, err := r.Cookie(adminCookieName)
