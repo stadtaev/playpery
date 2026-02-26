@@ -24,17 +24,34 @@ The platform is designed as a SaaS — tourism companies anywhere in the world c
 
 ### How a Game Works
 
-1. **An operator creates a scenario** — a reusable template stored in the admin database. A scenario is a sequence of stages, each tied to a real-world location. Every stage has a clue (to get players to the right spot), a question (about what they'll find there), a correct answer, and GPS coordinates. Scenarios are global — any client can create games from them.
+1. **An operator creates a scenario** — a reusable template stored in the admin database. A scenario is a sequence of stages, each tied to a real-world location. Every stage has these properties:
 
-2. **The operator creates a game** from that scenario. The stages are **copied** into the game at creation time, so editing the scenario later won't affect games already in progress. The operator optionally enables timers and generates teams with unique join links/QR codes.
+   | Field | Description |
+   |-------|-------------|
+   | `stageNumber` | 1-based order in the sequence |
+   | `location` | Landmark name (e.g. "Plaza Mayor") |
+   | `clue` | Text hint to guide players to the spot |
+   | `question` | What players answer at the location |
+   | `correctAnswer` | Expected answer (matched case-insensitively) |
+   | `lat`, `lng` | GPS coordinates of the landmark |
+
+   Scenarios are global — any client can create games from them.
+
+2. **The operator creates a game** from that scenario. The stages are **copied** into the game at creation time — same data structure, same fields, just stored in the client's database instead of the admin database. This means editing the scenario later won't affect games already in progress. The operator optionally enables timers and generates teams with unique join links/QR codes.
 
 3. **Players scan the QR code** on their phone, enter their name, and join their team. No account creation, no app download.
 
-4. **The game begins.** Each team sees their first clue. They walk to the location, find the answer, and submit it.
+4. **The game begins.** Each team sees their first clue. Players only see a safe subset of the stage: the clue, question, and location name. The correct answer and GPS coordinates are never sent to the client.
 
 5. **Real-time updates** keep the whole team in sync. When a teammate answers, everyone's screen updates instantly via Server-Sent Events. New players joining mid-game see the current state immediately.
 
 6. **The game ends** when the timer runs out or all stages are completed. Teams see their final score.
+
+### Stages and Movement
+
+Each stage is a real-world checkpoint. The **clue** tells players where to go ("Walk south to the yellow church with famous underground tunnels"). The **question** is designed to be answerable only by someone physically at the location ("What are the underground tunnels beneath San Francisco called?"). This is the core mechanic — the clue gets you there, the question proves you arrived.
+
+There is no GPS verification. The `lat`/`lng` coordinates on each stage are stored for potential future use (map display, proximity checks), but currently nothing prevents a player from submitting an answer without being at the location. The game relies on question design: operators should write observational questions whose answers require being on-site (reading a plaque, counting arches, noting a color). A question with an easily Googleable answer defeats the purpose.
 
 ### Answering Questions
 
