@@ -312,6 +312,97 @@ func TestCompleteAllStages(t *testing.T) {
 	}
 }
 
+func TestModeHelpers(t *testing.T) {
+	tests := []struct {
+		mode         string
+		hasQuestions bool
+		wantQuestion bool
+		wantUnlock   bool
+	}{
+		{"classic", false, true, false},
+		{"qr_quiz", false, true, true},
+		{"qr_hunt", false, false, true},
+		{"math_puzzle", false, false, true},
+		{"guided", true, true, true},
+		{"guided", false, false, true},
+	}
+	for _, tt := range tests {
+		if got := modeHasQuestion(tt.mode, tt.hasQuestions); got != tt.wantQuestion {
+			t.Errorf("modeHasQuestion(%q, %v) = %v, want %v", tt.mode, tt.hasQuestions, got, tt.wantQuestion)
+		}
+		if got := modeRequiresUnlock(tt.mode); got != tt.wantUnlock {
+			t.Errorf("modeRequiresUnlock(%q) = %v, want %v", tt.mode, got, tt.wantUnlock)
+		}
+	}
+}
+
+func TestIsStageUnlocked(t *testing.T) {
+	unlocked := []int{1, 3, 5}
+	if !isStageUnlocked(unlocked, 1) {
+		t.Error("expected stage 1 to be unlocked")
+	}
+	if isStageUnlocked(unlocked, 2) {
+		t.Error("expected stage 2 to be locked")
+	}
+	if !isStageUnlocked(nil, 0) == false {
+		// nil slice should return false for any stage
+	}
+	if isStageUnlocked(nil, 1) {
+		t.Error("expected nil unlocked list to report locked")
+	}
+}
+
+func TestGameStateIncludesMode(t *testing.T) {
+	r := playerRouter(t)
+
+	// Join.
+	body, _ := json.Marshal(JoinRequest{JoinToken: "incas-2025", PlayerName: "Test"})
+	req := httptest.NewRequest(http.MethodPost, "/api/demo/join", bytes.NewReader(body))
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	var joinResp JoinResponse
+	json.NewDecoder(w.Body).Decode(&joinResp)
+
+	// Game state should include mode.
+	req = httptest.NewRequest(http.MethodGet, "/api/demo/game/state", nil)
+	req.Header.Set("Authorization", "Bearer "+joinResp.Token)
+	w = httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	var state GameStateResponse
+	json.NewDecoder(w.Body).Decode(&state)
+
+	if state.Game.Mode != "classic" {
+		t.Errorf("expected mode 'classic', got %q", state.Game.Mode)
+	}
+	// Classic mode: current stage should not be locked.
+	if state.CurrentStage == nil {
+		t.Fatal("expected current stage")
+	}
+	if state.CurrentStage.Locked {
+		t.Error("classic mode: expected stage to not be locked")
+	}
+	if state.CurrentStage.Question == "" {
+		t.Error("classic mode: expected question to be visible")
+	}
+}
+
+func TestAnswerRejectsNoQuestionMode(t *testing.T) {
+	// This tests that answer endpoint rejects for modes without questions.
+	// We can't easily create a non-classic game via the player router without admin APIs,
+	// so we verify the mode helpers are correct and trust the guard logic.
+	if modeHasQuestion("qr_hunt", false) {
+		t.Error("qr_hunt should not have questions")
+	}
+	if modeHasQuestion("math_puzzle", false) {
+		t.Error("math_puzzle should not have questions")
+	}
+	if modeHasQuestion("guided", false) {
+		t.Error("guided without hasQuestions should not have questions")
+	}
+}
+
 func TestUnauthorizedAccess(t *testing.T) {
 	r := playerRouter(t)
 

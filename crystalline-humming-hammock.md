@@ -271,13 +271,13 @@ Set `Mode: "classic"` explicitly on demo scenario in `SeedDemoScenario`.
 
 ### Task 3: Game state and answer endpoint changes
 
-- [ ] Add Mode, HasQuestions to GameInfo in handle_game_state.go
-- [ ] Add Locked, LocationNumber to StageInfo in handle_game_state.go
-- [ ] Add TeamSecret to GameStateResponse
-- [ ] Implement mode-aware question visibility (hide question when locked)
-- [ ] Add modeHasQuestion helper function
-- [ ] Add mode guards to handle_answer.go (unlock check, no-question rejection)
-- [ ] Set Locked:true on nextStage in answer response for non-classic modes
+- [x] Add Mode, HasQuestions to GameInfo in handle_game_state.go
+- [x] Add Locked, LocationNumber to StageInfo in handle_game_state.go
+- [x] Add TeamSecret to GameStateResponse
+- [x] Implement mode-aware question visibility (hide question when locked)
+- [x] Add modeHasQuestion helper function
+- [x] Add mode guards to handle_answer.go (unlock check, no-question rejection)
+- [x] Set Locked:true on nextStage in answer response for non-classic modes
 
 ### Task 4: Unlock endpoint and routes
 

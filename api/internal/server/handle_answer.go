@@ -80,6 +80,16 @@ func handleAnswer(broker *Broker) http.HandlerFunc {
 			return
 		}
 
+		// Mode guards: reject answer if mode doesn't support questions or stage not unlocked.
+		if !modeHasQuestion(data.Mode, data.HasQuestions) {
+			writeError(w, http.StatusConflict, "this mode does not use questions")
+			return
+		}
+		if modeRequiresUnlock(data.Mode) && !isStageUnlocked(data.UnlockedStages, currentStageNum) {
+			writeError(w, http.StatusConflict, "stage not unlocked")
+			return
+		}
+
 		stage := stages[currentStageNum-1]
 		isCorrect := strings.EqualFold(
 			strings.TrimSpace(req.Answer),
@@ -100,12 +110,19 @@ func handleAnswer(broker *Broker) http.HandlerFunc {
 		nextStageNum := currentStageNum + 1
 		if nextStageNum <= len(stages) {
 			s := stages[nextStageNum-1]
-			resp.NextStage = &StageInfo{
+			ns := StageInfo{
 				StageNumber: s.StageNumber,
 				Clue:        s.Clue,
-				Question:    s.Question,
 				Location:    s.Location,
+				Locked:      modeRequiresUnlock(data.Mode),
 			}
+			if !ns.Locked {
+				ns.Question = s.Question
+			}
+			if data.Mode == "math_puzzle" {
+				ns.LocationNumber = s.LocationNumber
+			}
+			resp.NextStage = &ns
 		} else {
 			resp.GameComplete = true
 		}

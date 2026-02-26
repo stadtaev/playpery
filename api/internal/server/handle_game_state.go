@@ -8,6 +8,8 @@ import (
 
 type GameInfo struct {
 	Status            string  `json:"status"`
+	Mode              string  `json:"mode"`
+	HasQuestions      bool    `json:"hasQuestions,omitempty"`
 	Supervised        bool    `json:"supervised"`
 	TimerEnabled      bool    `json:"timerEnabled"`
 	TimerMinutes      int     `json:"timerMinutes"`
@@ -22,10 +24,12 @@ type TeamInfo struct {
 }
 
 type StageInfo struct {
-	StageNumber int    `json:"stageNumber"`
-	Clue        string `json:"clue"`
-	Question    string `json:"question"`
-	Location    string `json:"location"`
+	StageNumber    int    `json:"stageNumber"`
+	Clue           string `json:"clue"`
+	Question       string `json:"question,omitempty"`
+	Location       string `json:"location"`
+	Locked         bool   `json:"locked"`
+	LocationNumber int    `json:"locationNumber,omitempty"`
 }
 
 type CompletedStage struct {
@@ -43,17 +47,47 @@ type GameStateResponse struct {
 	Game            GameInfo         `json:"game"`
 	Team            TeamInfo         `json:"team"`
 	Role            string           `json:"role"`
+	TeamSecret      int              `json:"teamSecret,omitempty"`
 	CurrentStage    *StageInfo       `json:"currentStage"`
 	CompletedStages []CompletedStage `json:"completedStages"`
 	Players         []PlayerInfo     `json:"players"`
 }
 
 type scenarioStage struct {
-	StageNumber   int    `json:"stageNumber"`
-	Location      string `json:"location"`
-	Clue          string `json:"clue"`
-	Question      string `json:"question"`
-	CorrectAnswer string `json:"correctAnswer"`
+	StageNumber    int    `json:"stageNumber"`
+	Location       string `json:"location"`
+	Clue           string `json:"clue"`
+	Question       string `json:"question"`
+	CorrectAnswer  string `json:"correctAnswer"`
+	UnlockCode     string `json:"unlockCode,omitempty"`
+	LocationNumber int    `json:"locationNumber,omitempty"`
+}
+
+// modeHasQuestion returns true if the mode supports questions at each stage.
+func modeHasQuestion(mode string, hasQuestions bool) bool {
+	switch mode {
+	case "classic", "qr_quiz":
+		return true
+	case "guided":
+		return hasQuestions
+	default:
+		return false
+	}
+}
+
+// modeRequiresUnlock returns true if the mode requires unlocking before the question/completion.
+func modeRequiresUnlock(mode string) bool {
+	return mode != "classic" && mode != ""
+}
+
+// isStageUnlocked checks if a stage number is in the unlocked list.
+func isStageUnlocked(unlockedStages []int, stageNumber int) bool {
+	for _, n := range unlockedStages {
+		if n == stageNumber {
+			return true
+		}
+	}
+	return false
 }
 
 func handleGameState() http.HandlerFunc {
@@ -93,12 +127,29 @@ func handleGameState() http.HandlerFunc {
 		var currentStage *StageInfo
 		if currentStageNum <= len(stages) && data.Status == "active" {
 			s := stages[currentStageNum-1]
-			currentStage = &StageInfo{
+			si := StageInfo{
 				StageNumber: s.StageNumber,
 				Clue:        s.Clue,
-				Question:    s.Question,
 				Location:    s.Location,
 			}
+
+			if modeRequiresUnlock(data.Mode) {
+				unlocked := isStageUnlocked(data.UnlockedStages, currentStageNum)
+				si.Locked = !unlocked
+				if unlocked && modeHasQuestion(data.Mode, data.HasQuestions) {
+					si.Question = s.Question
+				}
+				// For locked stages, question is omitted (zero value, omitempty)
+			} else {
+				// classic: always show question, never locked
+				si.Question = s.Question
+			}
+
+			if data.Mode == "math_puzzle" {
+				si.LocationNumber = s.LocationNumber
+			}
+
+			currentStage = &si
 		}
 
 		players, err := store.ListPlayers(r.Context(), sess.GameID, sess.TeamID)
@@ -111,6 +162,8 @@ func handleGameState() http.HandlerFunc {
 			Role: sess.Role,
 			Game: GameInfo{
 				Status:            data.Status,
+				Mode:              data.Mode,
+				HasQuestions:      data.HasQuestions,
 				Supervised:        data.Supervised,
 				TimerEnabled:      data.TimerEnabled,
 				TimerMinutes:      data.TimerMinutes,
@@ -122,6 +175,7 @@ func handleGameState() http.HandlerFunc {
 				ID:   sess.TeamID,
 				Name: data.TeamName,
 			},
+			TeamSecret:      data.TeamSecret,
 			CurrentStage:    currentStage,
 			CompletedStages: completed,
 			Players:         players,
