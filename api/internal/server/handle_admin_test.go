@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/go-chi/chi/v5"
@@ -684,6 +685,270 @@ func TestAdminCreateTeamDuplicateToken(t *testing.T) {
 
 	if w.Code != http.StatusConflict {
 		t.Fatalf("expected 409, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestScenarioModeValidation(t *testing.T) {
+	tests := []struct {
+		name    string
+		req     AdminScenarioRequest
+		wantErr string
+	}{
+		{
+			name: "classic defaults when empty",
+			req: AdminScenarioRequest{
+				Name: "Test", City: "Lima",
+				Stages: []AdminStage{{Location: "A", Question: "Q?", CorrectAnswer: "A"}},
+			},
+		},
+		{
+			name: "invalid mode rejected",
+			req: AdminScenarioRequest{
+				Name: "Test", City: "Lima", Mode: "invalid",
+				Stages: []AdminStage{{Location: "A"}},
+			},
+			wantErr: "mode must be one of",
+		},
+		{
+			name: "classic requires question",
+			req: AdminScenarioRequest{
+				Name: "Test", City: "Lima", Mode: "classic",
+				Stages: []AdminStage{{Location: "A"}},
+			},
+			wantErr: "each stage must have a question",
+		},
+		{
+			name: "qr_quiz requires question",
+			req: AdminScenarioRequest{
+				Name: "Test", City: "Lima", Mode: "qr_quiz",
+				Stages: []AdminStage{{Location: "A"}},
+			},
+			wantErr: "each stage must have a question",
+		},
+		{
+			name: "qr_quiz auto-generates unlock code",
+			req: AdminScenarioRequest{
+				Name: "Test", City: "Lima", Mode: "qr_quiz",
+				Stages: []AdminStage{{Location: "A", Question: "Q?", CorrectAnswer: "A"}},
+			},
+		},
+		{
+			name: "qr_hunt does not require question",
+			req: AdminScenarioRequest{
+				Name: "Test", City: "Lima", Mode: "qr_hunt",
+				Stages: []AdminStage{{Location: "A"}},
+			},
+		},
+		{
+			name: "qr_hunt auto-generates unlock code",
+			req: AdminScenarioRequest{
+				Name: "Test", City: "Lima", Mode: "qr_hunt",
+				Stages: []AdminStage{{Location: "A"}},
+			},
+		},
+		{
+			name: "math_puzzle requires locationNumber",
+			req: AdminScenarioRequest{
+				Name: "Test", City: "Lima", Mode: "math_puzzle",
+				Stages: []AdminStage{{Location: "A"}},
+			},
+			wantErr: "must have a locationNumber",
+		},
+		{
+			name: "math_puzzle valid",
+			req: AdminScenarioRequest{
+				Name: "Test", City: "Lima", Mode: "math_puzzle",
+				Stages: []AdminStage{{Location: "A", LocationNumber: 42}},
+			},
+		},
+		{
+			name: "guided with questions requires question",
+			req: AdminScenarioRequest{
+				Name: "Test", City: "Lima", Mode: "guided", HasQuestions: true,
+				Stages: []AdminStage{{Location: "A"}},
+			},
+			wantErr: "each stage must have a question",
+		},
+		{
+			name: "guided without questions is ok",
+			req: AdminScenarioRequest{
+				Name: "Test", City: "Lima", Mode: "guided",
+				Stages: []AdminStage{{Location: "A"}},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			msg := tt.req.validate()
+			if tt.wantErr == "" {
+				if msg != "" {
+					t.Errorf("expected no error, got %q", msg)
+				}
+			} else {
+				if msg == "" {
+					t.Error("expected error, got none")
+				} else if !strings.Contains(msg, tt.wantErr) {
+					t.Errorf("expected error containing %q, got %q", tt.wantErr, msg)
+				}
+			}
+		})
+	}
+
+	// Verify unlock code auto-generation.
+	t.Run("qr_quiz stages get unlock codes", func(t *testing.T) {
+		req := AdminScenarioRequest{
+			Name: "Test", City: "Lima", Mode: "qr_quiz",
+			Stages: []AdminStage{
+				{Location: "A", Question: "Q?", CorrectAnswer: "A"},
+				{Location: "B", Question: "Q2?", CorrectAnswer: "B"},
+			},
+		}
+		if msg := req.validate(); msg != "" {
+			t.Fatalf("unexpected error: %s", msg)
+		}
+		for i, s := range req.Stages {
+			if s.UnlockCode == "" {
+				t.Errorf("stage %d: expected auto-generated unlock code", i+1)
+			}
+		}
+	})
+
+	// Verify default mode is set.
+	t.Run("empty mode defaults to classic", func(t *testing.T) {
+		req := AdminScenarioRequest{
+			Name: "Test", City: "Lima",
+			Stages: []AdminStage{{Location: "A", Question: "Q?", CorrectAnswer: "A"}},
+		}
+		req.validate()
+		if req.Mode != "classic" {
+			t.Errorf("expected mode 'classic', got %q", req.Mode)
+		}
+	})
+}
+
+func TestMathPuzzleTeamSecret(t *testing.T) {
+	r, login := adminRouter(t)
+	cookies := login()
+
+	addCookies := func(req *http.Request) {
+		for _, c := range cookies {
+			req.AddCookie(c)
+		}
+	}
+
+	// Create a math_puzzle scenario.
+	scenarioReq := AdminScenarioRequest{
+		Name: "Math Puzzle Test",
+		City: "Lima",
+		Mode: "math_puzzle",
+		Stages: []AdminStage{
+			{Location: "Plaza", LocationNumber: 10},
+			{Location: "Church", LocationNumber: 20},
+		},
+	}
+	body, _ := json.Marshal(scenarioReq)
+	req := httptest.NewRequest(http.MethodPost, "/api/admin/scenarios/", bytes.NewReader(body))
+	addCookies(req)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("create scenario: expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+	var sc AdminScenarioDetail
+	json.NewDecoder(w.Body).Decode(&sc)
+
+	// Create a game from the scenario.
+	gameReq := AdminGameRequest{ScenarioID: sc.ID, Status: "active"}
+	body, _ = json.Marshal(gameReq)
+	req = httptest.NewRequest(http.MethodPost, "/api/admin/clients/demo/games", bytes.NewReader(body))
+	addCookies(req)
+	w = httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("create game: expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+	var game AdminGameDetail
+	json.NewDecoder(w.Body).Decode(&game)
+	if game.Mode != "math_puzzle" {
+		t.Errorf("expected mode 'math_puzzle', got %q", game.Mode)
+	}
+
+	// Create a team — should get a TeamSecret.
+	teamReq := AdminTeamRequest{Name: "Puzzle Team"}
+	body, _ = json.Marshal(teamReq)
+	req = httptest.NewRequest(http.MethodPost, "/api/admin/clients/demo/games/"+game.ID+"/teams", bytes.NewReader(body))
+	addCookies(req)
+	w = httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("create team: expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+	var team AdminTeamItem
+	json.NewDecoder(w.Body).Decode(&team)
+
+	if team.TeamSecret < 100 || team.TeamSecret > 999 {
+		t.Errorf("expected team secret 100-999, got %d", team.TeamSecret)
+	}
+}
+
+func TestClassicGameNoTeamSecret(t *testing.T) {
+	r, login := adminRouter(t)
+	cookies := login()
+
+	addCookies := func(req *http.Request) {
+		for _, c := range cookies {
+			req.AddCookie(c)
+		}
+	}
+
+	// Create a classic scenario.
+	scenarioReq := AdminScenarioRequest{
+		Name: "Classic Test",
+		City: "Lima",
+		Stages: []AdminStage{
+			{Location: "Plaza", Question: "Q?", CorrectAnswer: "A"},
+		},
+	}
+	body, _ := json.Marshal(scenarioReq)
+	req := httptest.NewRequest(http.MethodPost, "/api/admin/scenarios/", bytes.NewReader(body))
+	addCookies(req)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("create scenario: expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+	var sc AdminScenarioDetail
+	json.NewDecoder(w.Body).Decode(&sc)
+
+	// Create a game.
+	gameReq := AdminGameRequest{ScenarioID: sc.ID, Status: "active"}
+	body, _ = json.Marshal(gameReq)
+	req = httptest.NewRequest(http.MethodPost, "/api/admin/clients/demo/games", bytes.NewReader(body))
+	addCookies(req)
+	w = httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("create game: expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+	var game AdminGameDetail
+	json.NewDecoder(w.Body).Decode(&game)
+
+	// Create a team — should NOT get a TeamSecret.
+	teamReq := AdminTeamRequest{Name: "Classic Team"}
+	body, _ = json.Marshal(teamReq)
+	req = httptest.NewRequest(http.MethodPost, "/api/admin/clients/demo/games/"+game.ID+"/teams", bytes.NewReader(body))
+	addCookies(req)
+	w = httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("create team: expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+	var team AdminTeamItem
+	json.NewDecoder(w.Body).Decode(&team)
+
+	if team.TeamSecret != 0 {
+		t.Errorf("expected no team secret for classic mode, got %d", team.TeamSecret)
 	}
 }
 

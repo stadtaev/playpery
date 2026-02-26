@@ -1,12 +1,23 @@
 package server
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
 )
+
+var validModes = map[string]bool{
+	"classic":      true,
+	"qr_quiz":      true,
+	"qr_hunt":      true,
+	"math_puzzle":  true,
+	"guided":       true,
+}
 
 type AdminScenarioSummary struct {
 	ID           string `json:"id"`
@@ -51,6 +62,12 @@ type AdminScenarioRequest struct {
 	Stages       []AdminStage `json:"stages"`
 }
 
+func generateUnlockCode() string {
+	b := make([]byte, 6)
+	rand.Read(b)
+	return hex.EncodeToString(b)
+}
+
 func (req *AdminScenarioRequest) validate() string {
 	req.Name = strings.TrimSpace(req.Name)
 	req.City = strings.TrimSpace(req.City)
@@ -61,19 +78,38 @@ func (req *AdminScenarioRequest) validate() string {
 	if req.City == "" {
 		return "city is required"
 	}
+	if req.Mode == "" {
+		req.Mode = "classic"
+	}
+	if !validModes[req.Mode] {
+		return fmt.Sprintf("mode must be one of: classic, qr_quiz, qr_hunt, math_puzzle, guided")
+	}
 	if len(req.Stages) == 0 {
 		return "at least one stage is required"
 	}
+
+	needsQuestion := req.Mode == "classic" || req.Mode == "qr_quiz" || (req.Mode == "guided" && req.HasQuestions)
+	needsUnlockCode := req.Mode == "qr_quiz" || req.Mode == "qr_hunt"
+	needsLocationNumber := req.Mode == "math_puzzle"
+
 	for i := range req.Stages {
 		req.Stages[i].StageNumber = i + 1
 		if strings.TrimSpace(req.Stages[i].Location) == "" {
 			return "each stage must have a location"
 		}
-		if strings.TrimSpace(req.Stages[i].Question) == "" {
-			return "each stage must have a question"
+		if needsQuestion {
+			if strings.TrimSpace(req.Stages[i].Question) == "" {
+				return "each stage must have a question"
+			}
+			if strings.TrimSpace(req.Stages[i].CorrectAnswer) == "" {
+				return "each stage must have a correctAnswer"
+			}
 		}
-		if strings.TrimSpace(req.Stages[i].CorrectAnswer) == "" {
-			return "each stage must have a correctAnswer"
+		if needsUnlockCode && strings.TrimSpace(req.Stages[i].UnlockCode) == "" {
+			req.Stages[i].UnlockCode = generateUnlockCode()
+		}
+		if needsLocationNumber && req.Stages[i].LocationNumber == 0 {
+			return fmt.Sprintf("stage %d must have a locationNumber for math_puzzle mode", i+1)
 		}
 	}
 	return ""

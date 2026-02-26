@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"database/sql"
+	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -746,6 +747,11 @@ func (s *DocStore) CreateTeam(ctx context.Context, gameID string, req AdminTeamR
 		CreatedAt: now,
 		Players:   []player{},
 		Results:   []stageResult{},
+	}
+	if g.Mode == "math_puzzle" {
+		var b [2]byte
+		rand.Read(b[:])
+		newTeam.TeamSecret = 100 + int(binary.LittleEndian.Uint16(b[:]))%900
 	}
 	if g.Supervised {
 		superToken := generateSupervisorToken()

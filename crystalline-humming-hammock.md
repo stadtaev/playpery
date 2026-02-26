@@ -264,10 +264,10 @@ Set `Mode: "classic"` explicitly on demo scenario in `SeedDemoScenario`.
 
 ### Task 2: Scenario validation and game/team creation
 
-- [ ] Add mode-dependent validation to AdminScenarioRequest.validate()
-- [ ] Auto-generate unlockCode for qr_quiz/qr_hunt stages if empty
-- [ ] Copy mode + hasQuestions from scenario in CreateGame flow
-- [ ] Generate TeamSecret (100-999) in CreateTeam for math_puzzle games
+- [x] Add mode-dependent validation to AdminScenarioRequest.validate()
+- [x] Auto-generate unlockCode for qr_quiz/qr_hunt stages if empty
+- [x] Copy mode + hasQuestions from scenario in CreateGame flow
+- [x] Generate TeamSecret (100-999) in CreateTeam for math_puzzle games
 
 ### Task 3: Game state and answer endpoint changes
 
