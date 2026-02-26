@@ -16,6 +16,8 @@ type sessionInfo struct {
 
 type gameStateData struct {
 	Status            string
+	Mode              string
+	HasQuestions       bool
 	Supervised        bool
 	TimerEnabled      bool
 	TimerMinutes      int
@@ -23,6 +25,8 @@ type gameStateData struct {
 	StartedAt         *string
 	StagesJSON        string
 	TeamName          string
+	TeamSecret        int
+	UnlockedStages    []int
 }
 
 type Store interface {
@@ -35,6 +39,7 @@ type Store interface {
 	CountAnsweredStages(ctx context.Context, gameID, teamID string) (int, error)
 	CountCorrectAnswers(ctx context.Context, gameID, teamID string) (int, error)
 	RecordAnswer(ctx context.Context, gameID, teamID string, stageNumber int, answer string, isCorrect bool) error
+	UnlockStage(ctx context.Context, gameID, teamID string, stageNumber int) error
 	ListPlayers(ctx context.Context, gameID, teamID string) ([]PlayerInfo, error)
 	ListCompletedStages(ctx context.Context, gameID, teamID string) ([]CompletedStage, error)
 

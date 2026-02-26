@@ -248,20 +248,60 @@ Set `Mode: "classic"` explicitly on demo scenario in `SeedDemoScenario`.
 | `web/src/admin/AdminScenarioEditorPage.tsx` | Mode picker, conditional stage fields |
 | `web/src/admin/AdminScenariosPage.tsx` | Mode label in list |
 
-## Implementation Order
+## Tasks
 
-1. Backend data model (structs, store interface, backfill)
-2. Scenario validation (mode-dependent field requirements)
-3. Game/team creation (copy mode, generate team secrets)
-4. Game state endpoint (mode-aware stage info)
-5. Unlock endpoint (new handle_unlock.go)
-6. Answer endpoint (mode guards)
-7. Routes (wire unlock)
-8. Frontend types + API
-9. GamePage (phase state machine)
-10. Admin scenario editor (mode picker, conditional fields)
-11. Admin list pages (mode display)
-12. Seed (explicit classic)
+### Task 1: Backend data model (structs, store, backfill)
+
+- [x] Add Mode, HasQuestions to scenario and game structs in store_docs.go
+- [x] Add UnlockedStages, TeamSecret to team struct in store_docs.go
+- [x] Add Mode, HasQuestions, UnlockedStages, TeamSecret to gameStateData in store.go
+- [x] Add UnlockStage method to Store interface and DocStore implementation
+- [x] Backfill Mode="classic" in getGame(), GetScenario(), ListScenarios()
+- [x] Add UnlockCode, LocationNumber to AdminStage in handle_admin_scenarios.go
+- [x] Add Mode, HasQuestions to AdminScenarioRequest, AdminScenarioSummary, AdminScenarioDetail
+- [x] Add Mode to AdminGameRequest, AdminGameSummary, AdminGameDetail, AdminGameStatus
+- [x] Add TeamSecret to AdminTeamItem in handle_admin_games.go
+
+### Task 2: Scenario validation and game/team creation
+
+- [ ] Add mode-dependent validation to AdminScenarioRequest.validate()
+- [ ] Auto-generate unlockCode for qr_quiz/qr_hunt stages if empty
+- [ ] Copy mode + hasQuestions from scenario in CreateGame flow
+- [ ] Generate TeamSecret (100-999) in CreateTeam for math_puzzle games
+
+### Task 3: Game state and answer endpoint changes
+
+- [ ] Add Mode, HasQuestions to GameInfo in handle_game_state.go
+- [ ] Add Locked, LocationNumber to StageInfo in handle_game_state.go
+- [ ] Add TeamSecret to GameStateResponse
+- [ ] Implement mode-aware question visibility (hide question when locked)
+- [ ] Add modeHasQuestion helper function
+- [ ] Add mode guards to handle_answer.go (unlock check, no-question rejection)
+- [ ] Set Locked:true on nextStage in answer response for non-classic modes
+
+### Task 4: Unlock endpoint and routes
+
+- [ ] Create handle_unlock.go with UnlockRequest, UnlockResponse types
+- [ ] Implement handleUnlock with mode dispatch (qr_quiz, qr_hunt, math_puzzle, guided)
+- [ ] Wire /game/unlock route in routes.go
+- [ ] Add OpenAPI annotations for unlock endpoint
+- [ ] Set Mode="classic" on demo scenario in seed.go
+
+### Task 5: Frontend types, API, and GamePage
+
+- [ ] Add mode/locked/teamSecret/UnlockResponse types to types.ts
+- [ ] Add unlockStage() to api.ts
+- [ ] Add mode/hasQuestions/unlockCode/locationNumber to adminTypes.ts
+- [ ] Implement phase state machine in GamePage.tsx (interstitial/unlocking/answering)
+- [ ] Handle SSE stage_unlocked event in useGameEvents.ts
+
+### Task 6: Admin UI and list pages
+
+- [ ] Add mode picker dropdown to AdminScenarioEditorPage.tsx
+- [ ] Add guided mode "Include questions" checkbox
+- [ ] Show/hide stage fields based on mode in scenario editor
+- [ ] Show mode label in AdminScenariosPage.tsx list
+- [ ] Show mode in AdminGamesPage.tsx list
 
 ## Verification
 

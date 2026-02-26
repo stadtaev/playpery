@@ -9,38 +9,46 @@ import (
 )
 
 type AdminScenarioSummary struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	City        string `json:"city"`
-	Description string `json:"description"`
-	StageCount  int    `json:"stageCount"`
-	CreatedAt   string `json:"createdAt"`
+	ID           string `json:"id"`
+	Name         string `json:"name"`
+	City         string `json:"city"`
+	Description  string `json:"description"`
+	Mode         string `json:"mode"`
+	HasQuestions bool   `json:"hasQuestions,omitempty"`
+	StageCount   int    `json:"stageCount"`
+	CreatedAt    string `json:"createdAt"`
 }
 
 type AdminScenarioDetail struct {
-	ID          string       `json:"id"`
-	Name        string       `json:"name"`
-	City        string       `json:"city"`
-	Description string       `json:"description"`
-	Stages      []AdminStage `json:"stages"`
-	CreatedAt   string       `json:"createdAt"`
+	ID           string       `json:"id"`
+	Name         string       `json:"name"`
+	City         string       `json:"city"`
+	Description  string       `json:"description"`
+	Mode         string       `json:"mode"`
+	HasQuestions bool         `json:"hasQuestions,omitempty"`
+	Stages       []AdminStage `json:"stages"`
+	CreatedAt    string       `json:"createdAt"`
 }
 
 type AdminStage struct {
-	StageNumber   int     `json:"stageNumber"`
-	Location      string  `json:"location"`
-	Clue          string  `json:"clue"`
-	Question      string  `json:"question"`
-	CorrectAnswer string  `json:"correctAnswer"`
-	Lat           float64 `json:"lat"`
-	Lng           float64 `json:"lng"`
+	StageNumber    int     `json:"stageNumber"`
+	Location       string  `json:"location"`
+	Clue           string  `json:"clue"`
+	Question       string  `json:"question"`
+	CorrectAnswer  string  `json:"correctAnswer"`
+	UnlockCode     string  `json:"unlockCode,omitempty"`
+	LocationNumber int     `json:"locationNumber,omitempty"`
+	Lat            float64 `json:"lat"`
+	Lng            float64 `json:"lng"`
 }
 
 type AdminScenarioRequest struct {
-	Name        string       `json:"name"`
-	City        string       `json:"city"`
-	Description string       `json:"description"`
-	Stages      []AdminStage `json:"stages"`
+	Name         string       `json:"name"`
+	City         string       `json:"city"`
+	Description  string       `json:"description"`
+	Mode         string       `json:"mode"`
+	HasQuestions bool         `json:"hasQuestions,omitempty"`
+	Stages       []AdminStage `json:"stages"`
 }
 
 func (req *AdminScenarioRequest) validate() string {

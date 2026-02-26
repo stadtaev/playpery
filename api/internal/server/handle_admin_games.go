@@ -16,6 +16,7 @@ type AdminGameSummary struct {
 	ScenarioID        string `json:"scenarioId"`
 	ScenarioName      string `json:"scenarioName"`
 	Status            string `json:"status"`
+	Mode              string `json:"mode"`
 	Supervised        bool   `json:"supervised"`
 	TimerEnabled      bool   `json:"timerEnabled"`
 	TimerMinutes      int    `json:"timerMinutes"`
@@ -29,6 +30,7 @@ type AdminGameDetail struct {
 	ScenarioID        string          `json:"scenarioId"`
 	ScenarioName      string          `json:"scenarioName"`
 	Status            string          `json:"status"`
+	Mode              string          `json:"mode"`
 	Supervised        bool            `json:"supervised"`
 	TimerEnabled      bool            `json:"timerEnabled"`
 	TimerMinutes      int             `json:"timerMinutes"`
@@ -44,13 +46,16 @@ type AdminTeamItem struct {
 	JoinToken       string `json:"joinToken"`
 	SupervisorToken string `json:"supervisorToken,omitempty"`
 	GuideName       string `json:"guideName"`
+	TeamSecret      int    `json:"teamSecret,omitempty"`
 	PlayerCount     int    `json:"playerCount"`
 	CreatedAt       string `json:"createdAt"`
 }
 
 type AdminGameRequest struct {
 	ScenarioID        string `json:"scenarioId"`
-	ScenarioName      string `json:"-"` // set by handler after validation
+	ScenarioName      string `json:"-"`  // set by handler after validation
+	Mode              string `json:"-"`  // set by handler from scenario
+	HasQuestions      bool   `json:"-"`  // set by handler from scenario
 	Status            string `json:"status"`
 	Supervised        bool   `json:"supervised"`
 	TimerEnabled      bool   `json:"timerEnabled"`
@@ -68,6 +73,7 @@ type AdminGameStatus struct {
 	ID                string            `json:"id"`
 	ScenarioName      string            `json:"scenarioName"`
 	Status            string            `json:"status"`
+	Mode              string            `json:"mode"`
 	Supervised        bool              `json:"supervised"`
 	TimerEnabled      bool              `json:"timerEnabled"`
 	TimerMinutes      int               `json:"timerMinutes"`
@@ -187,6 +193,8 @@ func handleAdminCreateGame(admin AdminStore) http.HandlerFunc {
 			return
 		}
 		req.ScenarioName = scenario.Name
+		req.Mode = scenario.Mode
+		req.HasQuestions = scenario.HasQuestions
 
 		game, err := store.CreateGame(r.Context(), req, scenario.Stages)
 		if err != nil {
