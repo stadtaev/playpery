@@ -147,7 +147,7 @@ func handleGameState() http.HandlerFunc {
 				if unlocked && modeHasQuestion(data.Mode, data.HasQuestions) {
 					si.Question = s.Question
 				}
-				if data.Mode == "math_puzzle" {
+				if data.Mode == "math_puzzle" && unlocked {
 					si.LocationNumber = s.LocationNumber
 				}
 			} else {

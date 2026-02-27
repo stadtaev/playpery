@@ -91,7 +91,7 @@ export function GamePage() {
     setUnlockCode('')
   }, [currentStageNumber])
 
-  // If the current stage arrives already unlocked (e.g. after page reload), skip to answering.
+  // If the current stage arrives already unlocked (e.g. via SSE), skip from unlocking to answering.
   useEffect(() => {
     if (!state?.currentStage) return
     const mode = state.game.mode
@@ -145,8 +145,10 @@ export function GamePage() {
       if (resp.stageComplete) {
         // Stage auto-completed (qr_hunt, math_puzzle, guided without questions)
         setFeedback({ correct: true, message: `Stage ${resp.stageNumber} complete!` })
-        setStagePhase('interstitial')
-        fetchState()
+        setTimeout(() => {
+          setStagePhase('interstitial')
+          fetchState()
+        }, 1500)
       } else {
         // Unlocked, now answer the question
         setStagePhase('answering')
