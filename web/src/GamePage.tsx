@@ -210,8 +210,8 @@ export function GamePage() {
 
   const { game, team, role, currentStage, completedStages, players } = state
   const isEnded = game.status === 'ended' || (!currentStage && completedStages.length === game.totalStages)
-  const canAnswer = !game.supervised || role === 'supervisor'
   const mode = game.mode || 'classic'
+  const canAnswer = !game.supervised || role === 'supervisor' || mode === 'guided'
 
   return (
     <main className="container" style={{ maxWidth: 600 }}>

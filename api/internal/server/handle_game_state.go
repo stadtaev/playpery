@@ -147,7 +147,7 @@ func handleGameState() http.HandlerFunc {
 				if unlocked && modeHasQuestion(data.Mode, data.HasQuestions) {
 					si.Question = s.Question
 				}
-				if data.Mode == "math_puzzle" && unlocked {
+				if data.Mode == "math_puzzle" {
 					si.LocationNumber = s.LocationNumber
 				}
 			} else {
@@ -181,10 +181,12 @@ func handleGameState() http.HandlerFunc {
 				ID:   sess.TeamID,
 				Name: data.TeamName,
 			},
-			TeamSecret:      data.TeamSecret,
 			CurrentStage:    currentStage,
 			CompletedStages: completed,
 			Players:         players,
+		}
+		if data.Mode == "math_puzzle" {
+			resp.TeamSecret = data.TeamSecret
 		}
 		if resp.CompletedStages == nil {
 			resp.CompletedStages = []CompletedStage{}
