@@ -69,11 +69,12 @@ export function GamePage() {
     fetchState()
   }, [fetchState])
 
-  // SSE handler: refetch state, and if stage was unlocked, transition phase
+  // SSE handler: refetch state, and if stage was unlocked, transition phase.
+  // Only transition if we're in the unlocking phase — otherwise we'd skip interstitial.
   const onSSEEvent = useCallback((eventType?: string) => {
     fetchState()
     if (eventType === 'stage_unlocked') {
-      setStagePhase('answering')
+      setStagePhase((prev) => prev === 'unlocking' ? 'answering' : prev)
       setUnlockCode('')
     }
   }, [fetchState])

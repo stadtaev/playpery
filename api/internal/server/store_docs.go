@@ -620,6 +620,11 @@ func (s *DocStore) UpdateGame(ctx context.Context, id string, req AdminGameReque
 	oldStatus := g.Status
 	if g.ScenarioID != req.ScenarioID {
 		g.Stages = stages
+		// Reset team progress since stages changed.
+		for i := range g.Teams {
+			g.Teams[i].UnlockedStages = nil
+			g.Teams[i].Results = nil
+		}
 	}
 	g.ScenarioID = req.ScenarioID
 	g.ScenarioName = req.ScenarioName

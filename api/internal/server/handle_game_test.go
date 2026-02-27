@@ -71,6 +71,7 @@ func playerRouter(t *testing.T) *chi.Mux {
 	r.Post("/api/{client}/join", handleJoin(broker))
 	r.Get("/api/{client}/game/state", handleGameState())
 	r.Post("/api/{client}/game/answer", handleAnswer(broker))
+	r.Post("/api/{client}/game/unlock", handleUnlock(broker))
 	return r
 }
 
