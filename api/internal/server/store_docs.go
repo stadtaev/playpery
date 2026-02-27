@@ -650,6 +650,7 @@ func (s *DocStore) UpdateGame(ctx context.Context, id string, req AdminGameReque
 	return AdminGameDetail{
 		ID:                id,
 		ScenarioID:        req.ScenarioID,
+		ScenarioName:      req.ScenarioName,
 		Status:            req.Status,
 		Mode:              g.Mode,
 		Supervised:        req.Supervised,
