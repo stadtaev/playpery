@@ -618,11 +618,13 @@ func (s *DocStore) UpdateGame(ctx context.Context, id string, req AdminGameReque
 	}
 
 	oldStatus := g.Status
+	if g.ScenarioID != req.ScenarioID {
+		g.Stages = stages
+	}
 	g.ScenarioID = req.ScenarioID
 	g.ScenarioName = req.ScenarioName
 	g.Mode = req.Mode
 	g.HasQuestions = req.HasQuestions
-	g.Stages = stages
 	g.Status = req.Status
 	g.Supervised = req.Supervised
 	g.TimerEnabled = req.TimerEnabled
