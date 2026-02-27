@@ -66,7 +66,10 @@ func handleAnswer(broker *Broker) http.HandlerFunc {
 		}
 
 		var stages []scenarioStage
-		json.Unmarshal([]byte(data.StagesJSON), &stages)
+		if err := json.Unmarshal([]byte(data.StagesJSON), &stages); err != nil {
+			writeError(w, http.StatusInternalServerError, "internal error")
+			return
+		}
 
 		answeredCount, err := store.CountAnsweredStages(r.Context(), sess.GameID, sess.TeamID)
 		if err != nil {
@@ -118,9 +121,6 @@ func handleAnswer(broker *Broker) http.HandlerFunc {
 			}
 			if !ns.Locked {
 				ns.Question = s.Question
-			}
-			if data.Mode == "math_puzzle" {
-				ns.LocationNumber = s.LocationNumber
 			}
 			resp.NextStage = &ns
 		} else {

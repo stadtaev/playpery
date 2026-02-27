@@ -378,17 +378,11 @@ func (s *DocStore) GameState(ctx context.Context, gameID, teamID string) (gameSt
 	stagesJSON, _ := json.Marshal(g.Stages)
 
 	var teamName string
-	for _, t := range g.Teams {
-		if t.ID == teamID {
-			teamName = t.Name
-			break
-		}
-	}
-
 	var teamSecret int
 	var unlockedStages []int
 	for _, t := range g.Teams {
 		if t.ID == teamID {
+			teamName = t.Name
 			teamSecret = t.TeamSecret
 			unlockedStages = t.UnlockedStages
 			break
@@ -625,6 +619,9 @@ func (s *DocStore) UpdateGame(ctx context.Context, id string, req AdminGameReque
 
 	oldStatus := g.Status
 	g.ScenarioID = req.ScenarioID
+	g.ScenarioName = req.ScenarioName
+	g.Mode = req.Mode
+	g.HasQuestions = req.HasQuestions
 	g.Status = req.Status
 	g.Supervised = req.Supervised
 	g.TimerEnabled = req.TimerEnabled
@@ -872,12 +869,7 @@ func (s *DocStore) GameStatus(ctx context.Context, gameID string) (AdminGameStat
 			}
 		}
 
-		completed := 0
-		for _, r := range t.Results {
-			if r.IsCorrect {
-				completed++
-			}
-		}
+		completed := len(t.Results)
 
 		teams[i] = AdminTeamStatus{
 			ID:              t.ID,
@@ -920,6 +912,7 @@ func (s *DocStore) SeedDemoGame(ctx context.Context, sc *scenario) error {
 		ScenarioID:        sc.ID,
 		ScenarioName:      sc.Name,
 		Status:            "active",
+		Mode:              sc.Mode,
 		TimerEnabled:      true,
 		TimerMinutes:      120,
 		StageTimerMinutes: 10,

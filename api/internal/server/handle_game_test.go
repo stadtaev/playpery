@@ -344,8 +344,8 @@ func TestIsStageUnlocked(t *testing.T) {
 	if isStageUnlocked(unlocked, 2) {
 		t.Error("expected stage 2 to be locked")
 	}
-	if !isStageUnlocked(nil, 0) == false {
-		// nil slice should return false for any stage
+	if isStageUnlocked(nil, 0) {
+		t.Error("expected nil unlocked list to report locked for stage 0")
 	}
 	if isStageUnlocked(nil, 1) {
 		t.Error("expected nil unlocked list to report locked")
@@ -388,10 +388,7 @@ func TestGameStateIncludesMode(t *testing.T) {
 	}
 }
 
-func TestAnswerRejectsNoQuestionMode(t *testing.T) {
-	// This tests that answer endpoint rejects for modes without questions.
-	// We can't easily create a non-classic game via the player router without admin APIs,
-	// so we verify the mode helpers are correct and trust the guard logic.
+func TestModeHelpersRejectNoQuestionModes(t *testing.T) {
 	if modeHasQuestion("qr_hunt", false) {
 		t.Error("qr_hunt should not have questions")
 	}

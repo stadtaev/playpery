@@ -249,7 +249,9 @@ func handleAdminUpdateGame(admin AdminStore) http.HandlerFunc {
 			writeError(w, http.StatusInternalServerError, "internal error")
 			return
 		}
-		_ = scenario // validate scenario exists
+		req.ScenarioName = scenario.Name
+		req.Mode = scenario.Mode
+		req.HasQuestions = scenario.HasQuestions
 
 		game, err := store.UpdateGame(r.Context(), gameID, req)
 		if errors.Is(err, ErrNotFound) {

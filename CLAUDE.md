@@ -98,6 +98,7 @@ api/
       handle_join.go              — POST /api/{client}/join
       handle_game_state.go        — GET /api/{client}/game/state
       handle_answer.go            — POST /api/{client}/game/answer
+      handle_unlock.go            — POST /api/{client}/game/unlock (mode-aware stage unlock)
       handle_events.go            — GET /api/{client}/game/events (SSE)
       handle_admin_login.go       — POST /api/admin/login, GET /api/admin/me, clients CRUD
       handle_admin_logout.go      — POST /api/admin/logout
@@ -129,6 +130,15 @@ web/
 
 Startup order: load config → derive DB directory from DB_PATH → open admin DB → create Registry → pre-open existing clients → seed demo if first run → start HTTP server. Graceful shutdown via errgroup + signal.NotifyContext.
 
+**Scenario modes** control what happens at each stage. Mode is scenario-level (copied to game at creation). Five modes exist:
+- `classic` — question shown immediately (default, backward-compatible)
+- `qr_quiz` — scan QR/enter code to unlock, then answer question
+- `qr_hunt` — scan QR/enter code, stage auto-completes (no question)
+- `math_puzzle` — enter calculated code (teamSecret + locationNumber), stage auto-completes
+- `guided` — supervisor unlocks stage, optionally followed by a question
+
+Existing data without a `mode` field defaults to `"classic"` at read time (no migration needed).
+
 ## API Endpoints
 
 | Method | Path | Purpose | Auth |
@@ -141,6 +151,7 @@ Startup order: load config → derive DB directory from DB_PATH → open admin D
 | POST | `/api/{client}/join` | Player joins team, gets session token | none |
 | GET | `/api/{client}/game/state` | Full game state for player's team | Bearer |
 | POST | `/api/{client}/game/answer` | Submit answer for current stage | Bearer |
+| POST | `/api/{client}/game/unlock` | Unlock current stage (QR code, math answer, or guide tap) | Bearer |
 | GET | `/api/{client}/game/events` | SSE stream for real-time updates | `?token=` |
 | POST | `/api/admin/login` | Admin login (email+password → cookie) | none |
 | POST | `/api/admin/logout` | Admin logout (clear session) | cookie |

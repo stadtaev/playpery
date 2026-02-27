@@ -24,12 +24,11 @@ type TeamInfo struct {
 }
 
 type StageInfo struct {
-	StageNumber    int    `json:"stageNumber"`
-	Clue           string `json:"clue"`
-	Question       string `json:"question,omitempty"`
-	Location       string `json:"location"`
-	Locked         bool   `json:"locked"`
-	LocationNumber int    `json:"locationNumber,omitempty"`
+	StageNumber int    `json:"stageNumber"`
+	Clue        string `json:"clue"`
+	Question    string `json:"question,omitempty"`
+	Location    string `json:"location"`
+	Locked      bool   `json:"locked"`
 }
 
 type CompletedStage struct {
@@ -77,7 +76,12 @@ func modeHasQuestion(mode string, hasQuestions bool) bool {
 
 // modeRequiresUnlock returns true if the mode requires unlocking before the question/completion.
 func modeRequiresUnlock(mode string) bool {
-	return mode != "classic" && mode != ""
+	switch mode {
+	case "qr_quiz", "qr_hunt", "math_puzzle", "guided":
+		return true
+	default:
+		return false
+	}
 }
 
 // isStageUnlocked checks if a stage number is in the unlocked list.
@@ -115,7 +119,10 @@ func handleGameState() http.HandlerFunc {
 		}
 
 		var stages []scenarioStage
-		json.Unmarshal([]byte(data.StagesJSON), &stages)
+		if err := json.Unmarshal([]byte(data.StagesJSON), &stages); err != nil {
+			writeError(w, http.StatusInternalServerError, "internal error")
+			return
+		}
 
 		completed, err := store.ListCompletedStages(r.Context(), sess.GameID, sess.TeamID)
 		if err != nil {
@@ -143,10 +150,6 @@ func handleGameState() http.HandlerFunc {
 			} else {
 				// classic: always show question, never locked
 				si.Question = s.Question
-			}
-
-			if data.Mode == "math_puzzle" {
-				si.LocationNumber = s.LocationNumber
 			}
 
 			currentStage = &si

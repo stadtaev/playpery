@@ -814,6 +814,25 @@ func TestScenarioModeValidation(t *testing.T) {
 		}
 	})
 
+	// Verify qr_hunt unlock code auto-generation.
+	t.Run("qr_hunt stages get unlock codes", func(t *testing.T) {
+		req := AdminScenarioRequest{
+			Name: "Test", City: "Lima", Mode: "qr_hunt",
+			Stages: []AdminStage{
+				{Location: "A"},
+				{Location: "B"},
+			},
+		}
+		if msg := req.validate(); msg != "" {
+			t.Fatalf("unexpected error: %s", msg)
+		}
+		for i, s := range req.Stages {
+			if s.UnlockCode == "" {
+				t.Errorf("stage %d: expected auto-generated unlock code", i+1)
+			}
+		}
+	})
+
 	// Verify default mode is set.
 	t.Run("empty mode defaults to classic", func(t *testing.T) {
 		req := AdminScenarioRequest{

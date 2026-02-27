@@ -141,9 +141,7 @@ export function GamePage() {
       const code = mode === 'guided' ? '' : unlockCode.trim()
       const resp = await unlockStage(client, code)
       setUnlockCode('')
-      if (!resp.unlocked) {
-        setFeedback({ correct: false, message: 'Incorrect code. Try again.' })
-      } else if (resp.stageComplete) {
+      if (resp.stageComplete) {
         // Stage auto-completed (qr_hunt, math_puzzle, guided without questions)
         setFeedback({ correct: true, message: `Stage ${resp.stageNumber} complete!` })
         setStagePhase('interstitial')

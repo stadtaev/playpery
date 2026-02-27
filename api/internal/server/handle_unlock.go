@@ -58,13 +58,16 @@ func handleUnlock(broker *Broker) http.HandlerFunc {
 			return
 		}
 
-		if data.Mode == "classic" || data.Mode == "" {
+		if data.Mode == "classic" {
 			writeError(w, http.StatusConflict, "classic mode does not use unlock")
 			return
 		}
 
 		var stages []scenarioStage
-		json.Unmarshal([]byte(data.StagesJSON), &stages)
+		if err := json.Unmarshal([]byte(data.StagesJSON), &stages); err != nil {
+			writeError(w, http.StatusInternalServerError, "internal error")
+			return
+		}
 
 		answeredCount, err := store.CountAnsweredStages(r.Context(), sess.GameID, sess.TeamID)
 		if err != nil {
@@ -178,11 +181,10 @@ func handleUnlock(broker *Broker) http.HandlerFunc {
 			if nextStageNum <= len(stages) {
 				s := stages[nextStageNum-1]
 				resp.NextStage = &StageInfo{
-					StageNumber:    s.StageNumber,
-					Clue:           s.Clue,
-					Location:       s.Location,
-					Locked:         true,
-					LocationNumber: s.LocationNumber,
+					StageNumber: s.StageNumber,
+					Clue:        s.Clue,
+					Location:    s.Location,
+					Locked:      true,
 				}
 			} else {
 				resp.GameComplete = true

@@ -82,7 +82,7 @@ func (req *AdminScenarioRequest) validate() string {
 		req.Mode = "classic"
 	}
 	if !validModes[req.Mode] {
-		return fmt.Sprintf("mode must be one of: classic, qr_quiz, qr_hunt, math_puzzle, guided")
+		return "mode must be one of: classic, qr_quiz, qr_hunt, math_puzzle, guided"
 	}
 	if len(req.Stages) == 0 {
 		return "at least one stage is required"
