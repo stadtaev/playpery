@@ -46,7 +46,7 @@ type Store interface {
 	ListGames(ctx context.Context) ([]AdminGameSummary, error)
 	CreateGame(ctx context.Context, req AdminGameRequest, stages []AdminStage) (AdminGameDetail, error)
 	GetGame(ctx context.Context, id string) (AdminGameDetail, error)
-	UpdateGame(ctx context.Context, id string, req AdminGameRequest) (AdminGameDetail, error)
+	UpdateGame(ctx context.Context, id string, req AdminGameRequest, stages []AdminStage) (AdminGameDetail, error)
 	DeleteGame(ctx context.Context, id string) error
 	GameHasPlayers(ctx context.Context, gameID string) (bool, error)
 	DeleteTeamsByGame(ctx context.Context, gameID string) error

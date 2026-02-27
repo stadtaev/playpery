@@ -57,6 +57,8 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
       .finally(() => setLoading(false))
   }, [client, id])
 
+  const selectedMode = scenarios.find((s) => s.id === scenarioId)?.mode || 'classic'
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
@@ -208,6 +210,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
                   <th>Name</th>
                   <th>Join Link</th>
                   {supervised && <th>Supervisor Link</th>}
+                  {selectedMode === 'math_puzzle' && <th>Team Secret</th>}
                   <th>Guide</th>
                   <th>Players</th>
                   <th></th>
@@ -238,6 +241,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
                         })() : '-'}
                       </td>
                     )}
+                    {selectedMode === 'math_puzzle' && <td>{t.teamSecret || '-'}</td>}
                     <td>{t.guideName || '-'}</td>
                     <td>{t.playerCount}</td>
                     <td style={{ whiteSpace: 'nowrap' }}>

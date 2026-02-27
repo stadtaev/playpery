@@ -611,7 +611,7 @@ func (s *DocStore) GetGame(ctx context.Context, id string) (AdminGameDetail, err
 	}, nil
 }
 
-func (s *DocStore) UpdateGame(ctx context.Context, id string, req AdminGameRequest) (AdminGameDetail, error) {
+func (s *DocStore) UpdateGame(ctx context.Context, id string, req AdminGameRequest, stages []AdminStage) (AdminGameDetail, error) {
 	g, err := s.getGame(ctx, id)
 	if err != nil {
 		return AdminGameDetail{}, err
@@ -622,6 +622,7 @@ func (s *DocStore) UpdateGame(ctx context.Context, id string, req AdminGameReque
 	g.ScenarioName = req.ScenarioName
 	g.Mode = req.Mode
 	g.HasQuestions = req.HasQuestions
+	g.Stages = stages
 	g.Status = req.Status
 	g.Supervised = req.Supervised
 	g.TimerEnabled = req.TimerEnabled

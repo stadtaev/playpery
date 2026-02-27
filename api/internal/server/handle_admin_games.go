@@ -195,6 +195,9 @@ func handleAdminCreateGame(admin AdminStore) http.HandlerFunc {
 		req.ScenarioName = scenario.Name
 		req.Mode = scenario.Mode
 		req.HasQuestions = scenario.HasQuestions
+		if req.Mode == "guided" {
+			req.Supervised = true
+		}
 
 		game, err := store.CreateGame(r.Context(), req, scenario.Stages)
 		if err != nil {
@@ -252,8 +255,11 @@ func handleAdminUpdateGame(admin AdminStore) http.HandlerFunc {
 		req.ScenarioName = scenario.Name
 		req.Mode = scenario.Mode
 		req.HasQuestions = scenario.HasQuestions
+		if req.Mode == "guided" {
+			req.Supervised = true
+		}
 
-		game, err := store.UpdateGame(r.Context(), gameID, req)
+		game, err := store.UpdateGame(r.Context(), gameID, req, scenario.Stages)
 		if errors.Is(err, ErrNotFound) {
 			writeError(w, http.StatusNotFound, "game not found")
 			return
