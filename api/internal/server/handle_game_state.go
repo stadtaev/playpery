@@ -24,11 +24,12 @@ type TeamInfo struct {
 }
 
 type StageInfo struct {
-	StageNumber int    `json:"stageNumber"`
-	Clue        string `json:"clue"`
-	Question    string `json:"question,omitempty"`
-	Location    string `json:"location"`
-	Locked      bool   `json:"locked"`
+	StageNumber    int    `json:"stageNumber"`
+	Clue           string `json:"clue"`
+	Question       string `json:"question,omitempty"`
+	Location       string `json:"location"`
+	Locked         bool   `json:"locked"`
+	LocationNumber int    `json:"locationNumber,omitempty"`
 }
 
 type CompletedStage struct {
@@ -146,7 +147,9 @@ func handleGameState() http.HandlerFunc {
 				if unlocked && modeHasQuestion(data.Mode, data.HasQuestions) {
 					si.Question = s.Question
 				}
-				// For locked stages, question is omitted (zero value, omitempty)
+				if data.Mode == "math_puzzle" {
+					si.LocationNumber = s.LocationNumber
+				}
 			} else {
 				// classic: always show question, never locked
 				si.Question = s.Question

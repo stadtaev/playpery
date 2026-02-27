@@ -273,7 +273,8 @@ export function GamePage() {
           {mode === 'math_puzzle' && (
             <form onSubmit={handleUnlock}>
               <p>Your team secret is: <strong>{state.teamSecret}</strong></p>
-              <p>Add it to the location number and enter the result:</p>
+              <p>Location number: <strong>{state.currentStage?.locationNumber}</strong></p>
+              <p>Add them together and enter the result:</p>
               <input
                 type="text"
                 value={unlockCode}

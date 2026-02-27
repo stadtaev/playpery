@@ -181,10 +181,11 @@ func handleUnlock(broker *Broker) http.HandlerFunc {
 			if nextStageNum <= len(stages) {
 				s := stages[nextStageNum-1]
 				resp.NextStage = &StageInfo{
-					StageNumber: s.StageNumber,
-					Clue:        s.Clue,
-					Location:    s.Location,
-					Locked:      true,
+					StageNumber:    s.StageNumber,
+					Clue:           s.Clue,
+					Location:       s.Location,
+					Locked:         true,
+					LocationNumber: s.LocationNumber,
 				}
 			} else {
 				resp.GameComplete = true

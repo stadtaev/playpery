@@ -38,6 +38,7 @@ export interface StageInfo {
   question?: string
   location: string
   locked: boolean
+  locationNumber?: number
 }
 
 export interface CompletedStage {

@@ -648,6 +648,21 @@ func (s *DocStore) UpdateGame(ctx context.Context, id string, req AdminGameReque
 	if err := s.putGame(ctx, g); err != nil {
 		return AdminGameDetail{}, err
 	}
+
+	teams := make([]AdminTeamItem, len(g.Teams))
+	for i, t := range g.Teams {
+		teams[i] = AdminTeamItem{
+			ID:              t.ID,
+			Name:            t.Name,
+			JoinToken:       t.JoinToken,
+			SupervisorToken: t.SupervisorToken,
+			GuideName:       t.GuideName,
+			TeamSecret:      t.TeamSecret,
+			PlayerCount:     len(t.Players),
+			CreatedAt:       t.CreatedAt,
+		}
+	}
+
 	return AdminGameDetail{
 		ID:                id,
 		ScenarioID:        req.ScenarioID,
@@ -659,6 +674,7 @@ func (s *DocStore) UpdateGame(ctx context.Context, id string, req AdminGameReque
 		TimerMinutes:      req.TimerMinutes,
 		StageTimerMinutes: req.StageTimerMinutes,
 		StartedAt:         g.StartedAt,
+		Teams:             teams,
 		CreatedAt:         g.CreatedAt,
 	}, nil
 }
