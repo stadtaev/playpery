@@ -453,6 +453,12 @@ func (s *DocStore) RecordAnswer(ctx context.Context, gameID, teamID string, stag
 	return s.modifyGame(ctx, gameID, func(g *game) error {
 		for i := range g.Teams {
 			if g.Teams[i].ID == teamID {
+				// Deduplicate: skip if this stage was already answered.
+				for _, r := range g.Teams[i].Results {
+					if r.StageNumber == stageNumber {
+						return nil
+					}
+				}
 				g.Teams[i].Results = append(g.Teams[i].Results, stageResult{
 					StageNumber: stageNumber,
 					Answer:      answer,
@@ -618,14 +624,27 @@ func (s *DocStore) UpdateGame(ctx context.Context, id string, req AdminGameReque
 	}
 
 	oldStatus := g.Status
-	if g.ScenarioID != req.ScenarioID {
+
+	// Always refresh stages from scenario. Reset team progress if stages changed.
+	if stagesChanged(g.Stages, stages) {
 		g.Stages = stages
-		// Reset team progress since stages changed.
 		for i := range g.Teams {
 			g.Teams[i].UnlockedStages = nil
 			g.Teams[i].Results = nil
 		}
 	}
+
+	// Backfill TeamSecret for existing teams when mode becomes math_puzzle.
+	if req.Mode == "math_puzzle" {
+		for i := range g.Teams {
+			if g.Teams[i].TeamSecret == 0 {
+				var b [2]byte
+				rand.Read(b[:])
+				g.Teams[i].TeamSecret = 100 + int(binary.LittleEndian.Uint16(b[:]))%900
+			}
+		}
+	}
+
 	g.ScenarioID = req.ScenarioID
 	g.ScenarioName = req.ScenarioName
 	g.Mode = req.Mode
@@ -982,6 +1001,54 @@ func (s *DocStore) UnlockStage(ctx context.Context, gameID, teamID string, stage
 		}
 		return ErrNotFound
 	})
+}
+
+func (s *DocStore) UnlockAndCompleteStage(ctx context.Context, gameID, teamID string, stageNumber int) error {
+	now := nowUTC()
+	return s.modifyGame(ctx, gameID, func(g *game) error {
+		for i := range g.Teams {
+			if g.Teams[i].ID == teamID {
+				// Unlock (no-op if already present).
+				found := false
+				for _, n := range g.Teams[i].UnlockedStages {
+					if n == stageNumber {
+						found = true
+						break
+					}
+				}
+				if !found {
+					g.Teams[i].UnlockedStages = append(g.Teams[i].UnlockedStages, stageNumber)
+				}
+				// Record auto-complete result (skip if already recorded).
+				for _, r := range g.Teams[i].Results {
+					if r.StageNumber == stageNumber {
+						return nil
+					}
+				}
+				g.Teams[i].Results = append(g.Teams[i].Results, stageResult{
+					StageNumber: stageNumber,
+					Answer:      "",
+					IsCorrect:   true,
+					AnsweredAt:  now,
+				})
+				return nil
+			}
+		}
+		return ErrNotFound
+	})
+}
+
+// stagesChanged returns true if the two stage slices differ in content.
+func stagesChanged(old, new []AdminStage) bool {
+	if len(old) != len(new) {
+		return true
+	}
+	for i := range old {
+		if old[i] != new[i] {
+			return true
+		}
+	}
+	return false
 }
 
 // Ensure DocStore implements Store at compile time.

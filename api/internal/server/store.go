@@ -40,6 +40,7 @@ type Store interface {
 	CountCorrectAnswers(ctx context.Context, gameID, teamID string) (int, error)
 	RecordAnswer(ctx context.Context, gameID, teamID string, stageNumber int, answer string, isCorrect bool) error
 	UnlockStage(ctx context.Context, gameID, teamID string, stageNumber int) error
+	UnlockAndCompleteStage(ctx context.Context, gameID, teamID string, stageNumber int) error
 	ListPlayers(ctx context.Context, gameID, teamID string) ([]PlayerInfo, error)
 	ListCompletedStages(ctx context.Context, gameID, teamID string) ([]CompletedStage, error)
 

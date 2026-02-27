@@ -78,6 +78,7 @@ func newOpenAPISpec() *openapi3.Spec {
 	postUnlock.AddReqStructure(UnlockRequest{})
 	postUnlock.AddRespStructure(UnlockResponse{}, openapi.WithHTTPStatus(http.StatusOK))
 	postUnlock.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusUnauthorized))
+	postUnlock.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusForbidden))
 	postUnlock.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusConflict))
 	postUnlock.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusUnprocessableEntity))
 	postUnlock.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusBadRequest))

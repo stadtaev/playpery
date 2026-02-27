@@ -121,12 +121,7 @@ func handleUnlock(broker *Broker) http.HandlerFunc {
 				writeError(w, http.StatusUnprocessableEntity, "invalid code")
 				return
 			}
-			if err := store.UnlockStage(r.Context(), sess.GameID, sess.TeamID, currentStageNum); err != nil {
-				writeError(w, http.StatusInternalServerError, "internal error")
-				return
-			}
-			// Auto-complete: no question in qr_hunt.
-			if err := store.RecordAnswer(r.Context(), sess.GameID, sess.TeamID, currentStageNum, "", true); err != nil {
+			if err := store.UnlockAndCompleteStage(r.Context(), sess.GameID, sess.TeamID, currentStageNum); err != nil {
 				writeError(w, http.StatusInternalServerError, "internal error")
 				return
 			}
@@ -163,12 +158,7 @@ func handleUnlock(broker *Broker) http.HandlerFunc {
 				writeError(w, http.StatusUnprocessableEntity, "invalid code")
 				return
 			}
-			if err := store.UnlockStage(r.Context(), sess.GameID, sess.TeamID, currentStageNum); err != nil {
-				writeError(w, http.StatusInternalServerError, "internal error")
-				return
-			}
-			// Auto-complete: no question in math_puzzle.
-			if err := store.RecordAnswer(r.Context(), sess.GameID, sess.TeamID, currentStageNum, "", true); err != nil {
+			if err := store.UnlockAndCompleteStage(r.Context(), sess.GameID, sess.TeamID, currentStageNum); err != nil {
 				writeError(w, http.StatusInternalServerError, "internal error")
 				return
 			}
@@ -201,11 +191,11 @@ func handleUnlock(broker *Broker) http.HandlerFunc {
 				writeError(w, http.StatusForbidden, "only the supervisor can unlock stages")
 				return
 			}
-			if err := store.UnlockStage(r.Context(), sess.GameID, sess.TeamID, currentStageNum); err != nil {
-				writeError(w, http.StatusInternalServerError, "internal error")
-				return
-			}
 			if data.HasQuestions {
+				if err := store.UnlockStage(r.Context(), sess.GameID, sess.TeamID, currentStageNum); err != nil {
+					writeError(w, http.StatusInternalServerError, "internal error")
+					return
+				}
 				broker.Publish(sess.TeamID, SSEEvent{
 					Type:        "stage_unlocked",
 					StageNumber: currentStageNum,
@@ -216,8 +206,8 @@ func handleUnlock(broker *Broker) http.HandlerFunc {
 					Question:    stage.Question,
 				})
 			} else {
-				// No questions — auto-complete.
-				if err := store.RecordAnswer(r.Context(), sess.GameID, sess.TeamID, currentStageNum, "", true); err != nil {
+				// No questions — auto-complete (unlock + record in one transaction).
+				if err := store.UnlockAndCompleteStage(r.Context(), sess.GameID, sess.TeamID, currentStageNum); err != nil {
 					writeError(w, http.StatusInternalServerError, "internal error")
 					return
 				}

@@ -105,8 +105,11 @@ func (req *AdminScenarioRequest) validate() string {
 				return "each stage must have a correctAnswer"
 			}
 		}
-		if needsUnlockCode && strings.TrimSpace(req.Stages[i].UnlockCode) == "" {
-			req.Stages[i].UnlockCode = generateUnlockCode()
+		if needsUnlockCode {
+			req.Stages[i].UnlockCode = strings.TrimSpace(req.Stages[i].UnlockCode)
+			if req.Stages[i].UnlockCode == "" {
+				req.Stages[i].UnlockCode = generateUnlockCode()
+			}
 		}
 		if needsLocationNumber && req.Stages[i].LocationNumber == 0 {
 			return fmt.Sprintf("stage %d must have a locationNumber for math_puzzle mode", i+1)
