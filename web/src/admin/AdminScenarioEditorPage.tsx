@@ -81,6 +81,7 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
   }
 
   function removeStage(index: number) {
+    if (stages.length <= 1) return
     setStages((prev) => prev.filter((_, i) => i !== index))
     if (expandedStage === index) setExpandedStage(null)
     else if (expandedStage !== null && expandedStage > index) setExpandedStage(expandedStage - 1)
@@ -100,6 +101,19 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+
+    // Validate collapsed stages that bypass browser required checks
+    const needsQuestion = modeNeedsQuestion(mode, hasQuestions)
+    for (let i = 0; i < stages.length; i++) {
+      const s = stages[i]
+      const missing = !s.location.trim() || (needsQuestion && (!s.question.trim() || !s.correctAnswer.trim())) || (mode === 'math_puzzle' && !s.locationNumber)
+      if (missing) {
+        setExpandedStage(i)
+        setError(`Stage ${i + 1} has missing required fields`)
+        return
+      }
+    }
+
     setSaving(true)
     setError('')
 

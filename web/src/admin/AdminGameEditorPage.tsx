@@ -133,7 +133,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
   }
 
   async function handleAddTeam() {
-    if (!id) return
+    if (!id || addingTeam) return
     setAddingTeam(true)
     setError('')
 
