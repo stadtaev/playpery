@@ -8,6 +8,8 @@ export interface ScenarioSummary {
   name: string
   city: string
   description: string
+  mode: string
+  hasQuestions?: boolean
   stageCount: number
   createdAt: string
 }
@@ -18,6 +20,8 @@ export interface Stage {
   clue: string
   question: string
   correctAnswer: string
+  unlockCode?: string
+  locationNumber?: number
   lat: number
   lng: number
 }
@@ -27,6 +31,8 @@ export interface ScenarioDetail {
   name: string
   city: string
   description: string
+  mode: string
+  hasQuestions?: boolean
   stages: Stage[]
   createdAt: string
 }
@@ -35,6 +41,8 @@ export interface ScenarioRequest {
   name: string
   city: string
   description: string
+  mode: string
+  hasQuestions?: boolean
   stages: Stage[]
 }
 
@@ -43,6 +51,7 @@ export interface GameSummary {
   scenarioId: string
   scenarioName: string
   status: string
+  mode: string
   supervised: boolean
   timerEnabled: boolean
   timerMinutes: number
@@ -57,6 +66,7 @@ export interface TeamItem {
   joinToken: string
   supervisorToken: string
   guideName: string
+  teamSecret?: number
   playerCount: number
   createdAt: string
 }
@@ -66,6 +76,7 @@ export interface GameDetail {
   scenarioId: string
   scenarioName: string
   status: string
+  mode: string
   supervised: boolean
   timerEnabled: boolean
   timerMinutes: number
@@ -94,6 +105,7 @@ export interface GameStatus {
   id: string
   scenarioName: string
   status: string
+  mode: string
   timerEnabled: boolean
   timerMinutes: number
   stageTimerMinutes: number

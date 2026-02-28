@@ -225,13 +225,19 @@ func (s *AdminDocStore) ListScenarios(ctx context.Context) ([]AdminScenarioSumma
 		if err := json.Unmarshal([]byte(data), &sc); err != nil {
 			return nil, err
 		}
+		mode := sc.Mode
+		if mode == "" {
+			mode = "classic"
+		}
 		scenarios = append(scenarios, AdminScenarioSummary{
-			ID:          sc.ID,
-			Name:        sc.Name,
-			City:        sc.City,
-			Description: sc.Description,
-			StageCount:  len(sc.Stages),
-			CreatedAt:   sc.CreatedAt,
+			ID:           sc.ID,
+			Name:         sc.Name,
+			City:         sc.City,
+			Description:  sc.Description,
+			Mode:         mode,
+			HasQuestions: sc.HasQuestions,
+			StageCount:   len(sc.Stages),
+			CreatedAt:    sc.CreatedAt,
 		})
 	}
 	// Newest first.
@@ -245,23 +251,27 @@ func (s *AdminDocStore) CreateScenario(ctx context.Context, req AdminScenarioReq
 	id := newID()
 	now := nowUTC()
 	doc := scenario{
-		ID:          id,
-		Name:        req.Name,
-		City:        req.City,
-		Description: req.Description,
-		Stages:      req.Stages,
-		CreatedAt:   now,
+		ID:           id,
+		Name:         req.Name,
+		City:         req.City,
+		Description:  req.Description,
+		Mode:         req.Mode,
+		HasQuestions: req.HasQuestions,
+		Stages:       req.Stages,
+		CreatedAt:    now,
 	}
 	if err := s.putScenario(ctx, doc); err != nil {
 		return AdminScenarioDetail{}, err
 	}
 	return AdminScenarioDetail{
-		ID:          id,
-		Name:        req.Name,
-		City:        req.City,
-		Description: req.Description,
-		Stages:      req.Stages,
-		CreatedAt:   now,
+		ID:           id,
+		Name:         req.Name,
+		City:         req.City,
+		Description:  req.Description,
+		Mode:         req.Mode,
+		HasQuestions: req.HasQuestions,
+		Stages:       req.Stages,
+		CreatedAt:    now,
 	}, nil
 }
 
@@ -274,13 +284,19 @@ func (s *AdminDocStore) GetScenario(ctx context.Context, id string) (AdminScenar
 	if stages == nil {
 		stages = []AdminStage{}
 	}
+	mode := sc.Mode
+	if mode == "" {
+		mode = "classic"
+	}
 	return AdminScenarioDetail{
-		ID:          sc.ID,
-		Name:        sc.Name,
-		City:        sc.City,
-		Description: sc.Description,
-		Stages:      stages,
-		CreatedAt:   sc.CreatedAt,
+		ID:           sc.ID,
+		Name:         sc.Name,
+		City:         sc.City,
+		Description:  sc.Description,
+		Mode:         mode,
+		HasQuestions: sc.HasQuestions,
+		Stages:       stages,
+		CreatedAt:    sc.CreatedAt,
 	}, nil
 }
 
@@ -292,17 +308,21 @@ func (s *AdminDocStore) UpdateScenario(ctx context.Context, id string, req Admin
 	sc.Name = req.Name
 	sc.City = req.City
 	sc.Description = req.Description
+	sc.Mode = req.Mode
+	sc.HasQuestions = req.HasQuestions
 	sc.Stages = req.Stages
 	if err := s.putScenario(ctx, sc); err != nil {
 		return AdminScenarioDetail{}, err
 	}
 	return AdminScenarioDetail{
-		ID:          id,
-		Name:        req.Name,
-		City:        req.City,
-		Description: req.Description,
-		Stages:      req.Stages,
-		CreatedAt:   sc.CreatedAt,
+		ID:           id,
+		Name:         req.Name,
+		City:         req.City,
+		Description:  req.Description,
+		Mode:         req.Mode,
+		HasQuestions: req.HasQuestions,
+		Stages:       req.Stages,
+		CreatedAt:    sc.CreatedAt,
 	}, nil
 }
 
@@ -389,6 +409,7 @@ func (s *AdminDocStore) SeedDemoScenario(ctx context.Context) (*scenario, error)
 		Name:        "Lima Centro Historico",
 		City:        "Lima",
 		Description: "Explore the historic center of Lima through four iconic landmarks.",
+		Mode:        "classic",
 		CreatedAt:   now,
 		Stages: []AdminStage{
 			{StageNumber: 1, Location: "Plaza Mayor", Clue: "Head to the main square where Pizarro founded the city. Look for the bronze fountain in the center.", Question: "What year was the fountain in Plaza Mayor built?", CorrectAnswer: "1651", Lat: -12.0464, Lng: -77.0300},

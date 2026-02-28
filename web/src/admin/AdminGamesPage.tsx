@@ -60,6 +60,7 @@ export function AdminGamesPage({ client }: { client: string }) {
           <thead>
             <tr>
               <th>Scenario</th>
+              <th>Mode</th>
               <th>Status</th>
               <th>Timer</th>
               <th>Teams</th>
@@ -78,6 +79,7 @@ export function AdminGamesPage({ client }: { client: string }) {
                     {g.scenarioName}{g.supervised && ' (supervised)'}
                   </a>
                 </td>
+                <td>{g.mode || 'classic'}</td>
                 <td>{statusLabels[g.status] || g.status}</td>
                 <td>{g.timerMinutes}m</td>
                 <td>{g.teamCount}</td>

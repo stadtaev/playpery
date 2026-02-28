@@ -54,6 +54,7 @@ export function AdminScenariosPage() {
             <tr>
               <th>Name</th>
               <th>City</th>
+              <th>Mode</th>
               <th>Stages</th>
               <th>Created</th>
               <th></th>
@@ -71,6 +72,7 @@ export function AdminScenariosPage() {
                   </a>
                 </td>
                 <td>{s.city}</td>
+                <td>{s.mode || 'classic'}</td>
                 <td>{s.stageCount}</td>
                 <td>{new Date(s.createdAt).toLocaleDateString()}</td>
                 <td>

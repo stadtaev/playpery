@@ -7,6 +7,18 @@ function navigate(path: string) {
   window.dispatchEvent(new PopStateEvent('popstate'))
 }
 
+const modeLabels: Record<string, string> = {
+  classic: 'Classic',
+  qr_quiz: 'QR Quiz',
+  qr_hunt: 'QR Hunt',
+  math_puzzle: 'Math Puzzle',
+  guided: 'Guided',
+}
+
+function modeNeedsQuestion(mode: string, hasQuestions: boolean): boolean {
+  return mode === 'classic' || mode === 'qr_quiz' || (mode === 'guided' && hasQuestions)
+}
+
 function emptyStage(): Stage {
   return { stageNumber: 0, location: '', clue: '', question: '', correctAnswer: '', lat: 0, lng: 0 }
 }
@@ -15,6 +27,8 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
   const [name, setName] = useState('')
   const [city, setCity] = useState('')
   const [description, setDescription] = useState('')
+  const [mode, setMode] = useState('classic')
+  const [hasQuestions, setHasQuestions] = useState(false)
   const [stages, setStages] = useState<Stage[]>([emptyStage()])
   const [loading, setLoading] = useState(!!id)
   const [saving, setSaving] = useState(false)
@@ -27,6 +41,8 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
         setName(s.name)
         setCity(s.city)
         setDescription(s.description)
+        setMode(s.mode || 'classic')
+        setHasQuestions(s.hasQuestions || false)
         setStages(s.stages.length > 0 ? s.stages : [emptyStage()])
       })
       .catch((e) => setError(e.message))
@@ -64,6 +80,8 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
       name,
       city,
       description,
+      mode,
+      hasQuestions: mode === 'guided' ? hasQuestions : undefined,
       stages: stages.map((s, i) => ({ ...s, stageNumber: i + 1 })),
     }
 
@@ -104,6 +122,23 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
           <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
         </label>
 
+        <div className="grid">
+          <label>
+            Mode
+            <select value={mode} onChange={(e) => setMode(e.target.value)}>
+              {Object.entries(modeLabels).map(([value, label]) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
+            </select>
+          </label>
+          {mode === 'guided' && (
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingTop: '1.75rem' }}>
+              <input type="checkbox" checked={hasQuestions} onChange={(e) => setHasQuestions(e.target.checked)} role="switch" />
+              Include questions at each stage
+            </label>
+          )}
+        </div>
+
         <h3>Stages</h3>
         {stages.map((stage, i) => (
           <article key={i} style={{ padding: '1rem', marginBottom: '1rem' }}>
@@ -129,14 +164,30 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
               Clue
               <textarea value={stage.clue} onChange={(e) => updateStage(i, 'clue', e.target.value)} rows={2} />
             </label>
-            <label>
-              Question
-              <input type="text" value={stage.question} onChange={(e) => updateStage(i, 'question', e.target.value)} required />
-            </label>
-            <label>
-              Correct Answer
-              <input type="text" value={stage.correctAnswer} onChange={(e) => updateStage(i, 'correctAnswer', e.target.value)} required />
-            </label>
+            {(mode === 'qr_quiz' || mode === 'qr_hunt') && (
+              <label>
+                Unlock Code
+                <input type="text" value={stage.unlockCode || ''} onChange={(e) => updateStage(i, 'unlockCode', e.target.value)} placeholder="Auto-generated if empty" />
+              </label>
+            )}
+            {mode === 'math_puzzle' && (
+              <label>
+                Location Number
+                <input type="number" value={stage.locationNumber || ''} onChange={(e) => updateStage(i, 'locationNumber', parseInt(e.target.value) || 0)} required />
+              </label>
+            )}
+            {modeNeedsQuestion(mode, hasQuestions) && (
+              <>
+                <label>
+                  Question
+                  <input type="text" value={stage.question} onChange={(e) => updateStage(i, 'question', e.target.value)} required />
+                </label>
+                <label>
+                  Correct Answer
+                  <input type="text" value={stage.correctAnswer} onChange={(e) => updateStage(i, 'correctAnswer', e.target.value)} required />
+                </label>
+              </>
+            )}
             <div className="grid">
               <label>
                 Latitude

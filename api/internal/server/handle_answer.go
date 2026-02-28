@@ -60,13 +60,16 @@ func handleAnswer(broker *Broker) http.HandlerFunc {
 			return
 		}
 
-		if data.Supervised && sess.Role != "supervisor" {
+		if data.Supervised && sess.Role != "supervisor" && data.Mode != "guided" {
 			writeError(w, http.StatusForbidden, "only the supervisor can submit answers")
 			return
 		}
 
 		var stages []scenarioStage
-		json.Unmarshal([]byte(data.StagesJSON), &stages)
+		if err := json.Unmarshal([]byte(data.StagesJSON), &stages); err != nil {
+			writeError(w, http.StatusInternalServerError, "internal error")
+			return
+		}
 
 		answeredCount, err := store.CountAnsweredStages(r.Context(), sess.GameID, sess.TeamID)
 		if err != nil {
@@ -77,6 +80,16 @@ func handleAnswer(broker *Broker) http.HandlerFunc {
 		currentStageNum := answeredCount + 1
 		if currentStageNum > len(stages) {
 			writeError(w, http.StatusConflict, "all stages completed")
+			return
+		}
+
+		// Mode guards: reject answer if mode doesn't support questions or stage not unlocked.
+		if !modeHasQuestion(data.Mode, data.HasQuestions) {
+			writeError(w, http.StatusConflict, "this mode does not use questions")
+			return
+		}
+		if modeRequiresUnlock(data.Mode) && !isStageUnlocked(data.UnlockedStages, currentStageNum) {
+			writeError(w, http.StatusConflict, "stage not unlocked")
 			return
 		}
 
@@ -100,12 +113,16 @@ func handleAnswer(broker *Broker) http.HandlerFunc {
 		nextStageNum := currentStageNum + 1
 		if nextStageNum <= len(stages) {
 			s := stages[nextStageNum-1]
-			resp.NextStage = &StageInfo{
+			ns := StageInfo{
 				StageNumber: s.StageNumber,
 				Clue:        s.Clue,
-				Question:    s.Question,
 				Location:    s.Location,
+				Locked:      modeRequiresUnlock(data.Mode),
 			}
+			if !ns.Locked {
+				ns.Question = s.Question
+			}
+			resp.NextStage = &ns
 		} else {
 			resp.GameComplete = true
 		}

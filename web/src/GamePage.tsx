@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { getGameState, submitAnswer } from './api'
+import { getGameState, submitAnswer, unlockStage } from './api'
 import { useGameEvents } from './useGameEvents'
 import type { GameState } from './types'
 
@@ -43,14 +43,18 @@ function TimerDisplay({ gameRemaining, stageRemaining }: { gameRemaining: number
   )
 }
 
+type StagePhase = 'interstitial' | 'unlocking' | 'answering'
+
 export function GamePage() {
   const client = localStorage.getItem('client') || 'demo'
   const [state, setState] = useState<GameState | null>(null)
   const [answer, setAnswer] = useState('')
+  const [unlockCode, setUnlockCode] = useState('')
   const [feedback, setFeedback] = useState<{ correct: boolean; message: string } | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
-  const [stageStartedAt, setStageStartedAt] = useState<number | null>(null)
+  const [stagePhase, setStagePhase] = useState<StagePhase>('interstitial')
+  const [phaseStartedAt, setPhaseStartedAt] = useState<number | null>(null)
 
   const fetchState = useCallback(() => {
     getGameState(client)
@@ -65,13 +69,37 @@ export function GamePage() {
     fetchState()
   }, [fetchState])
 
-  useGameEvents(client, fetchState)
+  // SSE handler: refetch state, and if stage was unlocked, transition phase.
+  // Only transition if we're in the unlocking phase — otherwise we'd skip interstitial.
+  const onSSEEvent = useCallback((eventType?: string) => {
+    fetchState()
+    if (eventType === 'stage_unlocked') {
+      setStagePhase((prev) => prev === 'unlocking' ? 'answering' : prev)
+      setUnlockCode('')
+    }
+  }, [fetchState])
 
-  // Reset interstitial when stage changes (e.g. teammate answered via SSE).
+  useGameEvents(client, onSSEEvent)
+
+  // Reset to interstitial when stage changes (e.g. teammate answered via SSE).
   const currentStageNumber = state?.currentStage?.stageNumber ?? null
   useEffect(() => {
-    setStageStartedAt(null)
+    setStagePhase('interstitial')
+    setPhaseStartedAt(null)
+    setFeedback(null)
+    setAnswer('')
+    setUnlockCode('')
   }, [currentStageNumber])
+
+  // If the current stage arrives already unlocked (e.g. via SSE), skip from unlocking to answering.
+  useEffect(() => {
+    if (!state?.currentStage) return
+    const mode = state.game.mode
+    if (mode === 'classic') return // classic doesn't use locked
+    if (!state.currentStage.locked && stagePhase === 'unlocking') {
+      setStagePhase('answering')
+    }
+  }, [state?.currentStage?.locked, state?.game.mode, stagePhase])
 
   // Compute timer deadlines.
   const timerActive = state?.game.timerEnabled && state.game.status === 'active'
@@ -80,12 +108,57 @@ export function GamePage() {
     ? new Date(state.game.startedAt).getTime() + state.game.timerMinutes * 60000
     : null
 
-  const stageDeadline = (timerActive && stageStartedAt && state.game.stageTimerMinutes)
-    ? stageStartedAt + state.game.stageTimerMinutes * 60000
+  const stageDeadline = (timerActive && phaseStartedAt && state.game.stageTimerMinutes)
+    ? phaseStartedAt + state.game.stageTimerMinutes * 60000
     : null
 
   const gameRemaining = useCountdown(gameDeadline)
   const stageRemaining = useCountdown(stageDeadline)
+
+  function handleGoToStage() {
+    const mode = state?.game.mode || 'classic'
+    const now = Date.now()
+    setPhaseStartedAt(now)
+    setFeedback(null)
+    if (mode === 'classic') {
+      setStagePhase('answering')
+    } else {
+      // Non-classic: if stage is already unlocked, go straight to answering
+      if (state?.currentStage && !state.currentStage.locked) {
+        setStagePhase('answering')
+      } else {
+        setStagePhase('unlocking')
+      }
+    }
+  }
+
+  async function handleUnlock(e: React.FormEvent) {
+    e.preventDefault()
+    if (submitting) return
+    setSubmitting(true)
+    setFeedback(null)
+    try {
+      const mode = state!.game.mode
+      const code = mode === 'guided' ? '' : unlockCode.trim()
+      const resp = await unlockStage(client, code)
+      setUnlockCode('')
+      if (resp.stageComplete) {
+        // Stage auto-completed (qr_hunt, math_puzzle, guided without questions)
+        setFeedback({ correct: true, message: `Stage ${resp.stageNumber} complete!` })
+        setTimeout(() => {
+          setStagePhase('interstitial')
+          fetchState()
+        }, 1500)
+      } else {
+        // Unlocked, now answer the question
+        setStagePhase('answering')
+      }
+    } catch (e) {
+      setFeedback({ correct: false, message: e instanceof Error ? e.message : 'Error' })
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -97,7 +170,7 @@ export function GamePage() {
       setAnswer('')
       if (resp.isCorrect) {
         setFeedback({ correct: true, message: `Stage ${resp.stageNumber} complete!` })
-        setStageStartedAt(null)
+        setStagePhase('interstitial')
         fetchState()
       } else {
         setFeedback({ correct: false, message: `Incorrect — the correct answer was: ${resp.correctAnswer}` })
@@ -137,7 +210,8 @@ export function GamePage() {
 
   const { game, team, role, currentStage, completedStages, players } = state
   const isEnded = game.status === 'ended' || (!currentStage && completedStages.length === game.totalStages)
-  const canAnswer = !game.supervised || role === 'supervisor'
+  const mode = game.mode || 'classic'
+  const canAnswer = !game.supervised || role === 'supervisor' || mode === 'guided'
 
   return (
     <main className="container" style={{ maxWidth: 600 }}>
@@ -158,31 +232,106 @@ export function GamePage() {
         </article>
       )}
 
-      {currentStage && !isEnded && stageStartedAt === null && (
+      {currentStage && !isEnded && stagePhase === 'interstitial' && (
         <article>
           <header>
             Stage {currentStage.stageNumber} of {game.totalStages} &mdash; {currentStage.location}
           </header>
           <p><strong>Clue:</strong> {currentStage.clue}</p>
-          <button onClick={() => setStageStartedAt(Date.now())}>
+          <button onClick={handleGoToStage}>
             {completedStages.length === 0 ? 'Start Quest' : 'Go to Next Stage'}
           </button>
         </article>
       )}
 
-      {currentStage && !isEnded && stageStartedAt !== null && (
+      {currentStage && !isEnded && stagePhase === 'unlocking' && (
         <article>
           <header>
             Stage {currentStage.stageNumber} of {game.totalStages} &mdash; {currentStage.location}
           </header>
           <p><strong>Clue:</strong> {currentStage.clue}</p>
-          <p><strong>Question:</strong> {currentStage.question}</p>
+
+          {(mode === 'qr_quiz' || mode === 'qr_hunt') && (
+            <form onSubmit={handleUnlock}>
+              <p>Enter the code from the QR at this location:</p>
+              <input
+                type="text"
+                value={unlockCode}
+                onChange={(e) => setUnlockCode(e.target.value)}
+                placeholder="QR code..."
+                autoFocus
+                required
+              />
+              {feedback && (
+                <small style={{ color: feedback.correct ? 'var(--pico-color-green-500)' : 'var(--pico-color-red-500)' }}>
+                  {feedback.message}
+                </small>
+              )}
+              <button type="submit" disabled={submitting} aria-busy={submitting}>
+                Submit Code
+              </button>
+            </form>
+          )}
+
+          {mode === 'math_puzzle' && (
+            <form onSubmit={handleUnlock}>
+              <p>Your team secret is: <strong>{state.teamSecret}</strong></p>
+              <p>Location number: <strong>{state.currentStage?.locationNumber}</strong></p>
+              <p>Add them together and enter the result:</p>
+              <input
+                type="text"
+                value={unlockCode}
+                onChange={(e) => setUnlockCode(e.target.value)}
+                placeholder="Calculated code..."
+                autoFocus
+                required
+              />
+              {feedback && (
+                <small style={{ color: feedback.correct ? 'var(--pico-color-green-500)' : 'var(--pico-color-red-500)' }}>
+                  {feedback.message}
+                </small>
+              )}
+              <button type="submit" disabled={submitting} aria-busy={submitting}>
+                Submit Code
+              </button>
+            </form>
+          )}
+
+          {mode === 'guided' && (
+            role === 'supervisor' ? (
+              <form onSubmit={handleUnlock}>
+                <p>Unlock this stage for your team:</p>
+                {feedback && (
+                  <small style={{ color: feedback.correct ? 'var(--pico-color-green-500)' : 'var(--pico-color-red-500)' }}>
+                    {feedback.message}
+                  </small>
+                )}
+                <button type="submit" disabled={submitting} aria-busy={submitting}>
+                  Unlock Stage
+                </button>
+              </form>
+            ) : (
+              <p><em>Waiting for the guide to unlock this stage...</em></p>
+            )
+          )}
+        </article>
+      )}
+
+      {currentStage && !isEnded && stagePhase === 'answering' && (
+        <article>
+          <header>
+            Stage {currentStage.stageNumber} of {game.totalStages} &mdash; {currentStage.location}
+          </header>
+          <p><strong>Clue:</strong> {currentStage.clue}</p>
+          {currentStage.question && (
+            <p><strong>Question:</strong> {currentStage.question}</p>
+          )}
           {feedback && !feedback.correct ? (
             <>
               <p style={{ color: 'var(--pico-color-red-500)' }}>
                 {feedback.message}
               </p>
-              <button onClick={() => { setFeedback(null); setStageStartedAt(null); fetchState() }}>
+              <button onClick={() => { setFeedback(null); setStagePhase('interstitial'); fetchState() }}>
                 Continue
               </button>
             </>

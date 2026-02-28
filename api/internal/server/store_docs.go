@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"database/sql"
+	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -18,6 +19,8 @@ type scenario struct {
 	Name        string       `json:"name"`
 	City        string       `json:"city"`
 	Description string       `json:"description"`
+	Mode        string       `json:"mode"`
+	HasQuestions bool        `json:"hasQuestions,omitempty"`
 	Stages      []AdminStage `json:"stages"`
 	CreatedAt   string       `json:"createdAt"`
 }
@@ -27,6 +30,8 @@ type game struct {
 	ScenarioID        string       `json:"scenarioId"`
 	ScenarioName      string       `json:"scenarioName"`
 	Status            string       `json:"status"`
+	Mode              string       `json:"mode"`
+	HasQuestions      bool         `json:"hasQuestions,omitempty"`
 	Supervised        bool         `json:"supervised,omitempty"`
 	TimerEnabled      bool         `json:"timerEnabled"`
 	TimerMinutes      int          `json:"timerMinutes"`
@@ -44,6 +49,8 @@ type team struct {
 	JoinToken       string        `json:"joinToken"`
 	SupervisorToken string        `json:"supervisorToken,omitempty"`
 	GuideName       string        `json:"guideName"`
+	TeamSecret      int           `json:"teamSecret,omitempty"`
+	UnlockedStages  []int         `json:"unlockedStages,omitempty"`
 	CreatedAt       string        `json:"createdAt"`
 	Players         []player      `json:"players"`
 	Results         []stageResult `json:"results"`
@@ -194,10 +201,15 @@ func (s *DocStore) allGames(ctx context.Context) ([]game, error) {
 func (s *DocStore) getGame(ctx context.Context, id string) (game, error) {
 	var g game
 	err := s.get(ctx, "games", id, &g)
-	if err == nil && !g.TimerEnabled && g.TimerMinutes > 0 {
-		g.TimerEnabled = true
-		if g.StageTimerMinutes == 0 {
-			g.StageTimerMinutes = 10
+	if err == nil {
+		if !g.TimerEnabled && g.TimerMinutes > 0 {
+			g.TimerEnabled = true
+			if g.StageTimerMinutes == 0 {
+				g.StageTimerMinutes = 10
+			}
+		}
+		if g.Mode == "" {
+			g.Mode = "classic"
 		}
 	}
 	return g, err
@@ -366,15 +378,21 @@ func (s *DocStore) GameState(ctx context.Context, gameID, teamID string) (gameSt
 	stagesJSON, _ := json.Marshal(g.Stages)
 
 	var teamName string
+	var teamSecret int
+	var unlockedStages []int
 	for _, t := range g.Teams {
 		if t.ID == teamID {
 			teamName = t.Name
+			teamSecret = t.TeamSecret
+			unlockedStages = t.UnlockedStages
 			break
 		}
 	}
 
 	var d gameStateData
 	d.Status = g.Status
+	d.Mode = g.Mode
+	d.HasQuestions = g.HasQuestions
 	d.Supervised = g.Supervised
 	d.TimerEnabled = g.TimerEnabled
 	d.TimerMinutes = g.TimerMinutes
@@ -382,6 +400,8 @@ func (s *DocStore) GameState(ctx context.Context, gameID, teamID string) (gameSt
 	d.StartedAt = g.StartedAt
 	d.StagesJSON = string(stagesJSON)
 	d.TeamName = teamName
+	d.TeamSecret = teamSecret
+	d.UnlockedStages = unlockedStages
 	return d, nil
 }
 
@@ -433,6 +453,12 @@ func (s *DocStore) RecordAnswer(ctx context.Context, gameID, teamID string, stag
 	return s.modifyGame(ctx, gameID, func(g *game) error {
 		for i := range g.Teams {
 			if g.Teams[i].ID == teamID {
+				// Deduplicate: skip if this stage was already answered.
+				for _, r := range g.Teams[i].Results {
+					if r.StageNumber == stageNumber {
+						return nil
+					}
+				}
 				g.Teams[i].Results = append(g.Teams[i].Results, stageResult{
 					StageNumber: stageNumber,
 					Answer:      answer,
@@ -494,11 +520,16 @@ func (s *DocStore) ListGames(ctx context.Context) ([]AdminGameSummary, error) {
 
 	var games []AdminGameSummary
 	for _, g := range allGames {
+		mode := g.Mode
+		if mode == "" {
+			mode = "classic"
+		}
 		games = append(games, AdminGameSummary{
 			ID:                g.ID,
 			ScenarioID:        g.ScenarioID,
 			ScenarioName:      g.ScenarioName,
 			Status:            g.Status,
+			Mode:              mode,
 			Supervised:        g.Supervised,
 			TimerEnabled:      g.TimerEnabled,
 			TimerMinutes:      g.TimerMinutes,
@@ -522,6 +553,8 @@ func (s *DocStore) CreateGame(ctx context.Context, req AdminGameRequest, stages 
 		ScenarioID:        req.ScenarioID,
 		ScenarioName:      req.ScenarioName,
 		Status:            req.Status,
+		Mode:              req.Mode,
+		HasQuestions:       req.HasQuestions,
 		Supervised:        req.Supervised,
 		TimerEnabled:      req.TimerEnabled,
 		TimerMinutes:      req.TimerMinutes,
@@ -538,6 +571,7 @@ func (s *DocStore) CreateGame(ctx context.Context, req AdminGameRequest, stages 
 		ScenarioID:        req.ScenarioID,
 		ScenarioName:      req.ScenarioName,
 		Status:            req.Status,
+		Mode:              req.Mode,
 		Supervised:        req.Supervised,
 		TimerEnabled:      req.TimerEnabled,
 		TimerMinutes:      req.TimerMinutes,
@@ -561,6 +595,7 @@ func (s *DocStore) GetGame(ctx context.Context, id string) (AdminGameDetail, err
 			JoinToken:       t.JoinToken,
 			SupervisorToken: t.SupervisorToken,
 			GuideName:       t.GuideName,
+			TeamSecret:      t.TeamSecret,
 			PlayerCount:     len(t.Players),
 			CreatedAt:       t.CreatedAt,
 		}
@@ -571,6 +606,7 @@ func (s *DocStore) GetGame(ctx context.Context, id string) (AdminGameDetail, err
 		ScenarioID:        g.ScenarioID,
 		ScenarioName:      g.ScenarioName,
 		Status:            g.Status,
+		Mode:              g.Mode,
 		Supervised:        g.Supervised,
 		TimerEnabled:      g.TimerEnabled,
 		TimerMinutes:      g.TimerMinutes,
@@ -581,14 +617,38 @@ func (s *DocStore) GetGame(ctx context.Context, id string) (AdminGameDetail, err
 	}, nil
 }
 
-func (s *DocStore) UpdateGame(ctx context.Context, id string, req AdminGameRequest) (AdminGameDetail, error) {
+func (s *DocStore) UpdateGame(ctx context.Context, id string, req AdminGameRequest, stages []AdminStage) (AdminGameDetail, error) {
 	g, err := s.getGame(ctx, id)
 	if err != nil {
 		return AdminGameDetail{}, err
 	}
 
 	oldStatus := g.Status
+
+	// Always refresh stages from scenario. Reset team progress if stages changed.
+	if stagesChanged(g.Stages, stages) {
+		g.Stages = stages
+		for i := range g.Teams {
+			g.Teams[i].UnlockedStages = nil
+			g.Teams[i].Results = nil
+		}
+	}
+
+	// Backfill TeamSecret for existing teams when mode becomes math_puzzle.
+	if req.Mode == "math_puzzle" {
+		for i := range g.Teams {
+			if g.Teams[i].TeamSecret == 0 {
+				var b [2]byte
+				rand.Read(b[:])
+				g.Teams[i].TeamSecret = 100 + int(binary.LittleEndian.Uint16(b[:]))%900
+			}
+		}
+	}
+
 	g.ScenarioID = req.ScenarioID
+	g.ScenarioName = req.ScenarioName
+	g.Mode = req.Mode
+	g.HasQuestions = req.HasQuestions
 	g.Status = req.Status
 	g.Supervised = req.Supervised
 	g.TimerEnabled = req.TimerEnabled
@@ -614,15 +674,33 @@ func (s *DocStore) UpdateGame(ctx context.Context, id string, req AdminGameReque
 	if err := s.putGame(ctx, g); err != nil {
 		return AdminGameDetail{}, err
 	}
+
+	teams := make([]AdminTeamItem, len(g.Teams))
+	for i, t := range g.Teams {
+		teams[i] = AdminTeamItem{
+			ID:              t.ID,
+			Name:            t.Name,
+			JoinToken:       t.JoinToken,
+			SupervisorToken: t.SupervisorToken,
+			GuideName:       t.GuideName,
+			TeamSecret:      t.TeamSecret,
+			PlayerCount:     len(t.Players),
+			CreatedAt:       t.CreatedAt,
+		}
+	}
+
 	return AdminGameDetail{
 		ID:                id,
 		ScenarioID:        req.ScenarioID,
+		ScenarioName:      req.ScenarioName,
 		Status:            req.Status,
+		Mode:              g.Mode,
 		Supervised:        req.Supervised,
 		TimerEnabled:      req.TimerEnabled,
 		TimerMinutes:      req.TimerMinutes,
 		StageTimerMinutes: req.StageTimerMinutes,
 		StartedAt:         g.StartedAt,
+		Teams:             teams,
 		CreatedAt:         g.CreatedAt,
 	}, nil
 }
@@ -672,6 +750,7 @@ func (s *DocStore) ListTeams(ctx context.Context, gameID string) ([]AdminTeamIte
 			JoinToken:       t.JoinToken,
 			SupervisorToken: t.SupervisorToken,
 			GuideName:       t.GuideName,
+			TeamSecret:      t.TeamSecret,
 			PlayerCount:     len(t.Players),
 			CreatedAt:       t.CreatedAt,
 		}
@@ -710,6 +789,11 @@ func (s *DocStore) CreateTeam(ctx context.Context, gameID string, req AdminTeamR
 		Players:   []player{},
 		Results:   []stageResult{},
 	}
+	if g.Mode == "math_puzzle" {
+		var b [2]byte
+		rand.Read(b[:])
+		newTeam.TeamSecret = 100 + int(binary.LittleEndian.Uint16(b[:]))%900
+	}
 	if g.Supervised {
 		superToken := generateSupervisorToken()
 		// Verify uniqueness of supervisor token too.
@@ -738,6 +822,7 @@ func (s *DocStore) CreateTeam(ctx context.Context, gameID string, req AdminTeamR
 		JoinToken:       token,
 		SupervisorToken: newTeam.SupervisorToken,
 		GuideName:       req.GuideName,
+		TeamSecret:      newTeam.TeamSecret,
 		PlayerCount:     0,
 		CreatedAt:       now,
 	}, nil
@@ -756,6 +841,7 @@ func (s *DocStore) UpdateTeam(ctx context.Context, gameID, teamID string, req Ad
 					JoinToken:       g.Teams[i].JoinToken,
 					SupervisorToken: g.Teams[i].SupervisorToken,
 					GuideName:       req.GuideName,
+					TeamSecret:      g.Teams[i].TeamSecret,
 					PlayerCount:     len(g.Teams[i].Players),
 					CreatedAt:       g.Teams[i].CreatedAt,
 				}
@@ -827,12 +913,7 @@ func (s *DocStore) GameStatus(ctx context.Context, gameID string) (AdminGameStat
 			}
 		}
 
-		completed := 0
-		for _, r := range t.Results {
-			if r.IsCorrect {
-				completed++
-			}
-		}
+		completed := len(t.Results)
 
 		teams[i] = AdminTeamStatus{
 			ID:              t.ID,
@@ -847,6 +928,7 @@ func (s *DocStore) GameStatus(ctx context.Context, gameID string) (AdminGameStat
 		ID:                g.ID,
 		ScenarioName:      g.ScenarioName,
 		Status:            g.Status,
+		Mode:              g.Mode,
 		Supervised:        g.Supervised,
 		TimerEnabled:      g.TimerEnabled,
 		TimerMinutes:      g.TimerMinutes,
@@ -874,6 +956,7 @@ func (s *DocStore) SeedDemoGame(ctx context.Context, sc *scenario) error {
 		ScenarioID:        sc.ID,
 		ScenarioName:      sc.Name,
 		Status:            "active",
+		Mode:              sc.Mode,
 		TimerEnabled:      true,
 		TimerMinutes:      120,
 		StageTimerMinutes: 10,
@@ -900,6 +983,72 @@ func (s *DocStore) SeedDemoGame(ctx context.Context, sc *scenario) error {
 		},
 	}
 	return s.putGame(ctx, game)
+}
+
+func (s *DocStore) UnlockStage(ctx context.Context, gameID, teamID string, stageNumber int) error {
+	return s.modifyGame(ctx, gameID, func(g *game) error {
+		for i := range g.Teams {
+			if g.Teams[i].ID == teamID {
+				// No-op if already unlocked.
+				for _, n := range g.Teams[i].UnlockedStages {
+					if n == stageNumber {
+						return nil
+					}
+				}
+				g.Teams[i].UnlockedStages = append(g.Teams[i].UnlockedStages, stageNumber)
+				return nil
+			}
+		}
+		return ErrNotFound
+	})
+}
+
+func (s *DocStore) UnlockAndCompleteStage(ctx context.Context, gameID, teamID string, stageNumber int) error {
+	now := nowUTC()
+	return s.modifyGame(ctx, gameID, func(g *game) error {
+		for i := range g.Teams {
+			if g.Teams[i].ID == teamID {
+				// Unlock (no-op if already present).
+				found := false
+				for _, n := range g.Teams[i].UnlockedStages {
+					if n == stageNumber {
+						found = true
+						break
+					}
+				}
+				if !found {
+					g.Teams[i].UnlockedStages = append(g.Teams[i].UnlockedStages, stageNumber)
+				}
+				// Record auto-complete result (skip if already recorded).
+				for _, r := range g.Teams[i].Results {
+					if r.StageNumber == stageNumber {
+						return nil
+					}
+				}
+				g.Teams[i].Results = append(g.Teams[i].Results, stageResult{
+					StageNumber: stageNumber,
+					Answer:      "",
+					IsCorrect:   true,
+					AnsweredAt:  now,
+				})
+				return nil
+			}
+		}
+		return ErrNotFound
+	})
+}
+
+// stagesChanged returns true if the two stage slices differ in content.
+func stagesChanged(old, new []AdminStage) bool {
+	if len(old) != len(new) {
+		return true
+	}
+	for i := range old {
+		if old[i] != new[i] {
+			return true
+		}
+	}
+	return false
 }
 
 // Ensure DocStore implements Store at compile time.

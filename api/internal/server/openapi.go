@@ -71,6 +71,19 @@ func newOpenAPISpec() *openapi3.Spec {
 	postAnswer.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusConflict))
 	_ = r.AddOperation(postAnswer)
 
+	// POST /api/game/unlock
+	postUnlock, _ := r.NewOperationContext(http.MethodPost, "/api/game/unlock")
+	postUnlock.SetSummary("Unlock stage")
+	postUnlock.SetDescription("Unlock the current stage using a code (QR, math, or guided). Requires Bearer token. Not used in classic mode.")
+	postUnlock.AddReqStructure(UnlockRequest{})
+	postUnlock.AddRespStructure(UnlockResponse{}, openapi.WithHTTPStatus(http.StatusOK))
+	postUnlock.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusUnauthorized))
+	postUnlock.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusForbidden))
+	postUnlock.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusConflict))
+	postUnlock.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusUnprocessableEntity))
+	postUnlock.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusBadRequest))
+	_ = r.AddOperation(postUnlock)
+
 	// GET /api/game/events
 	getEvents, _ := r.NewOperationContext(http.MethodGet, "/api/game/events")
 	getEvents.SetSummary("SSE event stream")
