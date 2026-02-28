@@ -103,7 +103,7 @@ export function AdminGameStatusPage({ client, id }: { client: string; id: string
 
     function load() {
       getGameStatus(client, id)
-        .then((g) => { if (active) setGame(g) })
+        .then((g) => { if (active) { setGame(g); setError('') } })
         .catch((e) => { if (active) setError(e.message) })
     }
 

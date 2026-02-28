@@ -26,8 +26,15 @@ function modeNeedsQuestion(mode: string, hasQuestions: boolean): boolean {
   return mode === 'classic' || mode === 'qr_quiz' || (mode === 'guided' && hasQuestions)
 }
 
-function emptyStage(): Stage {
-  return { stageNumber: 0, location: '', clue: '', question: '', correctAnswer: '', lat: 0, lng: 0 }
+type StageWithKey = Stage & { _key: string }
+let stageKeyCounter = 0
+
+function emptyStage(): StageWithKey {
+  return { _key: `s${++stageKeyCounter}`, stageNumber: 0, location: '', clue: '', question: '', correctAnswer: '', lat: 0, lng: 0 }
+}
+
+function withKeys(stages: Stage[]): StageWithKey[] {
+  return stages.map((s) => ({ ...s, _key: `s${++stageKeyCounter}` }))
 }
 
 function stagePreview(stage: Stage): string {
@@ -40,7 +47,7 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
   const [description, setDescription] = useState('')
   const [mode, setMode] = useState('classic')
   const [hasQuestions, setHasQuestions] = useState(false)
-  const [stages, setStages] = useState<Stage[]>([emptyStage()])
+  const [stages, setStages] = useState<StageWithKey[]>([emptyStage()])
   const [expandedStage, setExpandedStage] = useState<number | null>(0)
   const [loading, setLoading] = useState(!!id)
   const [saving, setSaving] = useState(false)
@@ -55,7 +62,7 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
         setDescription(s.description)
         setMode(s.mode || 'classic')
         setHasQuestions(s.hasQuestions || false)
-        setStages(s.stages.length > 0 ? s.stages : [emptyStage()])
+        setStages(s.stages.length > 0 ? withKeys(s.stages) : [emptyStage()])
         setExpandedStage(null)
       })
       .catch((e) => setError(e.message))
@@ -67,8 +74,10 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
   }
 
   function addStage() {
-    setStages((prev) => [...prev, emptyStage()])
-    setExpandedStage(stages.length)
+    setStages((prev) => {
+      setExpandedStage(prev.length)
+      return [...prev, emptyStage()]
+    })
   }
 
   function removeStage(index: number) {
@@ -100,7 +109,7 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
       description,
       mode,
       hasQuestions: mode === 'guided' ? hasQuestions : undefined,
-      stages: stages.map((s, i) => ({ ...s, stageNumber: i + 1 })),
+      stages: stages.map(({ _key, ...s }, i) => ({ ...s, stageNumber: i + 1 })),
     }
 
     try {
@@ -196,7 +205,7 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
             const isExpanded = expandedStage === i
             return (
               <div
-                key={i}
+                key={stage._key}
                 className="rounded-lg border border-border bg-card overflow-hidden"
               >
                 {/* Collapsed header row */}

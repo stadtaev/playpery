@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Pencil, Trash2, Copy, Check, Plus, ExternalLink, ArrowLeft, Eye } from 'lucide-react'
 import { listScenarios, getGame, createGame, updateGame, createTeam, updateTeam, deleteTeam } from './adminApi'
 import type { ScenarioSummary, GameRequest, TeamItem, TeamRequest } from './adminTypes'
@@ -293,6 +293,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
               </div>
             </div>
 
+            <AnimatePresence>
             {timerEnabled && (
               <motion.div
                 className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4"
@@ -322,6 +323,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
                 </div>
               </motion.div>
             )}
+            </AnimatePresence>
 
             <div className="flex gap-3">
               <MotionButton type="submit" disabled={saving}>
