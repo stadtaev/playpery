@@ -1,23 +1,37 @@
 import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
+import { Plus, Trash2, Users, Timer, Eye } from 'lucide-react'
 import { listGames, deleteGame } from './adminApi'
 import type { GameSummary } from './adminTypes'
+import { navigate } from '@/lib/navigate'
+import { Button, MotionButton } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
+import { Dialog, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Alert } from '@/components/ui/alert'
+import { Spinner } from '@/components/ui/spinner'
 
-function navigate(path: string) {
-  window.history.pushState(null, '', path)
-  window.dispatchEvent(new PopStateEvent('popstate'))
+const statusBadgeVariant: Record<string, 'default' | 'success' | 'warning' | 'error' | 'info'> = {
+  draft: 'default',
+  active: 'success',
+  paused: 'warning',
+  ended: 'error',
 }
 
-const statusLabels: Record<string, string> = {
-  draft: 'Draft',
-  active: 'Active',
-  paused: 'Paused',
-  ended: 'Ended',
+const modeBadgeVariant: Record<string, 'default' | 'success' | 'warning' | 'info' | 'error'> = {
+  classic: 'default',
+  qr_quiz: 'info',
+  qr_hunt: 'success',
+  math_puzzle: 'warning',
+  guided: 'error',
 }
 
 export function AdminGamesPage({ client }: { client: string }) {
   const [games, setGames] = useState<GameSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [deleteTarget, setDeleteTarget] = useState<GameSummary | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     listGames(client)
@@ -26,78 +40,164 @@ export function AdminGamesPage({ client }: { client: string }) {
       .finally(() => setLoading(false))
   }, [client])
 
-  async function handleDelete(id: string, scenarioName: string) {
-    if (!confirm(`Delete game "${scenarioName}"?`)) return
+  async function handleDelete() {
+    if (!deleteTarget) return
+    setDeleting(true)
     try {
-      await deleteGame(client, id)
-      setGames((prev) => prev.filter((g) => g.id !== id))
+      await deleteGame(client, deleteTarget.id)
+      setGames((prev) => prev.filter((g) => g.id !== deleteTarget.id))
+      setDeleteTarget(null)
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'Delete failed')
+      setError(e instanceof Error ? e.message : 'Delete failed')
+      setDeleteTarget(null)
+    } finally {
+      setDeleting(false)
     }
   }
 
   if (loading) {
-    return <p aria-busy="true">Loading games...</p>
-  }
-
-  if (error) {
-    return <p role="alert">{error}</p>
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Spinner size={32} />
+      </div>
+    )
   }
 
   return (
-    <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h2 style={{ margin: 0 }}>Games</h2>
-        <button onClick={() => navigate(`/admin/clients/${client}/games/new`)} style={{ width: 'auto' }}>
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-semibold text-text-primary">Games</h2>
+        <MotionButton onClick={() => navigate(`/admin/clients/${client}/games/new`)}>
+          <Plus size={16} />
           New Game
-        </button>
+        </MotionButton>
       </div>
 
-      {games.length === 0 ? (
-        <p>No games yet.</p>
-      ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>Scenario</th>
-              <th>Mode</th>
-              <th>Status</th>
-              <th>Timer</th>
-              <th>Teams</th>
-              <th>Created</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {games.map((g) => (
-              <tr key={g.id}>
-                <td>
-                  <a
-                    href={`/admin/clients/${client}/games/${g.id}/edit`}
-                    onClick={(e) => { e.preventDefault(); navigate(`/admin/clients/${client}/games/${g.id}/edit`) }}
-                  >
-                    {g.scenarioName}{g.supervised && ' (supervised)'}
-                  </a>
-                </td>
-                <td>{g.mode || 'classic'}</td>
-                <td>{statusLabels[g.status] || g.status}</td>
-                <td>{g.timerMinutes}m</td>
-                <td>{g.teamCount}</td>
-                <td>{new Date(g.createdAt).toLocaleDateString()}</td>
-                <td>
-                  <button
-                    className="outline secondary"
-                    onClick={() => handleDelete(g.id, g.scenarioName)}
-                    style={{ width: 'auto', padding: '0.25rem 0.5rem', fontSize: 'small' }}
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {error && (
+        <div className="mb-4">
+          <Alert variant="error">{error}</Alert>
+        </div>
       )}
-    </>
+
+      {games.length === 0 ? (
+        <p className="text-text-secondary">No games yet.</p>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Scenario</TableHead>
+              <TableHead>Mode</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-center">Timer</TableHead>
+              <TableHead className="text-center">Teams</TableHead>
+              <TableHead>Created</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {games.map((g, i) => {
+              const mode = g.mode || 'classic'
+              return (
+                <motion.tr
+                  key={g.id}
+                  className="border-b border-border transition-colors hover:bg-popover"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.04, duration: 0.25 }}
+                >
+                  <TableCell>
+                    <button
+                      className="text-accent hover:underline bg-transparent border-none cursor-pointer p-0 font-medium"
+                      onClick={() => navigate(`/admin/clients/${client}/games/${g.id}/edit`)}
+                    >
+                      {g.scenarioName}
+                    </button>
+                    {g.supervised && (
+                      <span className="ml-2 inline-flex items-center text-text-muted text-xs">
+                        <Eye size={12} className="mr-0.5" />
+                        supervised
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={modeBadgeVariant[mode] ?? 'default'}>{mode}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={statusBadgeVariant[g.status] ?? 'default'}>{g.status}</Badge>
+                  </TableCell>
+                  <TableCell className="text-center text-text-secondary">
+                    {g.timerEnabled ? (
+                      <span className="inline-flex items-center gap-1">
+                        <Timer size={12} />
+                        {g.timerMinutes}m
+                      </span>
+                    ) : (
+                      <span className="text-text-muted">-</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <span className="inline-flex items-center gap-1 text-text-secondary">
+                      <Users size={12} />
+                      {g.teamCount}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-text-secondary">
+                    {new Date(g.createdAt).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => navigate(`/admin/clients/${client}/games/${g.id}/status`)}
+                        className="text-text-muted hover:text-accent"
+                        title="View status"
+                      >
+                        <Eye size={14} />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setDeleteTarget(g)}
+                        className="text-text-muted hover:text-error"
+                      >
+                        <Trash2 size={14} />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </motion.tr>
+              )
+            })}
+          </TableBody>
+        </Table>
+      )}
+
+      <Dialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)}>
+        <DialogHeader>
+          <DialogTitle>Delete Game</DialogTitle>
+        </DialogHeader>
+        <p className="text-text-secondary mb-4">
+          Are you sure you want to delete the game for "{deleteTarget?.scenarioName}"? This cannot be undone.
+        </p>
+        <div className="flex gap-3 justify-end">
+          <Button variant="outline" onClick={() => setDeleteTarget(null)}>
+            Cancel
+          </Button>
+          <MotionButton variant="destructive" onClick={handleDelete} disabled={deleting}>
+            {deleting ? (
+              <>
+                <Spinner size={16} />
+                Deleting...
+              </>
+            ) : (
+              <>
+                <Trash2 size={16} />
+                Delete
+              </>
+            )}
+          </MotionButton>
+        </div>
+      </Dialog>
+    </div>
   )
 }
