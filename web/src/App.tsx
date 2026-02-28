@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { JoinPage } from './JoinPage'
 import { GamePage } from './GamePage'
 import { AdminLoginPage } from './admin/AdminLoginPage'
@@ -63,17 +64,14 @@ function getRoute(): Route {
   return { page: 'home' }
 }
 
-export default function App() {
-  const [route, setRoute] = useState(getRoute)
+const pageTransition = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 },
+  transition: { duration: 0.15 },
+}
 
-  useEffect(() => {
-    function onNav() {
-      setRoute(getRoute())
-    }
-    window.addEventListener('popstate', onNav)
-    return () => window.removeEventListener('popstate', onNav)
-  }, [])
-
+function renderRoute(route: Route) {
   switch (route.page) {
     case 'join':
       return <JoinPage client={route.client} joinToken={route.token} />
@@ -99,10 +97,32 @@ export default function App() {
       return <AdminLayout client={route.client}><AdminGameEditorPage client={route.client} id={route.id} /></AdminLayout>
     default:
       return (
-        <main className="container" style={{ maxWidth: 480, textAlign: 'center' }}>
-          <h1>CityQuest</h1>
-          <p>Scan your team's QR code or use the join link to get started.</p>
-        </main>
+        <div className="min-h-screen flex items-center justify-center bg-background px-4">
+          <div className="text-center">
+            <h1 className="text-2xl font-semibold text-text-primary mb-2">CityQuest</h1>
+            <p className="text-text-secondary">Scan your team's QR code or use the join link to get started.</p>
+          </div>
+        </div>
       )
   }
+}
+
+export default function App() {
+  const [route, setRoute] = useState(getRoute)
+
+  useEffect(() => {
+    function onNav() {
+      setRoute(getRoute())
+    }
+    window.addEventListener('popstate', onNav)
+    return () => window.removeEventListener('popstate', onNav)
+  }, [])
+
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div key={route.page} {...pageTransition}>
+        {renderRoute(route)}
+      </motion.div>
+    </AnimatePresence>
+  )
 }

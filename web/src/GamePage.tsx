@@ -1,7 +1,18 @@
 import { useState, useEffect, useCallback } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  Clock, MapPin, LogOut, Users, Trophy, CheckCircle2, XCircle,
+  Lock, Unlock, Send, ArrowRight, UserCog, Hash, QrCode, Play,
+} from 'lucide-react'
 import { getGameState, submitAnswer, unlockStage } from './api'
 import { useGameEvents } from './useGameEvents'
 import type { GameState } from './types'
+import { Card, CardHeader, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { MotionButton, Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Alert } from '@/components/ui/alert'
+import { Spinner } from '@/components/ui/spinner'
 
 function useCountdown(deadline: number | null) {
   const [remaining, setRemaining] = useState<number | null>(null)
@@ -33,14 +44,56 @@ function TimerDisplay({ gameRemaining, stageRemaining }: { gameRemaining: number
     stageRemaining ?? Infinity,
   )
   const isUrgent = minRemaining <= 60000
-  const color = isUrgent ? '#e53e3e' : '#38a169'
 
   return (
-    <div style={{ position: 'fixed', top: '0.75rem', left: '0.75rem', zIndex: 1000, fontFamily: 'monospace', fontSize: '1.1rem', fontWeight: 'bold', color }}>
-      {gameRemaining !== null && <div>Game: {formatTime(gameRemaining)}</div>}
-      {stageRemaining !== null && <div>Stage: {formatTime(stageRemaining)}</div>}
+    <div className={`fixed top-3 left-3 z-50 flex flex-col gap-1 rounded-lg border border-border bg-card/80 backdrop-blur-sm px-3 py-2 font-mono text-sm ${isUrgent ? 'animate-pulse' : ''}`}>
+      {gameRemaining !== null && (
+        <div className={`flex items-center gap-1.5 ${isUrgent ? 'text-error' : 'text-success'}`}>
+          <Clock size={14} />
+          <span>Game: {formatTime(gameRemaining)}</span>
+        </div>
+      )}
+      {stageRemaining !== null && (
+        <div className={`flex items-center gap-1.5 ${isUrgent ? 'text-error' : 'text-accent'}`}>
+          <Clock size={14} />
+          <span>Stage: {formatTime(stageRemaining)}</span>
+        </div>
+      )}
     </div>
   )
+}
+
+function ProgressDots({ totalStages, completedStages }: { totalStages: number; completedStages: { stageNumber: number; isCorrect: boolean }[] }) {
+  const completed = new Map(completedStages.map(s => [s.stageNumber, s.isCorrect]))
+
+  return (
+    <div className="flex items-center justify-center gap-1.5 py-3">
+      {Array.from({ length: totalStages }, (_, i) => {
+        const num = i + 1
+        const result = completed.get(num)
+        return (
+          <div
+            key={num}
+            className={`h-2.5 w-2.5 rounded-full transition-colors ${
+              result === true
+                ? 'bg-success'
+                : result === false
+                  ? 'bg-error'
+                  : 'bg-border'
+            }`}
+            title={`Stage ${num}${result === true ? ' - correct' : result === false ? ' - incorrect' : ''}`}
+          />
+        )
+      })}
+    </div>
+  )
+}
+
+const phaseTransition = {
+  initial: { opacity: 0, x: 30 },
+  animate: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: -30 },
+  transition: { duration: 0.25, ease: 'easeInOut' as const },
 }
 
 type StagePhase = 'interstitial' | 'unlocking' | 'answering'
@@ -69,8 +122,6 @@ export function GamePage() {
     fetchState()
   }, [fetchState])
 
-  // SSE handler: refetch state, and if stage was unlocked, transition phase.
-  // Only transition if we're in the unlocking phase — otherwise we'd skip interstitial.
   const onSSEEvent = useCallback((eventType?: string) => {
     fetchState()
     if (eventType === 'stage_unlocked') {
@@ -81,7 +132,6 @@ export function GamePage() {
 
   useGameEvents(client, onSSEEvent)
 
-  // Reset to interstitial when stage changes (e.g. teammate answered via SSE).
   const currentStageNumber = state?.currentStage?.stageNumber ?? null
   useEffect(() => {
     setStagePhase('interstitial')
@@ -91,17 +141,15 @@ export function GamePage() {
     setUnlockCode('')
   }, [currentStageNumber])
 
-  // If the current stage arrives already unlocked (e.g. via SSE), skip from unlocking to answering.
   useEffect(() => {
     if (!state?.currentStage) return
     const mode = state.game.mode
-    if (mode === 'classic') return // classic doesn't use locked
+    if (mode === 'classic') return
     if (!state.currentStage.locked && stagePhase === 'unlocking') {
       setStagePhase('answering')
     }
   }, [state?.currentStage?.locked, state?.game.mode, stagePhase])
 
-  // Compute timer deadlines.
   const timerActive = state?.game.timerEnabled && state.game.status === 'active'
 
   const gameDeadline = timerActive && state.game.startedAt
@@ -123,7 +171,6 @@ export function GamePage() {
     if (mode === 'classic') {
       setStagePhase('answering')
     } else {
-      // Non-classic: if stage is already unlocked, go straight to answering
       if (state?.currentStage && !state.currentStage.locked) {
         setStagePhase('answering')
       } else {
@@ -143,14 +190,12 @@ export function GamePage() {
       const resp = await unlockStage(client, code)
       setUnlockCode('')
       if (resp.stageComplete) {
-        // Stage auto-completed (qr_hunt, math_puzzle, guided without questions)
         setFeedback({ correct: true, message: `Stage ${resp.stageNumber} complete!` })
         setTimeout(() => {
           setStagePhase('interstitial')
           fetchState()
         }, 1500)
       } else {
-        // Unlocked, now answer the question
         setStagePhase('answering')
       }
     } catch (e) {
@@ -192,19 +237,35 @@ export function GamePage() {
 
   if (error) {
     return (
-      <main className="container">
-        <h1>CityQuest</h1>
-        <p role="alert">{error}</p>
-        <button onClick={handleLogout}>Back to start</button>
-      </main>
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: 'easeOut' }}
+          className="w-full max-w-md"
+        >
+          <Card>
+            <CardHeader>
+              <h1 className="text-xl font-semibold text-text-primary">CityQuest</h1>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
+              <Alert variant="error">{error}</Alert>
+              <Button variant="ghost" onClick={handleLogout} className="w-full">
+                <LogOut size={16} />
+                Back to start
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
     )
   }
 
   if (!state) {
     return (
-      <main className="container">
-        <p aria-busy="true">Loading game...</p>
-      </main>
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <Spinner />
+      </div>
     )
   }
 
@@ -214,179 +275,390 @@ export function GamePage() {
   const canAnswer = !game.supervised || role === 'supervisor' || mode === 'guided'
 
   return (
-    <main className="container" style={{ maxWidth: 600 }}>
-      {game.timerEnabled && !isEnded && (
-        <TimerDisplay gameRemaining={gameRemaining} stageRemaining={stageRemaining} />
-      )}
-      <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 style={{ margin: 0 }}>CityQuest</h1>
-        <small>{team.name}</small>
-      </nav>
+    <div className="min-h-screen bg-background px-4 py-6">
+      <div className="mx-auto max-w-lg flex flex-col gap-4">
+        {game.timerEnabled && !isEnded && (
+          <TimerDisplay gameRemaining={gameRemaining} stageRemaining={stageRemaining} />
+        )}
 
-      {isEnded && (
-        <article>
-          <header>Game Over!</header>
-          <p>
-            Your team answered {completedStages.filter((s) => s.isCorrect).length} of {game.totalStages} correctly.
-          </p>
-        </article>
-      )}
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-semibold text-text-primary">CityQuest</h1>
+          <div className="flex items-center gap-2">
+            <Badge>
+              <Users size={12} className="mr-1" />
+              {team.name}
+            </Badge>
+            {role === 'supervisor' && (
+              <Badge variant="warning">
+                <UserCog size={12} className="mr-1" />
+                Guide
+              </Badge>
+            )}
+          </div>
+        </div>
 
-      {currentStage && !isEnded && stagePhase === 'interstitial' && (
-        <article>
-          <header>
-            Stage {currentStage.stageNumber} of {game.totalStages} &mdash; {currentStage.location}
-          </header>
-          <p><strong>Clue:</strong> {currentStage.clue}</p>
-          <button onClick={handleGoToStage}>
-            {completedStages.length === 0 ? 'Start Quest' : 'Go to Next Stage'}
-          </button>
-        </article>
-      )}
+        {/* Progress dots */}
+        {game.totalStages > 0 && (
+          <ProgressDots totalStages={game.totalStages} completedStages={completedStages} />
+        )}
 
-      {currentStage && !isEnded && stagePhase === 'unlocking' && (
-        <article>
-          <header>
-            Stage {currentStage.stageNumber} of {game.totalStages} &mdash; {currentStage.location}
-          </header>
-          <p><strong>Clue:</strong> {currentStage.clue}</p>
-
-          {(mode === 'qr_quiz' || mode === 'qr_hunt') && (
-            <form onSubmit={handleUnlock}>
-              <p>Enter the code from the QR at this location:</p>
-              <input
-                type="text"
-                value={unlockCode}
-                onChange={(e) => setUnlockCode(e.target.value)}
-                placeholder="QR code..."
-                autoFocus
-                required
-              />
-              {feedback && (
-                <small style={{ color: feedback.correct ? 'var(--pico-color-green-500)' : 'var(--pico-color-red-500)' }}>
-                  {feedback.message}
-                </small>
-              )}
-              <button type="submit" disabled={submitting} aria-busy={submitting}>
-                Submit Code
-              </button>
-            </form>
-          )}
-
-          {mode === 'math_puzzle' && (
-            <form onSubmit={handleUnlock}>
-              <p>Your team secret is: <strong>{state.teamSecret}</strong></p>
-              <p>Location number: <strong>{state.currentStage?.locationNumber}</strong></p>
-              <p>Add them together and enter the result:</p>
-              <input
-                type="text"
-                value={unlockCode}
-                onChange={(e) => setUnlockCode(e.target.value)}
-                placeholder="Calculated code..."
-                autoFocus
-                required
-              />
-              {feedback && (
-                <small style={{ color: feedback.correct ? 'var(--pico-color-green-500)' : 'var(--pico-color-red-500)' }}>
-                  {feedback.message}
-                </small>
-              )}
-              <button type="submit" disabled={submitting} aria-busy={submitting}>
-                Submit Code
-              </button>
-            </form>
-          )}
-
-          {mode === 'guided' && (
-            role === 'supervisor' ? (
-              <form onSubmit={handleUnlock}>
-                <p>Unlock this stage for your team:</p>
-                {feedback && (
-                  <small style={{ color: feedback.correct ? 'var(--pico-color-green-500)' : 'var(--pico-color-red-500)' }}>
-                    {feedback.message}
-                  </small>
+        {/* Game Over */}
+        {isEnded && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Trophy size={20} className="text-accent" />
+                  <h2 className="text-lg font-semibold text-text-primary">Game Over!</h2>
+                </div>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-4">
+                <p className="text-text-secondary">
+                  Your team answered {completedStages.filter((s) => s.isCorrect).length} of {game.totalStages} correctly.
+                </p>
+                {completedStages.length > 0 && (
+                  <div className="flex flex-col gap-1.5">
+                    {completedStages.map((s) => (
+                      <div key={s.stageNumber} className="flex items-center gap-2 text-sm">
+                        {s.isCorrect ? (
+                          <CheckCircle2 size={14} className="text-success" />
+                        ) : (
+                          <XCircle size={14} className="text-error" />
+                        )}
+                        <span className="text-text-secondary">
+                          Stage {s.stageNumber} — {s.isCorrect ? 'correct' : 'incorrect'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 )}
-                <button type="submit" disabled={submitting} aria-busy={submitting}>
-                  Unlock Stage
-                </button>
-              </form>
-            ) : (
-              <p><em>Waiting for the guide to unlock this stage...</em></p>
-            )
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Stage phases */}
+        <AnimatePresence mode="wait">
+          {currentStage && !isEnded && stagePhase === 'interstitial' && (
+            <motion.div key="interstitial" {...phaseTransition}>
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <MapPin size={18} className="text-accent" />
+                      <h2 className="text-lg font-semibold text-text-primary">
+                        Stage {currentStage.stageNumber}
+                        <span className="text-text-muted font-normal"> / {game.totalStages}</span>
+                      </h2>
+                    </div>
+                  </div>
+                  <p className="text-sm text-text-muted">{currentStage.location}</p>
+                </CardHeader>
+                <CardContent className="flex flex-col gap-4">
+                  <p className="text-text-secondary">{currentStage.clue}</p>
+                  <MotionButton onClick={handleGoToStage} className="w-full">
+                    {completedStages.length === 0 ? (
+                      <>
+                        <Play size={16} />
+                        Start Quest
+                      </>
+                    ) : (
+                      <>
+                        <ArrowRight size={16} />
+                        Go to Next Stage
+                      </>
+                    )}
+                  </MotionButton>
+                </CardContent>
+              </Card>
+            </motion.div>
           )}
-        </article>
-      )}
 
-      {currentStage && !isEnded && stagePhase === 'answering' && (
-        <article>
-          <header>
-            Stage {currentStage.stageNumber} of {game.totalStages} &mdash; {currentStage.location}
-          </header>
-          <p><strong>Clue:</strong> {currentStage.clue}</p>
-          {currentStage.question && (
-            <p><strong>Question:</strong> {currentStage.question}</p>
+          {currentStage && !isEnded && stagePhase === 'unlocking' && (
+            <motion.div key="unlocking" {...phaseTransition}>
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <Lock size={18} className="text-accent" />
+                    <h2 className="text-lg font-semibold text-text-primary">
+                      Stage {currentStage.stageNumber}
+                      <span className="text-text-muted font-normal"> / {game.totalStages}</span>
+                    </h2>
+                  </div>
+                  <p className="text-sm text-text-muted">{currentStage.location}</p>
+                </CardHeader>
+                <CardContent className="flex flex-col gap-4">
+                  <p className="text-text-secondary">{currentStage.clue}</p>
+
+                  {(mode === 'qr_quiz' || mode === 'qr_hunt') && (
+                    <form onSubmit={handleUnlock} className="flex flex-col gap-3">
+                      <p className="text-sm text-text-muted flex items-center gap-1.5">
+                        <QrCode size={14} />
+                        Enter the code from the QR at this location:
+                      </p>
+                      <Input
+                        type="text"
+                        value={unlockCode}
+                        onChange={(e) => setUnlockCode(e.target.value)}
+                        placeholder="QR code..."
+                        autoFocus
+                        required
+                      />
+                      <AnimatePresence>
+                        {feedback && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                          >
+                            <Alert variant={feedback.correct ? 'success' : 'error'}>
+                              {feedback.message}
+                            </Alert>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                      <MotionButton type="submit" disabled={submitting} className="w-full">
+                        {submitting ? (
+                          <><Spinner size={16} className="text-accent-foreground" /> Submitting...</>
+                        ) : (
+                          <><Unlock size={16} /> Submit Code</>
+                        )}
+                      </MotionButton>
+                    </form>
+                  )}
+
+                  {mode === 'math_puzzle' && (
+                    <form onSubmit={handleUnlock} className="flex flex-col gap-3">
+                      <div className="flex items-center gap-3 rounded-lg bg-input p-3 text-sm">
+                        <Hash size={14} className="text-accent" />
+                        <div>
+                          <p className="text-text-secondary">Team secret: <strong className="text-text-primary">{state.teamSecret}</strong></p>
+                          <p className="text-text-secondary">Location number: <strong className="text-text-primary">{state.currentStage?.locationNumber}</strong></p>
+                          <p className="text-text-muted text-xs mt-1">Add them together and enter the result</p>
+                        </div>
+                      </div>
+                      <Input
+                        type="text"
+                        value={unlockCode}
+                        onChange={(e) => setUnlockCode(e.target.value)}
+                        placeholder="Calculated code..."
+                        autoFocus
+                        required
+                      />
+                      <AnimatePresence>
+                        {feedback && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                          >
+                            <Alert variant={feedback.correct ? 'success' : 'error'}>
+                              {feedback.message}
+                            </Alert>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                      <MotionButton type="submit" disabled={submitting} className="w-full">
+                        {submitting ? (
+                          <><Spinner size={16} className="text-accent-foreground" /> Submitting...</>
+                        ) : (
+                          <><Unlock size={16} /> Submit Code</>
+                        )}
+                      </MotionButton>
+                    </form>
+                  )}
+
+                  {mode === 'guided' && (
+                    role === 'supervisor' ? (
+                      <form onSubmit={handleUnlock} className="flex flex-col gap-3">
+                        <p className="text-sm text-text-muted">Unlock this stage for your team:</p>
+                        <AnimatePresence>
+                          {feedback && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              exit={{ opacity: 0, height: 0 }}
+                            >
+                              <Alert variant={feedback.correct ? 'success' : 'error'}>
+                                {feedback.message}
+                              </Alert>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                        <MotionButton type="submit" disabled={submitting} className="w-full">
+                          {submitting ? (
+                            <><Spinner size={16} className="text-accent-foreground" /> Unlocking...</>
+                          ) : (
+                            <><Unlock size={16} /> Unlock Stage</>
+                          )}
+                        </MotionButton>
+                      </form>
+                    ) : (
+                      <div className="flex items-center gap-2 rounded-lg bg-input p-3 text-sm text-text-muted">
+                        <Lock size={14} />
+                        Waiting for the guide to unlock this stage...
+                      </div>
+                    )
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
           )}
-          {feedback && !feedback.correct ? (
-            <>
-              <p style={{ color: 'var(--pico-color-red-500)' }}>
-                {feedback.message}
-              </p>
-              <button onClick={() => { setFeedback(null); setStagePhase('interstitial'); fetchState() }}>
-                Continue
-              </button>
-            </>
-          ) : canAnswer ? (
-            <form onSubmit={handleSubmit}>
-              <input
-                type="text"
-                value={answer}
-                onChange={(e) => setAnswer(e.target.value)}
-                placeholder="Your answer..."
-                autoFocus
-                required
-              />
-              {feedback && (
-                <small style={{ color: 'var(--pico-color-green-500)' }}>
-                  {feedback.message}
-                </small>
-              )}
-              <button type="submit" disabled={submitting} aria-busy={submitting}>
-                Submit Answer
-              </button>
-            </form>
-          ) : (
-            <p><em>Waiting for the supervisor to submit the answer...</em></p>
+
+          {currentStage && !isEnded && stagePhase === 'answering' && (
+            <motion.div key="answering" {...phaseTransition}>
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <MapPin size={18} className="text-accent" />
+                    <h2 className="text-lg font-semibold text-text-primary">
+                      Stage {currentStage.stageNumber}
+                      <span className="text-text-muted font-normal"> / {game.totalStages}</span>
+                    </h2>
+                  </div>
+                  <p className="text-sm text-text-muted">{currentStage.location}</p>
+                </CardHeader>
+                <CardContent className="flex flex-col gap-4">
+                  <p className="text-text-secondary">{currentStage.clue}</p>
+                  {currentStage.question && (
+                    <div className="rounded-lg bg-input p-3 text-sm text-text-primary font-medium">
+                      {currentStage.question}
+                    </div>
+                  )}
+
+                  <AnimatePresence mode="wait">
+                    {feedback && !feedback.correct ? (
+                      <motion.div
+                        key="wrong"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="flex flex-col gap-3"
+                      >
+                        <Alert variant="error">{feedback.message}</Alert>
+                        <Button
+                          variant="secondary"
+                          onClick={() => { setFeedback(null); setStagePhase('interstitial'); fetchState() }}
+                          className="w-full"
+                        >
+                          <ArrowRight size={16} />
+                          Continue
+                        </Button>
+                      </motion.div>
+                    ) : canAnswer ? (
+                      <motion.form
+                        key="form"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onSubmit={handleSubmit}
+                        className="flex flex-col gap-3"
+                      >
+                        <Input
+                          type="text"
+                          value={answer}
+                          onChange={(e) => setAnswer(e.target.value)}
+                          placeholder="Your answer..."
+                          autoFocus
+                          required
+                        />
+                        <AnimatePresence>
+                          {feedback && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              exit={{ opacity: 0, height: 0 }}
+                            >
+                              <Alert variant="success">{feedback.message}</Alert>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                        <MotionButton type="submit" disabled={submitting} className="w-full">
+                          {submitting ? (
+                            <><Spinner size={16} className="text-accent-foreground" /> Submitting...</>
+                          ) : (
+                            <><Send size={16} /> Submit Answer</>
+                          )}
+                        </MotionButton>
+                      </motion.form>
+                    ) : (
+                      <motion.div
+                        key="waiting"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="flex items-center gap-2 rounded-lg bg-input p-3 text-sm text-text-muted"
+                      >
+                        <UserCog size={14} />
+                        Waiting for the supervisor to submit the answer...
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </CardContent>
+              </Card>
+            </motion.div>
           )}
-        </article>
-      )}
+        </AnimatePresence>
 
-      {completedStages.length > 0 && (
-        <details open={isEnded}>
-          <summary>Completed Stages ({completedStages.length})</summary>
-          <ul>
-            {completedStages.map((s) => (
-              <li key={s.stageNumber} style={{ color: s.isCorrect ? 'var(--pico-color-green-500)' : 'var(--pico-color-red-500)' }}>
-                Stage {s.stageNumber} &mdash; {s.isCorrect ? 'correct' : 'incorrect'}
-              </li>
-            ))}
-          </ul>
-        </details>
-      )}
+        {/* Completed stages (non-ended state) */}
+        {completedStages.length > 0 && !isEnded && (
+          <Card>
+            <CardContent className="pt-5">
+              <details>
+                <summary className="cursor-pointer text-sm font-medium text-text-secondary hover:text-text-primary transition-colors">
+                  Completed Stages ({completedStages.length})
+                </summary>
+                <div className="mt-3 flex flex-col gap-1.5">
+                  {completedStages.map((s) => (
+                    <div key={s.stageNumber} className="flex items-center gap-2 text-sm">
+                      {s.isCorrect ? (
+                        <CheckCircle2 size={14} className="text-success" />
+                      ) : (
+                        <XCircle size={14} className="text-error" />
+                      )}
+                      <span className="text-text-secondary">
+                        Stage {s.stageNumber} — {s.isCorrect ? 'correct' : 'incorrect'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            </CardContent>
+          </Card>
+        )}
 
-      <details>
-        <summary>Team ({players.length} players)</summary>
-        <ul>
-          {players.map((p) => (
-            <li key={p.id}>{p.name}</li>
-          ))}
-        </ul>
-      </details>
+        {/* Team members */}
+        <Card>
+          <CardContent className="pt-5">
+            <details>
+              <summary className="cursor-pointer text-sm font-medium text-text-secondary hover:text-text-primary transition-colors">
+                <Users size={14} className="inline mr-1.5 -mt-0.5" />
+                Team ({players.length} players)
+              </summary>
+              <div className="mt-3 flex flex-col gap-1">
+                {players.map((p) => (
+                  <span key={p.id} className="text-sm text-text-muted pl-5">{p.name}</span>
+                ))}
+              </div>
+            </details>
+          </CardContent>
+        </Card>
 
-      <p style={{ textAlign: 'center', marginTop: '2rem' }}>
-        <a href="#" onClick={(e) => { e.preventDefault(); handleLogout() }} style={{ fontSize: 'small' }}>
-          Leave game
-        </a>
-      </p>
-    </main>
+        {/* Leave game */}
+        <div className="flex justify-center pt-2 pb-4">
+          <button
+            onClick={handleLogout}
+            className="text-xs text-text-muted hover:text-text-secondary transition-colors flex items-center gap-1 cursor-pointer"
+          >
+            <LogOut size={12} />
+            Leave game
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
