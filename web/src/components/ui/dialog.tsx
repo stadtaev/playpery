@@ -47,6 +47,7 @@ function Dialog({ open, onClose, children, className }: DialogProps) {
           >
             <button
               onClick={onClose}
+              aria-label="Close"
               className="absolute right-3 top-3 rounded-md p-1 text-text-muted hover:text-text-primary transition-colors"
             >
               <X size={16} />

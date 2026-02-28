@@ -236,42 +236,33 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
                     {stagePreview(stage)}
                   </span>
                   <div className="ml-auto flex items-center gap-1 shrink-0">
-                    <span
-                      className="inline-flex items-center justify-center h-7 w-7 rounded text-text-muted hover:text-text-primary hover:bg-card transition-colors"
-                      role="button"
-                      tabIndex={0}
+                    <button
+                      type="button"
+                      className="inline-flex items-center justify-center h-7 w-7 rounded text-text-muted hover:text-text-primary hover:bg-card transition-colors cursor-pointer"
                       onClick={(e) => { e.stopPropagation(); moveStage(i, -1) }}
-                      onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); moveStage(i, -1) } }}
                       aria-label="Move up"
-                      aria-disabled={i === 0}
-                      style={i === 0 ? { opacity: 0.3, pointerEvents: 'none' } : undefined}
+                      disabled={i === 0}
                     >
                       <ArrowUp size={14} />
-                    </span>
-                    <span
-                      className="inline-flex items-center justify-center h-7 w-7 rounded text-text-muted hover:text-text-primary hover:bg-card transition-colors"
-                      role="button"
-                      tabIndex={0}
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex items-center justify-center h-7 w-7 rounded text-text-muted hover:text-text-primary hover:bg-card transition-colors cursor-pointer"
                       onClick={(e) => { e.stopPropagation(); moveStage(i, 1) }}
-                      onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); moveStage(i, 1) } }}
                       aria-label="Move down"
-                      aria-disabled={i === stages.length - 1}
-                      style={i === stages.length - 1 ? { opacity: 0.3, pointerEvents: 'none' } : undefined}
+                      disabled={i === stages.length - 1}
                     >
                       <ArrowDown size={14} />
-                    </span>
-                    <span
-                      className="inline-flex items-center justify-center h-7 w-7 rounded text-text-muted hover:text-error hover:bg-card transition-colors"
-                      role="button"
-                      tabIndex={0}
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex items-center justify-center h-7 w-7 rounded text-text-muted hover:text-error hover:bg-card transition-colors cursor-pointer"
                       onClick={(e) => { e.stopPropagation(); removeStage(i) }}
-                      onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); removeStage(i) } }}
                       aria-label="Remove stage"
-                      aria-disabled={stages.length <= 1}
-                      style={stages.length <= 1 ? { opacity: 0.3, pointerEvents: 'none' } : undefined}
+                      disabled={stages.length <= 1}
                     >
                       <Trash2 size={14} />
-                    </span>
+                    </button>
                     <motion.span
                       className="inline-flex items-center justify-center h-7 w-7 text-text-muted"
                       animate={{ rotate: isExpanded ? 180 : 0 }}
@@ -392,7 +383,7 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
           <MotionButton type="submit" disabled={saving}>
             {saving ? (
               <>
-                <Spinner size={16} />
+                <Spinner size={16} className="text-accent-foreground" />
                 Saving...
               </>
             ) : (

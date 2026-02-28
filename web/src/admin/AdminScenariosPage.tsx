@@ -144,7 +144,7 @@ export function AdminScenariosPage() {
           <MotionButton variant="destructive" onClick={handleDelete} disabled={deleting}>
             {deleting ? (
               <>
-                <Spinner size={16} />
+                <Spinner size={16} className="text-white" />
                 Deleting...
               </>
             ) : (

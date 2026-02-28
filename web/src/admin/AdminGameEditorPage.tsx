@@ -329,7 +329,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
               <MotionButton type="submit" disabled={saving}>
                 {saving ? (
                   <>
-                    <Spinner size={16} />
+                    <Spinner size={16} className="text-accent-foreground" />
                     Saving...
                   </>
                 ) : id ? (
@@ -555,7 +555,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
                       className="h-7 text-xs"
                     >
                       {addingTeam ? (
-                        <Spinner size={14} />
+                        <Spinner size={14} className="text-accent-foreground" />
                       ) : (
                         <Plus size={14} />
                       )}
@@ -584,7 +584,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
           <MotionButton variant="destructive" onClick={handleDeleteTeam} disabled={deleting}>
             {deleting ? (
               <>
-                <Spinner size={16} />
+                <Spinner size={16} className="text-white" />
                 Deleting...
               </>
             ) : (
