@@ -17,7 +17,11 @@ function Dialog({ open, onClose, children, className }: DialogProps) {
       if (e.key === 'Escape') onClose()
     }
     document.addEventListener('keydown', handler)
-    return () => document.removeEventListener('keydown', handler)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', handler)
+      document.body.style.overflow = ''
+    }
   }, [open, onClose])
 
   return (

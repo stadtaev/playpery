@@ -126,6 +126,7 @@ export function GamePage() {
     fetchState()
     if (eventType === 'stage_unlocked') {
       setStagePhase((prev) => prev === 'unlocking' ? 'answering' : prev)
+      setPhaseStartedAt(Date.now())
       setUnlockCode('')
     }
   }, [fetchState])
@@ -143,7 +144,7 @@ export function GamePage() {
 
   useEffect(() => {
     if (!state?.currentStage) return
-    const mode = state.game.mode
+    const mode = state.game.mode || 'classic'
     if (mode === 'classic') return
     if (!state.currentStage.locked && stagePhase === 'unlocking') {
       setStagePhase('answering')

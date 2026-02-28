@@ -199,6 +199,7 @@ export function AdminLayout({
           <button
             onClick={() => setMobileOpen(true)}
             className="p-2 text-text-secondary hover:text-text-primary transition-colors"
+            aria-label="Open navigation menu"
           >
             <Menu size={20} />
           </button>
