@@ -132,8 +132,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
     }
   }
 
-  async function handleAddTeam(e: React.FormEvent) {
-    e.preventDefault()
+  async function handleAddTeam() {
     if (!id) return
     setAddingTeam(true)
     setError('')
@@ -520,6 +519,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
                     <Input
                       value={newTeamName}
                       onChange={(e) => setNewTeamName(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' && newTeamName.trim()) handleAddTeam() }}
                       placeholder="Team name"
                       className="h-8 w-36"
                     />
@@ -528,6 +528,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
                     <Input
                       value={newTeamToken}
                       onChange={(e) => setNewTeamToken(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' && newTeamName.trim()) handleAddTeam() }}
                       placeholder="Auto-generated"
                       className="h-8 w-32"
                     />
@@ -538,6 +539,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
                     <Input
                       value={newTeamGuide}
                       onChange={(e) => setNewTeamGuide(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' && newTeamName.trim()) handleAddTeam() }}
                       placeholder="Guide name"
                       className="h-8 w-28"
                     />
@@ -546,7 +548,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
                   <TableCell className="text-right">
                     <MotionButton
                       size="sm"
-                      onClick={handleAddTeam}
+                      onClick={() => handleAddTeam()}
                       disabled={addingTeam || !newTeamName.trim()}
                       className="h-7 text-xs"
                     >

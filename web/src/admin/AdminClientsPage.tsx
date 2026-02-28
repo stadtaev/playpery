@@ -100,7 +100,7 @@ export function AdminClientsPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => navigate(`/admin/clients/${c.slug}/scenarios`)}
+                      onClick={() => navigate(`/admin/scenarios`)}
                     >
                       <Map size={14} />
                       Scenarios

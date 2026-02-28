@@ -116,16 +116,22 @@ web/
     JoinPage.tsx                  — team lookup → name input → join (/join/{client}/{token})
     GamePage.tsx                  — game state, clue, question, answer, timer
     useGameEvents.ts              — SSE hook (EventSource, client-aware)
+    components/
+      ui/                         — shared UI primitives (Button, Card, Dialog, Badge, Table, etc.)
+    lib/
+      navigate.ts                 — programmatic navigation via pushState + popstate event
+      utils.ts                    — cn() helper (clsx + tailwind-merge)
     admin/
       adminTypes.ts               — TS types for admin API
       adminApi.ts                 — fetch wrappers (client-scoped: /api/admin/clients/{client}/...)
       AdminLoginPage.tsx          — email + password login
-      AdminLayout.tsx             — auth check, nav, logout (client-aware breadcrumb)
+      AdminLayout.tsx             — responsive sidebar nav, auth check, logout
       AdminClientsPage.tsx        — client list + create
       AdminScenariosPage.tsx      — scenario list + delete (per-client)
       AdminScenarioEditorPage.tsx — create/edit scenario with stages (per-client)
       AdminGamesPage.tsx          — game list + delete (per-client)
       AdminGameEditorPage.tsx     — create/edit game with teams section (per-client)
+      AdminGameStatusPage.tsx     — live game scoreboard / status view (per-client)
 ```
 
 Startup order: load config → derive DB directory from DB_PATH → open admin DB → create Registry → pre-open existing clients → seed demo if first run → start HTTP server. Graceful shutdown via errgroup + signal.NotifyContext.
@@ -191,7 +197,13 @@ Existing data without a `mode` field defaults to `"classic"` at read time (no mi
 - **Vite** — build tool, dev server with proxy.
 - **React 19** + TypeScript.
 - **pnpm** — fast, disk-efficient package manager.
-- **Pico.css** (CDN) — minimal classless CSS framework.
+- **Tailwind CSS 4** — utility-first CSS framework (via `@tailwindcss/vite` plugin). Dark theme with amber accent.
+- **Framer Motion** — animation library for page transitions, staggered lists, hover/tap interactions.
+- **Lucide React** — icon library.
+- **class-variance-authority (cva)** — component variant definitions.
+- **clsx + tailwind-merge** — conditional/merged class composition via `cn()` helper.
+- **Google Fonts** — DM Sans (body) + JetBrains Mono (monospace), loaded via CDN.
+- **Import alias:** `@/*` maps to `web/src/*` (configured in tsconfig and vite).
 
 ## Database
 

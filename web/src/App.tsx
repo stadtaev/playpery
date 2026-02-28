@@ -71,6 +71,18 @@ const pageTransition = {
   transition: { duration: 0.15 },
 }
 
+function routeKey(route: Route): string {
+  switch (route.page) {
+    case 'join': return `join-${route.client}-${route.token}`
+    case 'admin-scenario-edit': return `admin-scenario-edit-${route.id}`
+    case 'admin-games': return `admin-games-${route.client}`
+    case 'admin-game-new': return `admin-game-new-${route.client}`
+    case 'admin-game-edit': return `admin-game-edit-${route.client}-${route.id}`
+    case 'admin-game-status': return `admin-game-status-${route.client}-${route.id}`
+    default: return route.page
+  }
+}
+
 function renderRoute(route: Route) {
   switch (route.page) {
     case 'join':
@@ -120,7 +132,7 @@ export default function App() {
 
   return (
     <AnimatePresence mode="wait">
-      <motion.div key={route.page} {...pageTransition}>
+      <motion.div key={routeKey(route)} {...pageTransition}>
         {renderRoute(route)}
       </motion.div>
     </AnimatePresence>

@@ -32,6 +32,9 @@
   --color-destructive: #ef4444;
   --color-destructive-hover: #dc2626;
 
+  /* Base (used for subtle backgrounds like progress tracks, chips) */
+  --color-base: #14161f;
+
   /* Fonts */
   --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
