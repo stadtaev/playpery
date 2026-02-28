@@ -1,6 +1,15 @@
 import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
+import { Users, UserCog } from 'lucide-react'
 import { lookupTeam, joinTeam } from './api'
 import type { TeamLookup } from './types'
+import { Card, CardHeader, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { MotionButton } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Alert } from '@/components/ui/alert'
+import { Spinner } from '@/components/ui/spinner'
 
 export function JoinPage({ client, joinToken }: { client: string; joinToken: string }) {
   const [team, setTeam] = useState<TeamLookup | null>(null)
@@ -35,48 +44,88 @@ export function JoinPage({ client, joinToken }: { client: string; joinToken: str
 
   if (error && !team) {
     return (
-      <main className="container">
-        <h1>CityQuest</h1>
-        <p role="alert">{error}</p>
-      </main>
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: 'easeOut' }}
+          className="w-full max-w-md"
+        >
+          <Card>
+            <CardHeader>
+              <h1 className="text-xl font-semibold text-text-primary">CityQuest</h1>
+            </CardHeader>
+            <CardContent>
+              <Alert variant="error">{error}</Alert>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
     )
   }
 
   if (!team) {
     return (
-      <main className="container">
-        <p aria-busy="true">Loading team...</p>
-      </main>
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <Spinner />
+      </div>
     )
   }
 
   return (
-    <main className="container" style={{ maxWidth: 480 }}>
-      <h1>CityQuest</h1>
-      <hgroup>
-        <h2>Join {team.name}</h2>
-        <p>{team.gameName}</p>
-      </hgroup>
-      {team.role === 'supervisor' && (
-        <p><mark>Joining as Supervisor</mark></p>
-      )}
-      <form onSubmit={handleJoin}>
-        <label>
-          Your name
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Enter your name"
-            autoFocus
-            required
-          />
-        </label>
-        {error && <small style={{ color: 'var(--pico-color-red-500)' }}>{error}</small>}
-        <button type="submit" disabled={joining} aria-busy={joining}>
-          {joining ? 'Joining...' : 'Join Game'}
-        </button>
-      </form>
-    </main>
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: 'easeOut' }}
+        className="w-full max-w-md"
+      >
+        <Card>
+          <CardHeader>
+            <h1 className="text-xl font-semibold text-text-primary">CityQuest</h1>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg text-text-secondary">Join {team.name}</h2>
+              {team.role === 'supervisor' && (
+                <Badge variant="warning">
+                  <UserCog size={12} className="mr-1" />
+                  Supervisor
+                </Badge>
+              )}
+            </div>
+            <p className="text-sm text-text-muted">{team.gameName}</p>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleJoin} className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="player-name">Your name</Label>
+                <Input
+                  id="player-name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter your name"
+                  autoFocus
+                  required
+                />
+              </div>
+              {error && <Alert variant="error">{error}</Alert>}
+              <MotionButton type="submit" disabled={joining} className="w-full">
+                {joining ? (
+                  <>
+                    <Spinner size={16} className="text-accent-foreground" />
+                    Joining...
+                  </>
+                ) : (
+                  <>
+                    <Users size={16} />
+                    Join Game
+                  </>
+                )}
+              </MotionButton>
+            </form>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </div>
   )
 }
