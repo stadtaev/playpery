@@ -34,7 +34,7 @@ export function GamePage() {
   const { game, team, role, currentStage, completedStages, players } = state
   const isEnded = game.status === 'ended' || (!currentStage && completedStages.length === game.totalStages)
   const mode = game.mode || 'classic'
-  const canAnswer = !game.supervised || role === 'supervisor' || mode === 'supervised'
+  const canAnswer = !game.supervised || role === 'supervisor'
 
   return (
     <PageContainer size="md">

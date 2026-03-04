@@ -60,7 +60,7 @@ func handleAnswer(broker *Broker) http.HandlerFunc {
 			return
 		}
 
-		if data.Supervised && sess.Role != "supervisor" && data.Mode != "supervised" {
+		if data.Supervised && sess.Role != "supervisor" {
 			writeError(w, http.StatusForbidden, "only the supervisor can submit answers")
 			return
 		}
