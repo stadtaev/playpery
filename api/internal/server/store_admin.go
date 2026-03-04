@@ -235,8 +235,7 @@ func (s *AdminDocStore) ListScenarios(ctx context.Context) ([]AdminScenarioSumma
 			City:         sc.City,
 			Description:  sc.Description,
 			Mode:         mode,
-			HasQuestions: sc.HasQuestions,
-			StageCount:   len(sc.Stages),
+				StageCount:   len(sc.Stages),
 			CreatedAt:    sc.CreatedAt,
 		})
 	}
@@ -256,7 +255,6 @@ func (s *AdminDocStore) CreateScenario(ctx context.Context, req AdminScenarioReq
 		City:         req.City,
 		Description:  req.Description,
 		Mode:         req.Mode,
-		HasQuestions: req.HasQuestions,
 		Stages:       req.Stages,
 		CreatedAt:    now,
 	}
@@ -269,7 +267,6 @@ func (s *AdminDocStore) CreateScenario(ctx context.Context, req AdminScenarioReq
 		City:         req.City,
 		Description:  req.Description,
 		Mode:         req.Mode,
-		HasQuestions: req.HasQuestions,
 		Stages:       req.Stages,
 		CreatedAt:    now,
 	}, nil
@@ -294,7 +291,6 @@ func (s *AdminDocStore) GetScenario(ctx context.Context, id string) (AdminScenar
 		City:         sc.City,
 		Description:  sc.Description,
 		Mode:         mode,
-		HasQuestions: sc.HasQuestions,
 		Stages:       stages,
 		CreatedAt:    sc.CreatedAt,
 	}, nil
@@ -309,7 +305,6 @@ func (s *AdminDocStore) UpdateScenario(ctx context.Context, id string, req Admin
 	sc.City = req.City
 	sc.Description = req.Description
 	sc.Mode = req.Mode
-	sc.HasQuestions = req.HasQuestions
 	sc.Stages = req.Stages
 	if err := s.putScenario(ctx, sc); err != nil {
 		return AdminScenarioDetail{}, err
@@ -320,7 +315,6 @@ func (s *AdminDocStore) UpdateScenario(ctx context.Context, id string, req Admin
 		City:         req.City,
 		Description:  req.Description,
 		Mode:         req.Mode,
-		HasQuestions: req.HasQuestions,
 		Stages:       req.Stages,
 		CreatedAt:    sc.CreatedAt,
 	}, nil

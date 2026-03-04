@@ -55,7 +55,6 @@ type AdminGameRequest struct {
 	ScenarioID        string `json:"scenarioId"`
 	ScenarioName      string `json:"-"`  // set by handler after validation
 	Mode              string `json:"-"`  // set by handler from scenario
-	HasQuestions      bool   `json:"-"`  // set by handler from scenario
 	Status            string `json:"status"`
 	Supervised        bool   `json:"supervised"`
 	TimerEnabled      bool   `json:"timerEnabled"`
@@ -194,7 +193,6 @@ func handleAdminCreateGame(admin AdminStore) http.HandlerFunc {
 		}
 		req.ScenarioName = scenario.Name
 		req.Mode = scenario.Mode
-		req.HasQuestions = scenario.HasQuestions
 		if req.Mode == "supervised" {
 			req.Supervised = true
 		}
@@ -254,7 +252,6 @@ func handleAdminUpdateGame(admin AdminStore) http.HandlerFunc {
 		}
 		req.ScenarioName = scenario.Name
 		req.Mode = scenario.Mode
-		req.HasQuestions = scenario.HasQuestions
 		if req.Mode == "supervised" {
 			req.Supervised = true
 		}

@@ -316,20 +316,18 @@ func TestCompleteAllStages(t *testing.T) {
 func TestModeHelpers(t *testing.T) {
 	tests := []struct {
 		mode         string
-		hasQuestions bool
 		wantQuestion bool
 		wantUnlock   bool
 	}{
-		{"classic", false, true, false},
-		{"qr_quiz", false, true, true},
-		{"qr_hunt", false, false, true},
-		{"math_puzzle", false, false, true},
-		{"supervised", true, true, true},
-		{"supervised", false, false, true},
+		{"classic", true, false},
+		{"qr_quiz", true, true},
+		{"qr_hunt", false, true},
+		{"math_puzzle", false, true},
+		{"supervised", true, true},
 	}
 	for _, tt := range tests {
-		if got := modeHasQuestion(tt.mode, tt.hasQuestions); got != tt.wantQuestion {
-			t.Errorf("modeHasQuestion(%q, %v) = %v, want %v", tt.mode, tt.hasQuestions, got, tt.wantQuestion)
+		if got := modeHasQuestion(tt.mode); got != tt.wantQuestion {
+			t.Errorf("modeHasQuestion(%q) = %v, want %v", tt.mode, got, tt.wantQuestion)
 		}
 		if got := modeRequiresUnlock(tt.mode); got != tt.wantUnlock {
 			t.Errorf("modeRequiresUnlock(%q) = %v, want %v", tt.mode, got, tt.wantUnlock)
@@ -390,14 +388,11 @@ func TestGameStateIncludesMode(t *testing.T) {
 }
 
 func TestModeHelpersRejectNoQuestionModes(t *testing.T) {
-	if modeHasQuestion("qr_hunt", false) {
+	if modeHasQuestion("qr_hunt") {
 		t.Error("qr_hunt should not have questions")
 	}
-	if modeHasQuestion("math_puzzle", false) {
+	if modeHasQuestion("math_puzzle") {
 		t.Error("math_puzzle should not have questions")
-	}
-	if modeHasQuestion("supervised", false) {
-		t.Error("supervised without hasQuestions should not have questions")
 	}
 }
 

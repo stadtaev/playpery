@@ -17,8 +17,8 @@ const modeLabels: Record<string, string> = {
   supervised: 'Supervised',
 }
 
-function modeNeedsQuestion(mode: string, hasQuestions: boolean): boolean {
-  return mode === 'classic' || mode === 'qr_quiz' || (mode === 'supervised' && hasQuestions)
+function modeNeedsQuestion(mode: string): boolean {
+  return mode === 'classic' || mode === 'qr_quiz' || mode === 'supervised'
 }
 
 function emptyStage(): Stage {
@@ -30,7 +30,6 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
   const [city, setCity] = useState('')
   const [description, setDescription] = useState('')
   const [mode, setMode] = useState('supervised')
-  const [hasQuestions, setHasQuestions] = useState(false)
   const [stages, setStages] = useState<Stage[]>([emptyStage()])
   const [loading, setLoading] = useState(!!id)
   const [saving, setSaving] = useState(false)
@@ -44,7 +43,6 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
         setCity(s.city)
         setDescription(s.description)
         setMode(s.mode || 'supervised')
-        setHasQuestions(s.hasQuestions || false)
         setStages(s.stages.length > 0 ? s.stages : [emptyStage()])
       })
       .catch((e) => setError(e.message))
@@ -83,7 +81,6 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
       city,
       description,
       mode,
-      hasQuestions: mode === 'supervised' ? hasQuestions : undefined,
       stages: stages.map((s, i) => ({ ...s, stageNumber: i + 1 })),
     }
 
@@ -133,12 +130,6 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
               ))}
             </select>
           </div>
-          {mode === 'supervised' && (
-            <label className="flex items-center gap-2 pb-1 cursor-pointer">
-              <input type="checkbox" checked={hasQuestions} onChange={(e) => setHasQuestions(e.target.checked)} />
-              <span className="text-sm">Include questions at each stage</span>
-            </label>
-          )}
         </div>
 
         <h3 className="mt-8">Stages</h3>
@@ -179,7 +170,7 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
                   <input className="input" type="number" value={stage.locationNumber || ''} onChange={(e) => updateStage(i, 'locationNumber', parseInt(e.target.value) || 0)} required />
                 </div>
               )}
-              {modeNeedsQuestion(mode, hasQuestions) && (
+              {modeNeedsQuestion(mode) && (
                 <>
                   <div>
                     <label className="input-label">Question</label>

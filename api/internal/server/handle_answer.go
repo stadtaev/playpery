@@ -84,7 +84,7 @@ func handleAnswer(broker *Broker) http.HandlerFunc {
 		}
 
 		// Mode guards: reject answer if mode doesn't support questions or stage not unlocked.
-		if !modeHasQuestion(data.Mode, data.HasQuestions) {
+		if !modeHasQuestion(data.Mode) {
 			writeError(w, http.StatusConflict, "this mode does not use questions")
 			return
 		}

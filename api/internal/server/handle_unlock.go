@@ -190,49 +190,19 @@ func handleUnlock(broker *Broker) http.HandlerFunc {
 				writeError(w, http.StatusForbidden, "only the supervisor can unlock stages")
 				return
 			}
-			if data.HasQuestions {
-				if err := store.UnlockStage(r.Context(), sess.GameID, sess.TeamID, currentStageNum); err != nil {
-					writeError(w, http.StatusInternalServerError, "internal error")
-					return
-				}
-				broker.Publish(sess.TeamID, SSEEvent{
-					Type:        "stage_unlocked",
-					StageNumber: currentStageNum,
-				})
-				writeJSON(w, http.StatusOK, UnlockResponse{
-					StageNumber: currentStageNum,
-					Unlocked:    true,
-					Question:    stage.Question,
-				})
-			} else {
-				// No questions — auto-complete (unlock + record in one transaction).
-				if err := store.UnlockAndCompleteStage(r.Context(), sess.GameID, sess.TeamID, currentStageNum); err != nil {
-					writeError(w, http.StatusInternalServerError, "internal error")
-					return
-				}
-				resp := UnlockResponse{
-					StageNumber:   currentStageNum,
-					Unlocked:      true,
-					StageComplete: true,
-				}
-				nextStageNum := currentStageNum + 1
-				if nextStageNum <= len(stages) {
-					s := stages[nextStageNum-1]
-					resp.NextStage = &StageInfo{
-						StageNumber: s.StageNumber,
-						Clue:        s.Clue,
-						Location:    s.Location,
-						Locked:      true,
-					}
-				} else {
-					resp.GameComplete = true
-				}
-				broker.Publish(sess.TeamID, SSEEvent{
-					Type:        "stage_completed",
-					StageNumber: currentStageNum,
-				})
-				writeJSON(w, http.StatusOK, resp)
+			if err := store.UnlockStage(r.Context(), sess.GameID, sess.TeamID, currentStageNum); err != nil {
+				writeError(w, http.StatusInternalServerError, "internal error")
+				return
 			}
+			broker.Publish(sess.TeamID, SSEEvent{
+				Type:        "stage_unlocked",
+				StageNumber: currentStageNum,
+			})
+			writeJSON(w, http.StatusOK, UnlockResponse{
+				StageNumber: currentStageNum,
+				Unlocked:    true,
+				Question:    stage.Question,
+			})
 
 		default:
 			writeError(w, http.StatusConflict, "unknown mode")

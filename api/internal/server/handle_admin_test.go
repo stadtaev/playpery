@@ -762,19 +762,12 @@ func TestScenarioModeValidation(t *testing.T) {
 			},
 		},
 		{
-			name: "supervised with questions requires question",
-			req: AdminScenarioRequest{
-				Name: "Test", City: "Lima", Mode: "supervised", HasQuestions: true,
-				Stages: []AdminStage{{Location: "A"}},
-			},
-			wantErr: "each stage must have a question",
-		},
-		{
-			name: "supervised without questions is ok",
+			name: "supervised requires question",
 			req: AdminScenarioRequest{
 				Name: "Test", City: "Lima", Mode: "supervised",
 				Stages: []AdminStage{{Location: "A"}},
 			},
+			wantErr: "each stage must have a question",
 		},
 	}
 

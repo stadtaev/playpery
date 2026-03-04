@@ -20,7 +20,6 @@ type scenario struct {
 	City        string       `json:"city"`
 	Description string       `json:"description"`
 	Mode        string       `json:"mode"`
-	HasQuestions bool        `json:"hasQuestions,omitempty"`
 	Stages      []AdminStage `json:"stages"`
 	CreatedAt   string       `json:"createdAt"`
 }
@@ -31,7 +30,6 @@ type game struct {
 	ScenarioName      string       `json:"scenarioName"`
 	Status            string       `json:"status"`
 	Mode              string       `json:"mode"`
-	HasQuestions      bool         `json:"hasQuestions,omitempty"`
 	Supervised        bool         `json:"supervised,omitempty"`
 	TimerEnabled      bool         `json:"timerEnabled"`
 	TimerMinutes      int          `json:"timerMinutes"`
@@ -392,7 +390,6 @@ func (s *DocStore) GameState(ctx context.Context, gameID, teamID string) (gameSt
 	var d gameStateData
 	d.Status = g.Status
 	d.Mode = g.Mode
-	d.HasQuestions = g.HasQuestions
 	d.Supervised = g.Supervised
 	d.TimerEnabled = g.TimerEnabled
 	d.TimerMinutes = g.TimerMinutes
@@ -554,7 +551,6 @@ func (s *DocStore) CreateGame(ctx context.Context, req AdminGameRequest, stages 
 		ScenarioName:      req.ScenarioName,
 		Status:            req.Status,
 		Mode:              req.Mode,
-		HasQuestions:       req.HasQuestions,
 		Supervised:        req.Supervised,
 		TimerEnabled:      req.TimerEnabled,
 		TimerMinutes:      req.TimerMinutes,
@@ -648,7 +644,6 @@ func (s *DocStore) UpdateGame(ctx context.Context, id string, req AdminGameReque
 	g.ScenarioID = req.ScenarioID
 	g.ScenarioName = req.ScenarioName
 	g.Mode = req.Mode
-	g.HasQuestions = req.HasQuestions
 	g.Status = req.Status
 	g.Supervised = req.Supervised
 	g.TimerEnabled = req.TimerEnabled

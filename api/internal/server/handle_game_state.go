@@ -9,7 +9,6 @@ import (
 type GameInfo struct {
 	Status            string  `json:"status"`
 	Mode              string  `json:"mode"`
-	HasQuestions      bool    `json:"hasQuestions,omitempty"`
 	Supervised        bool    `json:"supervised"`
 	TimerEnabled      bool    `json:"timerEnabled"`
 	TimerMinutes      int     `json:"timerMinutes"`
@@ -64,12 +63,10 @@ type scenarioStage struct {
 }
 
 // modeHasQuestion returns true if the mode supports questions at each stage.
-func modeHasQuestion(mode string, hasQuestions bool) bool {
+func modeHasQuestion(mode string) bool {
 	switch mode {
-	case "classic", "qr_quiz":
+	case "classic", "qr_quiz", "supervised":
 		return true
-	case "supervised":
-		return hasQuestions
 	default:
 		return false
 	}
@@ -144,7 +141,7 @@ func handleGameState() http.HandlerFunc {
 			if modeRequiresUnlock(data.Mode) {
 				unlocked := isStageUnlocked(data.UnlockedStages, currentStageNum)
 				si.Locked = !unlocked
-				if unlocked && modeHasQuestion(data.Mode, data.HasQuestions) {
+				if unlocked && modeHasQuestion(data.Mode) {
 					si.Question = s.Question
 				}
 				if data.Mode == "math_puzzle" {
@@ -169,7 +166,6 @@ func handleGameState() http.HandlerFunc {
 			Game: GameInfo{
 				Status:            data.Status,
 				Mode:              data.Mode,
-				HasQuestions:      data.HasQuestions,
 				Supervised:        data.Supervised,
 				TimerEnabled:      data.TimerEnabled,
 				TimerMinutes:      data.TimerMinutes,

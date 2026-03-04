@@ -17,7 +17,6 @@ type sessionInfo struct {
 type gameStateData struct {
 	Status            string
 	Mode              string
-	HasQuestions       bool
 	Supervised        bool
 	TimerEnabled      bool
 	TimerMinutes      int

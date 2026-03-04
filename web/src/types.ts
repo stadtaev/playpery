@@ -18,7 +18,6 @@ export type ScenarioMode = 'classic' | 'qr_quiz' | 'qr_hunt' | 'math_puzzle' | '
 export interface GameInfo {
   status: string
   mode: ScenarioMode
-  hasQuestions?: boolean
   supervised: boolean
   timerEnabled: boolean
   timerMinutes: number

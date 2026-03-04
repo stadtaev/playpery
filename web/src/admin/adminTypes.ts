@@ -9,7 +9,6 @@ export interface ScenarioSummary {
   city: string
   description: string
   mode: string
-  hasQuestions?: boolean
   stageCount: number
   createdAt: string
 }
@@ -32,7 +31,6 @@ export interface ScenarioDetail {
   city: string
   description: string
   mode: string
-  hasQuestions?: boolean
   stages: Stage[]
   createdAt: string
 }
@@ -42,7 +40,6 @@ export interface ScenarioRequest {
   city: string
   description: string
   mode: string
-  hasQuestions?: boolean
   stages: Stage[]
 }
 

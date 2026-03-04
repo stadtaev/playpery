@@ -25,7 +25,6 @@ type AdminScenarioSummary struct {
 	City         string `json:"city"`
 	Description  string `json:"description"`
 	Mode         string `json:"mode"`
-	HasQuestions bool   `json:"hasQuestions,omitempty"`
 	StageCount   int    `json:"stageCount"`
 	CreatedAt    string `json:"createdAt"`
 }
@@ -36,7 +35,6 @@ type AdminScenarioDetail struct {
 	City         string       `json:"city"`
 	Description  string       `json:"description"`
 	Mode         string       `json:"mode"`
-	HasQuestions bool         `json:"hasQuestions,omitempty"`
 	Stages       []AdminStage `json:"stages"`
 	CreatedAt    string       `json:"createdAt"`
 }
@@ -58,7 +56,6 @@ type AdminScenarioRequest struct {
 	City         string       `json:"city"`
 	Description  string       `json:"description"`
 	Mode         string       `json:"mode"`
-	HasQuestions bool         `json:"hasQuestions,omitempty"`
 	Stages       []AdminStage `json:"stages"`
 }
 
@@ -88,7 +85,7 @@ func (req *AdminScenarioRequest) validate() string {
 		return "at least one stage is required"
 	}
 
-	needsQuestion := req.Mode == "classic" || req.Mode == "qr_quiz" || (req.Mode == "supervised" && req.HasQuestions)
+	needsQuestion := req.Mode == "classic" || req.Mode == "qr_quiz" || req.Mode == "supervised"
 	needsUnlockCode := req.Mode == "qr_quiz" || req.Mode == "qr_hunt"
 	needsLocationNumber := req.Mode == "math_puzzle"
 
