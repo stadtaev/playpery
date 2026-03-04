@@ -110,12 +110,19 @@ api/
       wsecho.go                   — GET /ws/echo (WebSocket test)
 web/
   src/
+    index.css                     — Tailwind entry + ASOS design system (@theme, component classes)
     types.ts                      — TS types matching API responses
     api.ts                        — fetch wrappers (client-scoped: /api/{client}/...)
     App.tsx                       — URL-based routing (no router library)
     JoinPage.tsx                  — team lookup → name input → join (/join/{client}/{token})
     GamePage.tsx                  — game state, clue, question, answer, timer
     useGameEvents.ts              — SSE hook (EventSource, client-aware)
+    components/
+      Spinner.tsx                 — CSS spinner (replaces Pico's aria-busy)
+      ErrorMessage.tsx            — error text component
+      PageContainer.tsx           — page width variants (sm/md/wide)
+    lib/
+      utils.ts                    — cn() helper (clsx + tailwind-merge)
     admin/
       adminTypes.ts               — TS types for admin API
       adminApi.ts                 — fetch wrappers (client-scoped: /api/admin/clients/{client}/...)
@@ -126,6 +133,7 @@ web/
       AdminScenarioEditorPage.tsx — create/edit scenario with stages (per-client)
       AdminGamesPage.tsx          — game list + delete (per-client)
       AdminGameEditorPage.tsx     — create/edit game with teams section (per-client)
+      AdminGameStatusPage.tsx     — live scoreboard + team details (per-client)
 ```
 
 Startup order: load config → derive DB directory from DB_PATH → open admin DB → create Registry → pre-open existing clients → seed demo if first run → start HTTP server. Graceful shutdown via errgroup + signal.NotifyContext.
@@ -191,7 +199,8 @@ Existing data without a `mode` field defaults to `"classic"` at read time (no mi
 - **Vite** — build tool, dev server with proxy.
 - **React 19** + TypeScript.
 - **pnpm** — fast, disk-efficient package manager.
-- **Pico.css** (CDN) — minimal classless CSS framework.
+- **Tailwind CSS v4** — utility-first CSS via `@tailwindcss/vite` plugin.
+- **DM Sans** (Google Fonts) — primary typeface. ASOS-inspired design: monochrome, flat, no shadows, no border-radius.
 
 ## Database
 

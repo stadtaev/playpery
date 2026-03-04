@@ -1,105 +1,55 @@
-# Project Rules
+# Frontend Rules
 
 ## Tech Stack
-- **Styling:** Tailwind CSS
-- **Components:** shadcn/ui
-- **Animation:** Framer Motion
-- **Icons:** Lucide React
-- **Utilities:** clsx + tailwind-merge for class composition, cva for variants
+- **Styling:** Tailwind CSS v4 (`@tailwindcss/vite` plugin, no PostCSS config needed)
+- **Design system:** Custom `@apply`-based component classes in `index.css` (ASOS-inspired)
+- **Utilities:** `cn()` from `@/lib/utils` (clsx + tailwind-merge) for conditional classes
+- **Path alias:** `@/*` maps to `src/*` (configured in vite.config.ts + tsconfig.app.json)
+
+## Design Language — ASOS-inspired
+Monochrome, flat, editorial. No gradients, no shadows, no border-radius.
+
+- **Font:** DM Sans (Google Fonts). Bold uppercase for labels/buttons.
+- **Colors:** White bg, black text (#2d2d2d), gray secondary (#767676), green accent (#018849), red error (#d4351c). All defined as `@theme` tokens in `index.css`.
+- **Spacing:** Generous. Narrow content columns (~480px player forms, ~600px game, ~960px admin).
+
+## Component Classes (defined in `index.css`)
+Use these instead of writing long Tailwind class strings for common patterns:
+
+| Class | Purpose |
+|-------|---------|
+| `.page` / `.page-md` / `.page-wide` | Container widths (480/600/960px) |
+| `.btn` | Black filled button, uppercase |
+| `.btn.btn-accent` | Green filled button — use sparingly for key CTAs (Join, Start, Submit) |
+| `.btn-secondary` | White + black border |
+| `.btn-ghost` | Transparent, subtle |
+| `.btn-danger` | Red border, red fill on hover |
+| `.btn-sm` | Smaller padding/font |
+| `.input` | Text input with thin border |
+| `.input-label` | Uppercase label above input |
+| `.card` / `.card-header` | Bordered container, no shadow |
+| `.admin-table` | Table with uppercase headers |
+| `.text-feedback-error` / `.text-feedback-success` | Colored feedback text |
+| `.spinner` / `.spinner-lg` | CSS-only loading spinner |
+
+## Shared Components (`src/components/`)
+- `Spinner.tsx` — `<Spinner />` and `<LoadingPage />` (replaces `aria-busy` patterns)
+- `ErrorMessage.tsx` — `<ErrorMessage message="..." />`
+- `PageContainer.tsx` — `<PageContainer size="sm|md|wide">` (replaces `className="container" style={{ maxWidth }}`)
 
 ## Coding Standards
-- Use `cn()` from `@/lib/utils` (or equivalent) for merging Tailwind classes
-- Use `cva` from class-variance-authority for component variant definitions
-- Prefer shadcn/ui as the base — extend with Tailwind, don't recreate
-- Co-locate related files (component + test + styles)
-- absolute minimal styling - simplicity and readability over beauty
+- No inline `style={{}}` — use Tailwind utilities or component classes
+- No Pico.css patterns (`aria-busy` on elements, `<hgroup>`, `<mark>`, `className="container"`, `className="grid"`, `className="outline"`)
+- Proper label-input pattern: `<label className="input-label">` above `<input className="input">`
+- Use `<Spinner />` inside buttons for loading states, not text changes
+- Prefer component classes for repeated patterns, Tailwind utilities for one-offs
 
 ## Responsive Design
-- Mobile-first: base styles for mobile, `sm:` / `md:` / `lg:` / `xl:` for larger
-- Test at: 320px, 768px, 1024px, 1440px
-- Responsive grid: `grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6`
+- Mobile-first: base styles for mobile, `sm:` / `md:` for larger
+- Grid: `grid grid-cols-1 sm:grid-cols-2 gap-4` (not Pico's `className="grid"`)
 
-## Frontend Aesthetics — CRITICAL
-You tend to converge toward generic, "on distribution" outputs. In frontend design,
-this creates what users call the "AI slop" aesthetic. Avoid this: make creative,
-distinctive frontends that surprise and delight.
-
-- **Typography:** Choose beautiful, unique fonts. Avoid Inter, Roboto, Arial, system
-  fonts. Use Google Fonts or Fontsource for distinctive typography.
-- **Color & Theme:** Commit to a cohesive aesthetic. Use CSS variables. Dominant
-  colors with sharp accents. Draw from Dribbble, Awwwards for inspiration.
-- **Motion:** Use Framer Motion for transitions, scroll effects, micro-interactions.
-  Every interactive element should have hover/focus animation.
-- **Backgrounds:** Layer gradients, geometric patterns, subtle textures. Never
-  default to plain white/gray.
-- **Spacing:** Generous whitespace. Dense UIs feel cheap. Let content breathe.
-- **Shadows & Depth:** Layered shadows for visual hierarchy.
-
-### Avoid these "AI slop" patterns:
-- Overused font families (Inter, Roboto, Arial, Space Grotesk)
-- Purple/blue gradient on white background cliché
-- Predictable 3-card feature grids
-- Cookie-cutter hero sections
-- Generic "Welcome to our platform" copy
-- Excessive rounded corners on everything
-
-Each page should feel genuinely *designed by a human*, not generated.
-
-## Dark Mode
-- Support via Tailwind `dark:` classes
-- Define color tokens as CSS variables
-- Test both themes for contrast and readability
-
-## Accessibility (WCAG 2.1 AA)
+## Accessibility
 - Keyboard navigable interactive elements
-- Proper ARIA labels
-- Color contrast ≥ 4.5:1 (normal text), ≥ 3:1 (large text)
-- Visible focus indicators
-- Semantic HTML: `<nav>`, `<main>`, `<section>`, `<article>`
-
-## Animation Patterns (Framer Motion)
-```tsx
-// Page entrance
-<motion.div
-  initial={{ opacity: 0, y: 20 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ duration: 0.5, ease: "easeOut" }}
-/>
-
-// Staggered list
-const container = { hidden: {}, visible: { transition: { staggerChildren: 0.1 } } }
-const item = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }
-
-// Hover interaction
-<motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} />
-```
-
-## Component Variants (cva)
-```tsx
-import { cva, type VariantProps } from "class-variance-authority"
-import { cn } from "@/lib/utils"
-
-const buttonVariants = cva(
-  "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors",
-  {
-    variants: {
-      variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        outline: "border border-input bg-background hover:bg-accent",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-      },
-      size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 px-3",
-        lg: "h-11 px-8",
-      },
-    },
-    defaultVariants: { variant: "default", size: "default" },
-  }
-)
-```
-
-## Performance
-- Lazy-load below-fold content
-- Optimize images (use framework's Image component if available)
-- Minimize client-side JavaScript where possible
+- `role="alert"` on error messages
+- Semantic HTML: `<nav>`, `<main>`, `<details>`, `<summary>`
+- Visible focus: inputs get darker border on focus
