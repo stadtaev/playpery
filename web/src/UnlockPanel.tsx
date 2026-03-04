@@ -1,5 +1,8 @@
 import type { StageInfo, ScenarioMode } from './types'
 import type { Feedback } from './useGameState'
+import { QrUnlockForm } from './QrUnlockForm'
+import { MathUnlockForm } from './MathUnlockForm'
+import { SupervisedUnlockForm } from './SupervisedUnlockForm'
 
 interface Props {
   stage: StageInfo
@@ -14,15 +17,9 @@ interface Props {
   teamSecret?: number
 }
 
-function FeedbackMessage({ feedback }: { feedback: Feedback }) {
-  return (
-    <small style={{ color: feedback.correct ? 'var(--pico-color-green-500)' : 'var(--pico-color-red-500)' }}>
-      {feedback.message}
-    </small>
-  )
-}
-
 export function UnlockPanel({ stage, totalStages, mode, role, unlockCode, onUnlockCodeChange, onUnlock, feedback, submitting, teamSecret }: Props) {
+  const common = { onUnlock, feedback, submitting }
+
   return (
     <article>
       <header>
@@ -31,55 +28,13 @@ export function UnlockPanel({ stage, totalStages, mode, role, unlockCode, onUnlo
       <p><strong>Clue:</strong> {stage.clue}</p>
 
       {(mode === 'qr_quiz' || mode === 'qr_hunt') && (
-        <form onSubmit={onUnlock}>
-          <p>Enter the code from the QR at this location:</p>
-          <input
-            type="text"
-            value={unlockCode}
-            onChange={(e) => onUnlockCodeChange(e.target.value)}
-            placeholder="QR code..."
-            autoFocus
-            required
-          />
-          {feedback && <FeedbackMessage feedback={feedback} />}
-          <button type="submit" disabled={submitting} aria-busy={submitting}>
-            Submit Code
-          </button>
-        </form>
+        <QrUnlockForm {...common} unlockCode={unlockCode} onUnlockCodeChange={onUnlockCodeChange} />
       )}
-
       {mode === 'math_puzzle' && (
-        <form onSubmit={onUnlock}>
-          <p>Your team secret is: <strong>{teamSecret}</strong></p>
-          <p>Location number: <strong>{stage.locationNumber}</strong></p>
-          <p>Add them together and enter the result:</p>
-          <input
-            type="text"
-            value={unlockCode}
-            onChange={(e) => onUnlockCodeChange(e.target.value)}
-            placeholder="Calculated code..."
-            autoFocus
-            required
-          />
-          {feedback && <FeedbackMessage feedback={feedback} />}
-          <button type="submit" disabled={submitting} aria-busy={submitting}>
-            Submit Code
-          </button>
-        </form>
+        <MathUnlockForm {...common} unlockCode={unlockCode} onUnlockCodeChange={onUnlockCodeChange} teamSecret={teamSecret} locationNumber={stage.locationNumber} />
       )}
-
       {mode === 'supervised' && (
-        role === 'supervisor' ? (
-          <form onSubmit={onUnlock}>
-            <p>Unlock this stage for your team:</p>
-            {feedback && <FeedbackMessage feedback={feedback} />}
-            <button type="submit" disabled={submitting} aria-busy={submitting}>
-              Unlock Stage
-            </button>
-          </form>
-        ) : (
-          <p><em>Waiting for the guide to unlock this stage...</em></p>
-        )
+        <SupervisedUnlockForm {...common} role={role} />
       )}
     </article>
   )
