@@ -30,10 +30,9 @@ export function TimerDisplay({ gameRemaining, stageRemaining }: { gameRemaining:
     stageRemaining ?? Infinity,
   )
   const isUrgent = minRemaining <= 60000
-  const color = isUrgent ? '#e53e3e' : '#38a169'
 
   return (
-    <div style={{ position: 'fixed', top: '0.75rem', left: '0.75rem', zIndex: 1000, fontFamily: 'monospace', fontSize: '1.1rem', fontWeight: 'bold', color }}>
+    <div className={`fixed top-3 left-3 z-50 font-mono text-lg font-bold ${isUrgent ? 'text-error' : 'text-success'}`}>
       {gameRemaining !== null && <div>Game: {formatTime(gameRemaining)}</div>}
       {stageRemaining !== null && <div>Stage: {formatTime(stageRemaining)}</div>}
     </div>

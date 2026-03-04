@@ -21,11 +21,11 @@ export function UnlockPanel({ stage, totalStages, mode, role, unlockCode, onUnlo
   const common = { onUnlock, feedback, submitting }
 
   return (
-    <article>
-      <header>
+    <div className="card">
+      <div className="card-header">
         Stage {stage.stageNumber} of {totalStages} &mdash; {stage.location}
-      </header>
-      <p><strong>Clue:</strong> {stage.clue}</p>
+      </div>
+      <p className="mb-4"><strong>Clue:</strong> {stage.clue}</p>
 
       {(mode === 'qr_quiz' || mode === 'qr_hunt') && (
         <QrUnlockForm {...common} unlockCode={unlockCode} onUnlockCodeChange={onUnlockCodeChange} />
@@ -36,6 +36,6 @@ export function UnlockPanel({ stage, totalStages, mode, role, unlockCode, onUnlo
       {mode === 'supervised' && (
         <SupervisedUnlockForm {...common} role={role} />
       )}
-    </article>
+    </div>
   )
 }

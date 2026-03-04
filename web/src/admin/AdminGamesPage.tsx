@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { listGames, deleteGame } from './adminApi'
 import type { GameSummary } from './adminTypes'
+import { LoadingPage } from '../components/Spinner'
+import { ErrorMessage } from '../components/ErrorMessage'
 
 function navigate(path: string) {
   window.history.pushState(null, '', path)
@@ -37,26 +39,26 @@ export function AdminGamesPage({ client }: { client: string }) {
   }
 
   if (loading) {
-    return <p aria-busy="true">Loading games...</p>
+    return <LoadingPage message="Loading games..." />
   }
 
   if (error) {
-    return <p role="alert">{error}</p>
+    return <ErrorMessage message={error} />
   }
 
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h2 style={{ margin: 0 }}>Games</h2>
-        <button onClick={() => navigate(`/admin/clients/${client}/games/new`)} style={{ width: 'auto' }}>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="m-0">Games</h2>
+        <button onClick={() => navigate(`/admin/clients/${client}/games/new`)} className="btn">
           New Game
         </button>
       </div>
 
       {games.length === 0 ? (
-        <p>No games yet.</p>
+        <p className="text-secondary">No games yet.</p>
       ) : (
-        <table>
+        <table className="admin-table">
           <thead>
             <tr>
               <th>Scenario</th>
@@ -86,9 +88,8 @@ export function AdminGamesPage({ client }: { client: string }) {
                 <td>{new Date(g.createdAt).toLocaleDateString()}</td>
                 <td>
                   <button
-                    className="outline secondary"
+                    className="btn-danger btn-sm"
                     onClick={() => handleDelete(g.id, g.scenarioName)}
-                    style={{ width: 'auto', padding: '0.25rem 0.5rem', fontSize: 'small' }}
                   >
                     Delete
                   </button>

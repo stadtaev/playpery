@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { listClients, createClient, type ClientInfo } from './adminApi'
+import { LoadingPage, Spinner } from '../components/Spinner'
+import { ErrorMessage } from '../components/ErrorMessage'
 
 function navigate(path: string) {
   window.history.pushState(null, '', path)
@@ -39,18 +41,18 @@ export function AdminClientsPage() {
   }
 
   if (loading) {
-    return <p aria-busy="true">Loading clients...</p>
+    return <LoadingPage message="Loading clients..." />
   }
 
   return (
     <>
       <h2>Clients</h2>
-      {error && <p role="alert" style={{ color: 'var(--pico-color-red-500)' }}>{error}</p>}
+      {error && <ErrorMessage message={error} />}
 
       {clients.length === 0 ? (
-        <p>No clients yet.</p>
+        <p className="text-secondary">No clients yet.</p>
       ) : (
-        <table>
+        <table className="admin-table">
           <thead>
             <tr>
               <th>Slug</th>
@@ -61,20 +63,18 @@ export function AdminClientsPage() {
           <tbody>
             {clients.map((c) => (
               <tr key={c.slug}>
-                <td><code>{c.slug}</code></td>
+                <td><code className="text-sm">{c.slug}</code></td>
                 <td>{c.name}</td>
-                <td>
+                <td className="whitespace-nowrap">
                   <button
-                    className="outline"
+                    className="btn-ghost btn-sm mr-1"
                     onClick={() => navigate(`/admin/clients/${c.slug}/scenarios`)}
-                    style={{ width: 'auto', padding: '0.25rem 0.5rem', fontSize: 'small', marginRight: '0.25rem' }}
                   >
                     Scenarios
                   </button>
                   <button
-                    className="outline"
+                    className="btn-ghost btn-sm"
                     onClick={() => navigate(`/admin/clients/${c.slug}/games`)}
-                    style={{ width: 'auto', padding: '0.25rem 0.5rem', fontSize: 'small' }}
                   >
                     Games
                   </button>
@@ -87,19 +87,19 @@ export function AdminClientsPage() {
 
       <details>
         <summary>Add Client</summary>
-        <form onSubmit={handleCreate} style={{ marginTop: '0.5rem' }}>
-          <div className="grid">
-            <label>
-              Slug
-              <input type="text" value={newSlug} onChange={(e) => setNewSlug(e.target.value)} placeholder="e.g. acme" required />
-            </label>
-            <label>
-              Name
-              <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="e.g. Acme Tours" required />
-            </label>
+        <form onSubmit={handleCreate} className="mt-4 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="input-label" htmlFor="slug">Slug</label>
+              <input id="slug" className="input" type="text" value={newSlug} onChange={(e) => setNewSlug(e.target.value)} placeholder="e.g. acme" required />
+            </div>
+            <div>
+              <label className="input-label" htmlFor="name">Name</label>
+              <input id="name" className="input" type="text" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="e.g. Acme Tours" required />
+            </div>
           </div>
-          <button type="submit" disabled={creating} aria-busy={creating} style={{ width: 'auto' }}>
-            {creating ? 'Creating...' : 'Create Client'}
+          <button type="submit" disabled={creating} className="btn">
+            {creating ? <Spinner /> : 'Create Client'}
           </button>
         </form>
       </details>

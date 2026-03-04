@@ -3,6 +3,9 @@ import { InterstitialPanel } from './InterstitialPanel'
 import { UnlockPanel } from './UnlockPanel'
 import { AnswerPanel } from './AnswerPanel'
 import { useGameState } from './useGameState'
+import { PageContainer } from './components/PageContainer'
+import { LoadingPage } from './components/Spinner'
+import { ErrorMessage } from './components/ErrorMessage'
 
 export function GamePage() {
   const {
@@ -16,20 +19,16 @@ export function GamePage() {
 
   if (error) {
     return (
-      <main className="container">
+      <PageContainer>
         <h1>CityQuest</h1>
-        <p role="alert">{error}</p>
-        <button onClick={handleLogout}>Back to start</button>
-      </main>
+        <ErrorMessage message={error} />
+        <button onClick={handleLogout} className="btn">Back to start</button>
+      </PageContainer>
     )
   }
 
   if (!state) {
-    return (
-      <main className="container">
-        <p aria-busy="true">Loading game...</p>
-      </main>
-    )
+    return <LoadingPage message="Loading game..." />
   }
 
   const { game, team, role, currentStage, completedStages, players } = state
@@ -38,22 +37,22 @@ export function GamePage() {
   const canAnswer = !game.supervised || role === 'supervisor' || mode === 'supervised'
 
   return (
-    <main className="container" style={{ maxWidth: 600 }}>
+    <PageContainer size="md">
       {game.timerEnabled && !isEnded && (
         <TimerDisplay gameRemaining={gameRemaining} stageRemaining={stageRemaining} />
       )}
-      <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 style={{ margin: 0 }}>CityQuest</h1>
-        <small>{team.name}</small>
+      <nav className="flex justify-between items-center mb-6">
+        <h1 className="m-0">CityQuest</h1>
+        <span className="text-secondary text-sm uppercase tracking-widest font-bold">{team.name}</span>
       </nav>
 
       {isEnded && (
-        <article>
-          <header>Game Over!</header>
+        <div className="card">
+          <div className="card-header">Game Over!</div>
           <p>
             Your team answered {completedStages.filter((s) => s.isCorrect).length} of {game.totalStages} correctly.
           </p>
-        </article>
+        </div>
       )}
 
       {currentStage && !isEnded && stagePhase === 'interstitial' && (
@@ -97,9 +96,9 @@ export function GamePage() {
       {completedStages.length > 0 && (
         <details open={isEnded}>
           <summary>Completed Stages ({completedStages.length})</summary>
-          <ul>
+          <ul className="mt-3 space-y-1">
             {completedStages.map((s) => (
-              <li key={s.stageNumber} style={{ color: s.isCorrect ? 'var(--pico-color-green-500)' : 'var(--pico-color-red-500)' }}>
+              <li key={s.stageNumber} className={s.isCorrect ? 'text-success' : 'text-error'}>
                 Stage {s.stageNumber} &mdash; {s.isCorrect ? 'correct' : 'incorrect'}
               </li>
             ))}
@@ -109,18 +108,18 @@ export function GamePage() {
 
       <details>
         <summary>Team ({players.length} players)</summary>
-        <ul>
+        <ul className="mt-3 space-y-1">
           {players.map((p) => (
             <li key={p.id}>{p.name}</li>
           ))}
         </ul>
       </details>
 
-      <p style={{ textAlign: 'center', marginTop: '2rem' }}>
-        <a href="#" onClick={(e) => { e.preventDefault(); handleLogout() }} style={{ fontSize: 'small' }}>
+      <p className="text-center mt-8">
+        <a href="#" onClick={(e) => { e.preventDefault(); handleLogout() }} className="text-secondary text-xs uppercase tracking-widest">
           Leave game
         </a>
       </p>
-    </main>
+    </PageContainer>
   )
 }

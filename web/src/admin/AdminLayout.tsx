@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getMe, logout } from './adminApi'
+import { LoadingPage } from '../components/Spinner'
 
 function navigate(path: string) {
   window.history.pushState(null, '', path)
@@ -24,34 +25,34 @@ export function AdminLayout({ client, children }: { client?: string; children: R
   }
 
   if (authed === null) {
-    return (
-      <main className="container">
-        <p aria-busy="true">Loading...</p>
-      </main>
-    )
+    return <LoadingPage />
   }
 
   if (!authed) return null
 
   return (
-    <main className="container">
-      <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <h1 style={{ margin: 0 }}>
-            <a href="/admin/clients" onClick={(e) => { e.preventDefault(); navigate('/admin/clients') }} style={{ textDecoration: 'none' }}>
+    <main className="page-wide">
+      <nav className="flex justify-between items-center mb-8">
+        <div className="flex items-center gap-6">
+          <h1 className="m-0">
+            <a href="/admin/clients" onClick={(e) => { e.preventDefault(); navigate('/admin/clients') }} className="no-underline">
               CityQuest Admin
             </a>
           </h1>
-          <a href="/admin/scenarios" onClick={(e) => { e.preventDefault(); navigate('/admin/scenarios') }}>Scenarios</a>
+          <a href="/admin/scenarios" onClick={(e) => { e.preventDefault(); navigate('/admin/scenarios') }} className="text-sm uppercase tracking-widest font-bold">
+            Scenarios
+          </a>
           {client && (
             <>
-              <span style={{ color: 'var(--pico-muted-color)' }}>/</span>
+              <span className="text-secondary">/</span>
               <strong>{client}</strong>
-              <a href={`/admin/clients/${client}/games`} onClick={(e) => { e.preventDefault(); navigate(`/admin/clients/${client}/games`) }}>Games</a>
+              <a href={`/admin/clients/${client}/games`} onClick={(e) => { e.preventDefault(); navigate(`/admin/clients/${client}/games`) }} className="text-sm uppercase tracking-widest font-bold">
+                Games
+              </a>
             </>
           )}
         </div>
-        <button className="outline secondary" onClick={handleLogout} style={{ width: 'auto' }}>
+        <button className="btn-secondary btn-sm" onClick={handleLogout}>
           Log out
         </button>
       </nav>

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { getScenario, createScenario, updateScenario } from './adminApi'
 import type { Stage, ScenarioRequest } from './adminTypes'
+import { LoadingPage, Spinner } from '../components/Spinner'
+import { ErrorMessage } from '../components/ErrorMessage'
 
 function navigate(path: string) {
   window.history.pushState(null, '', path)
@@ -99,117 +101,119 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
   }
 
   if (loading) {
-    return <p aria-busy="true">Loading scenario...</p>
+    return <LoadingPage message="Loading scenario..." />
   }
 
   return (
     <>
       <h2>{id ? 'Edit Scenario' : 'New Scenario'}</h2>
-      {error && <p role="alert" style={{ color: 'var(--pico-color-red-500)' }}>{error}</p>}
-      <form onSubmit={handleSubmit}>
-        <div className="grid">
-          <label>
-            Name
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} required />
-          </label>
-          <label>
-            City
-            <input type="text" value={city} onChange={(e) => setCity(e.target.value)} required />
-          </label>
+      {error && <ErrorMessage message={error} />}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="input-label" htmlFor="sc-name">Name</label>
+            <input id="sc-name" className="input" type="text" value={name} onChange={(e) => setName(e.target.value)} required />
+          </div>
+          <div>
+            <label className="input-label" htmlFor="sc-city">City</label>
+            <input id="sc-city" className="input" type="text" value={city} onChange={(e) => setCity(e.target.value)} required />
+          </div>
         </div>
-        <label>
-          Description
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
-        </label>
+        <div>
+          <label className="input-label" htmlFor="sc-desc">Description</label>
+          <textarea id="sc-desc" className="input" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
+        </div>
 
-        <div className="grid">
-          <label>
-            Mode
-            <select value={mode} onChange={(e) => setMode(e.target.value)}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+          <div>
+            <label className="input-label" htmlFor="sc-mode">Mode</label>
+            <select id="sc-mode" className="input" value={mode} onChange={(e) => setMode(e.target.value)}>
               {Object.entries(modeLabels).map(([value, label]) => (
                 <option key={value} value={value}>{label}</option>
               ))}
             </select>
-          </label>
+          </div>
           {mode === 'supervised' && (
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingTop: '1.75rem' }}>
-              <input type="checkbox" checked={hasQuestions} onChange={(e) => setHasQuestions(e.target.checked)} role="switch" />
-              Include questions at each stage
+            <label className="flex items-center gap-2 pb-1 cursor-pointer">
+              <input type="checkbox" checked={hasQuestions} onChange={(e) => setHasQuestions(e.target.checked)} />
+              <span className="text-sm">Include questions at each stage</span>
             </label>
           )}
         </div>
 
-        <h3>Stages</h3>
+        <h3 className="mt-8">Stages</h3>
         {stages.map((stage, i) => (
-          <article key={i} style={{ padding: '1rem', marginBottom: '1rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+          <div key={i} className="card">
+            <div className="flex justify-between items-center mb-4">
               <strong>Stage {i + 1}</strong>
-              <div>
-                <button type="button" className="outline secondary" onClick={() => moveStage(i, -1)} disabled={i === 0} style={{ width: 'auto', padding: '0.15rem 0.4rem', marginRight: '0.25rem' }}>
+              <div className="flex gap-1">
+                <button type="button" className="btn-ghost btn-sm" onClick={() => moveStage(i, -1)} disabled={i === 0}>
                   &uarr;
                 </button>
-                <button type="button" className="outline secondary" onClick={() => moveStage(i, 1)} disabled={i === stages.length - 1} style={{ width: 'auto', padding: '0.15rem 0.4rem', marginRight: '0.25rem' }}>
+                <button type="button" className="btn-ghost btn-sm" onClick={() => moveStage(i, 1)} disabled={i === stages.length - 1}>
                   &darr;
                 </button>
-                <button type="button" className="outline secondary" onClick={() => removeStage(i)} disabled={stages.length <= 1} style={{ width: 'auto', padding: '0.15rem 0.4rem' }}>
+                <button type="button" className="btn-danger btn-sm" onClick={() => removeStage(i)} disabled={stages.length <= 1}>
                   &times;
                 </button>
               </div>
             </div>
-            <label>
-              Location
-              <input type="text" value={stage.location} onChange={(e) => updateStage(i, 'location', e.target.value)} required />
-            </label>
-            <label>
-              Clue
-              <textarea value={stage.clue} onChange={(e) => updateStage(i, 'clue', e.target.value)} rows={2} />
-            </label>
-            {(mode === 'qr_quiz' || mode === 'qr_hunt') && (
-              <label>
-                Unlock Code
-                <input type="text" value={stage.unlockCode || ''} onChange={(e) => updateStage(i, 'unlockCode', e.target.value)} placeholder="Auto-generated if empty" />
-              </label>
-            )}
-            {mode === 'math_puzzle' && (
-              <label>
-                Location Number
-                <input type="number" value={stage.locationNumber || ''} onChange={(e) => updateStage(i, 'locationNumber', parseInt(e.target.value) || 0)} required />
-              </label>
-            )}
-            {modeNeedsQuestion(mode, hasQuestions) && (
-              <>
-                <label>
-                  Question
-                  <input type="text" value={stage.question} onChange={(e) => updateStage(i, 'question', e.target.value)} required />
-                </label>
-                <label>
-                  Correct Answer
-                  <input type="text" value={stage.correctAnswer} onChange={(e) => updateStage(i, 'correctAnswer', e.target.value)} required />
-                </label>
-              </>
-            )}
-            <div className="grid">
-              <label>
-                Latitude
-                <input type="number" step="any" value={stage.lat || ''} onChange={(e) => updateStage(i, 'lat', parseFloat(e.target.value) || 0)} />
-              </label>
-              <label>
-                Longitude
-                <input type="number" step="any" value={stage.lng || ''} onChange={(e) => updateStage(i, 'lng', parseFloat(e.target.value) || 0)} />
-              </label>
+            <div className="space-y-3">
+              <div>
+                <label className="input-label">Location</label>
+                <input className="input" type="text" value={stage.location} onChange={(e) => updateStage(i, 'location', e.target.value)} required />
+              </div>
+              <div>
+                <label className="input-label">Clue</label>
+                <textarea className="input" value={stage.clue} onChange={(e) => updateStage(i, 'clue', e.target.value)} rows={2} />
+              </div>
+              {(mode === 'qr_quiz' || mode === 'qr_hunt') && (
+                <div>
+                  <label className="input-label">Unlock Code</label>
+                  <input className="input" type="text" value={stage.unlockCode || ''} onChange={(e) => updateStage(i, 'unlockCode', e.target.value)} placeholder="Auto-generated if empty" />
+                </div>
+              )}
+              {mode === 'math_puzzle' && (
+                <div>
+                  <label className="input-label">Location Number</label>
+                  <input className="input" type="number" value={stage.locationNumber || ''} onChange={(e) => updateStage(i, 'locationNumber', parseInt(e.target.value) || 0)} required />
+                </div>
+              )}
+              {modeNeedsQuestion(mode, hasQuestions) && (
+                <>
+                  <div>
+                    <label className="input-label">Question</label>
+                    <input className="input" type="text" value={stage.question} onChange={(e) => updateStage(i, 'question', e.target.value)} required />
+                  </div>
+                  <div>
+                    <label className="input-label">Correct Answer</label>
+                    <input className="input" type="text" value={stage.correctAnswer} onChange={(e) => updateStage(i, 'correctAnswer', e.target.value)} required />
+                  </div>
+                </>
+              )}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="input-label">Latitude</label>
+                  <input className="input" type="number" step="any" value={stage.lat || ''} onChange={(e) => updateStage(i, 'lat', parseFloat(e.target.value) || 0)} />
+                </div>
+                <div>
+                  <label className="input-label">Longitude</label>
+                  <input className="input" type="number" step="any" value={stage.lng || ''} onChange={(e) => updateStage(i, 'lng', parseFloat(e.target.value) || 0)} />
+                </div>
+              </div>
             </div>
-          </article>
+          </div>
         ))}
 
-        <button type="button" className="outline" onClick={addStage} style={{ marginBottom: '1rem' }}>
+        <button type="button" className="btn-secondary w-full" onClick={addStage}>
           Add Stage
         </button>
 
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <button type="submit" disabled={saving} aria-busy={saving}>
-            {saving ? 'Saving...' : id ? 'Update Scenario' : 'Create Scenario'}
+        <div className="flex gap-4 mt-6">
+          <button type="submit" disabled={saving} className="btn">
+            {saving ? <Spinner /> : id ? 'Update Scenario' : 'Create Scenario'}
           </button>
-          <button type="button" className="secondary" onClick={() => navigate('/admin/scenarios')}>
+          <button type="button" className="btn-secondary" onClick={() => navigate('/admin/scenarios')}>
             Cancel
           </button>
         </div>

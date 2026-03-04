@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { login } from './adminApi'
+import { PageContainer } from '../components/PageContainer'
+import { Spinner } from '../components/Spinner'
 
 export function AdminLoginPage() {
   const [email, setEmail] = useState('')
@@ -22,12 +24,14 @@ export function AdminLoginPage() {
   }
 
   return (
-    <main className="container" style={{ maxWidth: 400 }}>
+    <PageContainer>
       <h1>Admin Login</h1>
-      <form onSubmit={handleSubmit}>
-        <label>
-          Email
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="input-label" htmlFor="email">Email</label>
           <input
+            id="email"
+            className="input"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -35,21 +39,23 @@ export function AdminLoginPage() {
             autoFocus
             required
           />
-        </label>
-        <label>
-          Password
+        </div>
+        <div>
+          <label className="input-label" htmlFor="password">Password</label>
           <input
+            id="password"
+            className="input"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
           />
-        </label>
-        {error && <small style={{ color: 'var(--pico-color-red-500)' }}>{error}</small>}
-        <button type="submit" disabled={loading} aria-busy={loading}>
-          {loading ? 'Logging in...' : 'Log in'}
+        </div>
+        {error && <p className="text-feedback-error">{error}</p>}
+        <button type="submit" disabled={loading} className="btn w-full">
+          {loading ? <Spinner /> : 'Log in'}
         </button>
       </form>
-    </main>
+    </PageContainer>
   )
 }

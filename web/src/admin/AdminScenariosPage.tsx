@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { listScenarios, deleteScenario } from './adminApi'
 import type { ScenarioSummary } from './adminTypes'
+import { LoadingPage } from '../components/Spinner'
+import { ErrorMessage } from '../components/ErrorMessage'
 
 function navigate(path: string) {
   window.history.pushState(null, '', path)
@@ -30,26 +32,26 @@ export function AdminScenariosPage() {
   }
 
   if (loading) {
-    return <p aria-busy="true">Loading scenarios...</p>
+    return <LoadingPage message="Loading scenarios..." />
   }
 
   if (error) {
-    return <p role="alert">{error}</p>
+    return <ErrorMessage message={error} />
   }
 
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h2 style={{ margin: 0 }}>Scenarios</h2>
-        <button onClick={() => navigate('/admin/scenarios/new')} style={{ width: 'auto' }}>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="m-0">Scenarios</h2>
+        <button onClick={() => navigate('/admin/scenarios/new')} className="btn">
           New Scenario
         </button>
       </div>
 
       {scenarios.length === 0 ? (
-        <p>No scenarios yet.</p>
+        <p className="text-secondary">No scenarios yet.</p>
       ) : (
-        <table>
+        <table className="admin-table">
           <thead>
             <tr>
               <th>Name</th>
@@ -77,9 +79,8 @@ export function AdminScenariosPage() {
                 <td>{new Date(s.createdAt).toLocaleDateString()}</td>
                 <td>
                   <button
-                    className="outline secondary"
+                    className="btn-danger btn-sm"
                     onClick={() => handleDelete(s.id, s.name)}
-                    style={{ width: 'auto', padding: '0.25rem 0.5rem', fontSize: 'small' }}
                   >
                     Delete
                   </button>

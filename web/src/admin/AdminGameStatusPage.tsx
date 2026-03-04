@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { getGameStatus } from './adminApi'
 import type { GameStatus } from './adminTypes'
+import { LoadingPage } from '../components/Spinner'
+import { ErrorMessage } from '../components/ErrorMessage'
 
 function navigate(path: string) {
   window.history.pushState(null, '', path)
@@ -25,51 +27,51 @@ export function AdminGameStatusPage({ client, id }: { client: string; id: string
     return () => { active = false; clearInterval(interval) }
   }, [client, id])
 
-  if (error) return <p role="alert" style={{ color: 'var(--pico-color-red-500)' }}>{error}</p>
-  if (!game) return <p aria-busy="true">Loading...</p>
+  if (error) return <ErrorMessage message={error} />
+  if (!game) return <LoadingPage />
 
   const totalPlayers = game.teams.reduce((sum, t) => sum + t.players.length, 0)
 
   return (
     <>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: '1rem', flexWrap: 'wrap' }}>
-        <h2 style={{ margin: 0 }}>{game.scenarioName}</h2>
-        <span>
+      <div className="flex items-baseline gap-4 flex-wrap mb-2">
+        <h2 className="m-0">{game.scenarioName}</h2>
+        <span className="text-sm">
           <strong>Status:</strong> {game.status}
         </span>
         {game.timerEnabled && (
-          <span>
+          <span className="text-sm">
             <strong>Timer:</strong> {game.timerMinutes}m (stage: {game.stageTimerMinutes}m)
           </span>
         )}
-        <span>
+        <span className="text-sm">
           <strong>Players:</strong> {totalPlayers}
         </span>
-        <span>
+        <span className="text-sm">
           <strong>Stages:</strong> {game.totalStages}
         </span>
       </div>
       {game.startedAt && (
-        <p style={{ fontSize: 'small', marginTop: '0.5rem' }}>
+        <p className="text-secondary text-xs mb-4">
           Started: {new Date(game.startedAt).toLocaleString()}
         </p>
       )}
 
-      <div style={{ display: 'flex', gap: '0.5rem', margin: '1rem 0' }}>
-        <button className="outline" style={{ width: 'auto' }} onClick={() => navigate(`/admin/clients/${client}/games/${id}/edit`)}>
+      <div className="flex gap-2 mb-8">
+        <button className="btn-secondary btn-sm" onClick={() => navigate(`/admin/clients/${client}/games/${id}/edit`)}>
           Edit Game
         </button>
-        <button className="outline secondary" style={{ width: 'auto' }} onClick={() => navigate(`/admin/clients/${client}/games`)}>
+        <button className="btn-ghost btn-sm" onClick={() => navigate(`/admin/clients/${client}/games`)}>
           Back to Games
         </button>
       </div>
 
       {game.teams.length === 0 ? (
-        <p>No teams yet.</p>
+        <p className="text-secondary">No teams yet.</p>
       ) : (
         <>
           <h3>Scoreboard</h3>
-          <table>
+          <table className="admin-table mb-8">
             <thead>
               <tr>
                 <th>Team</th>
@@ -94,18 +96,18 @@ export function AdminGameStatusPage({ client, id }: { client: string; id: string
 
           <h3>Team Details</h3>
           {game.teams.map((team) => (
-            <article key={team.id} style={{ marginBottom: '1rem' }}>
-              <header>
-                <strong>{team.name}</strong>
-                {team.guideName && <span> &mdash; Guide: {team.guideName}</span>}
-                <span style={{ float: 'right' }}>
-                  {team.completedStages} pts
-                </span>
-              </header>
+            <div key={team.id} className="card">
+              <div className="flex justify-between items-center mb-3">
+                <div>
+                  <strong>{team.name}</strong>
+                  {team.guideName && <span className="text-secondary"> &mdash; Guide: {team.guideName}</span>}
+                </div>
+                <span className="font-bold">{team.completedStages} pts</span>
+              </div>
               {team.players.length === 0 ? (
-                <p style={{ margin: 0 }}>No players yet.</p>
+                <p className="text-secondary text-sm m-0">No players yet.</p>
               ) : (
-                <table>
+                <table className="admin-table">
                   <thead>
                     <tr>
                       <th>Player</th>
@@ -122,7 +124,7 @@ export function AdminGameStatusPage({ client, id }: { client: string; id: string
                   </tbody>
                 </table>
               )}
-            </article>
+            </div>
           ))}
         </>
       )}

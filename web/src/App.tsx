@@ -9,6 +9,7 @@ import { AdminScenarioEditorPage } from './admin/AdminScenarioEditorPage'
 import { AdminGamesPage } from './admin/AdminGamesPage'
 import { AdminGameEditorPage } from './admin/AdminGameEditorPage'
 import { AdminGameStatusPage } from './admin/AdminGameStatusPage'
+import { PageContainer } from './components/PageContainer'
 
 type Route =
   | { page: 'join'; client: string; token: string }
@@ -99,10 +100,10 @@ export default function App() {
       return <AdminLayout client={route.client}><AdminGameEditorPage client={route.client} id={route.id} /></AdminLayout>
     default:
       return (
-        <main className="container" style={{ maxWidth: 480, textAlign: 'center' }}>
+        <PageContainer className="text-center">
           <h1>CityQuest</h1>
-          <p>Scan your team's QR code or use the join link to get started.</p>
-        </main>
+          <p className="text-secondary">Scan your team's QR code or use the join link to get started.</p>
+        </PageContainer>
       )
   }
 }

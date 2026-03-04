@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { listScenarios, getGame, createGame, updateGame, createTeam, updateTeam, deleteTeam } from './adminApi'
 import type { ScenarioSummary, GameRequest, TeamItem, TeamRequest } from './adminTypes'
+import { LoadingPage, Spinner } from '../components/Spinner'
+import { ErrorMessage } from '../components/ErrorMessage'
 
 function navigate(path: string) {
   window.history.pushState(null, '', path)
@@ -130,67 +132,67 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
   }
 
   if (loading) {
-    return <p aria-busy="true">Loading...</p>
+    return <LoadingPage />
   }
 
   return (
     <>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: '1rem' }}>
-        <h2 style={{ margin: 0 }}>{id ? 'Edit Game' : 'New Game'}</h2>
+      <div className="flex items-baseline gap-4 mb-4">
+        <h2 className="m-0">{id ? 'Edit Game' : 'New Game'}</h2>
         {id && (
-          <button className="outline" style={{ width: 'auto', padding: '0.25rem 0.75rem', fontSize: 'small' }} onClick={() => navigate(`/admin/clients/${client}/games/${id}/status`)}>
+          <button className="btn-ghost btn-sm" onClick={() => navigate(`/admin/clients/${client}/games/${id}/status`)}>
             View Status
           </button>
         )}
       </div>
-      {error && <p role="alert" style={{ color: 'var(--pico-color-red-500)' }}>{error}</p>}
+      {error && <ErrorMessage message={error} />}
       {startedAt && (
-        <p><small>Started: {new Date(startedAt).toLocaleString()}</small></p>
+        <p className="text-secondary text-sm mb-4">Started: {new Date(startedAt).toLocaleString()}</p>
       )}
-      <form onSubmit={handleSubmit}>
-        <label>
-          Scenario
-          <select value={scenarioId} onChange={(e) => setScenarioId(e.target.value)} required disabled={!!id && status !== 'draft'}>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="input-label">Scenario</label>
+          <select className="input" value={scenarioId} onChange={(e) => setScenarioId(e.target.value)} required disabled={!!id && status !== 'draft'}>
             {scenarios.map((s) => (
               <option key={s.id} value={s.id}>{s.name} ({s.city})</option>
             ))}
           </select>
-          {!!id && status !== 'draft' && <small>Scenario cannot be changed after game is activated</small>}
-        </label>
-        <label>
-          Status
-          <select value={status} onChange={(e) => setStatus(e.target.value)}>
+          {!!id && status !== 'draft' && <p className="text-secondary text-xs mt-1">Scenario cannot be changed after game is activated</p>}
+        </div>
+        <div>
+          <label className="input-label">Status</label>
+          <select className="input" value={status} onChange={(e) => setStatus(e.target.value)}>
             {statuses.map((s) => (
               <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
             ))}
           </select>
-        </label>
-        <label>
+        </div>
+        <label className="flex items-center gap-2 cursor-pointer">
           <input type="checkbox" checked={supervised} onChange={(e) => setSupervised(e.target.checked)} />
-          Supervised game
+          <span className="text-sm">Supervised game</span>
         </label>
-        <label>
+        <label className="flex items-center gap-2 cursor-pointer">
           <input type="checkbox" checked={timerEnabled} onChange={(e) => setTimerEnabled(e.target.checked)} />
-          Enable timer
+          <span className="text-sm">Enable timer</span>
         </label>
         {timerEnabled && (
-          <div className="grid">
-            <label>
-              Game timer (minutes)
-              <input type="number" min="1" value={timerMinutes} onChange={(e) => setTimerMinutes(parseInt(e.target.value) || 120)} required />
-            </label>
-            <label>
-              Stage timer (minutes)
-              <input type="number" min="1" value={stageTimerMinutes} onChange={(e) => setStageTimerMinutes(parseInt(e.target.value) || 10)} required />
-            </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="input-label">Game timer (minutes)</label>
+              <input className="input" type="number" min="1" value={timerMinutes} onChange={(e) => setTimerMinutes(parseInt(e.target.value) || 120)} required />
+            </div>
+            <div>
+              <label className="input-label">Stage timer (minutes)</label>
+              <input className="input" type="number" min="1" value={stageTimerMinutes} onChange={(e) => setStageTimerMinutes(parseInt(e.target.value) || 10)} required />
+            </div>
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <button type="submit" disabled={saving} aria-busy={saving}>
-            {saving ? 'Saving...' : id ? 'Update Game' : 'Create Game'}
+        <div className="flex gap-4">
+          <button type="submit" disabled={saving} className="btn">
+            {saving ? <Spinner /> : id ? 'Update Game' : 'Create Game'}
           </button>
-          <button type="button" className="secondary" onClick={() => navigate(`/admin/clients/${client}/games`)}>
+          <button type="button" className="btn-secondary" onClick={() => navigate(`/admin/clients/${client}/games`)}>
             Cancel
           </button>
         </div>
@@ -202,9 +204,9 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
           <h3>Teams</h3>
 
           {teams.length === 0 ? (
-            <p>No teams yet.</p>
+            <p className="text-secondary">No teams yet.</p>
           ) : (
-            <table>
+            <table className="admin-table">
               <thead>
                 <tr>
                   <th>Name</th>
@@ -224,7 +226,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
                   <tr key={t.id}>
                     <td>{t.name}</td>
                     <td>
-                      <a href={joinPath} target="_blank" rel="noopener noreferrer" style={{ fontSize: 'small', wordBreak: 'break-all' }}>
+                      <a href={joinPath} target="_blank" rel="noopener noreferrer" className="text-xs break-all">
                         {joinUrl}
                       </a>
                     </td>
@@ -234,7 +236,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
                           const superPath = `/join/${client}/${t.supervisorToken}`
                           const superUrl = `${window.location.origin}${superPath}`
                           return (
-                            <a href={superPath} target="_blank" rel="noopener noreferrer" style={{ fontSize: 'small', wordBreak: 'break-all' }}>
+                            <a href={superPath} target="_blank" rel="noopener noreferrer" className="text-xs break-all">
                               {superUrl}
                             </a>
                           )
@@ -244,20 +246,18 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
                     {selectedMode === 'math_puzzle' && <td>{t.teamSecret || '-'}</td>}
                     <td>{t.guideName || '-'}</td>
                     <td>{t.playerCount}</td>
-                    <td style={{ whiteSpace: 'nowrap' }}>
+                    <td className="whitespace-nowrap">
                       <button
-                        className="outline"
+                        className="btn-ghost btn-sm mr-1"
                         onClick={() => handleUpdateTeam(t)}
-                        style={{ width: 'auto', padding: '0.25rem 0.5rem', fontSize: 'small', marginRight: '0.25rem' }}
                       >
                         Edit
                       </button>
                       <button
-                        className="outline secondary"
+                        className="btn-danger btn-sm"
                         onClick={() => handleDeleteTeam(t)}
                         disabled={t.playerCount > 0}
                         title={t.playerCount > 0 ? 'Cannot delete team with players' : ''}
-                        style={{ width: 'auto', padding: '0.25rem 0.5rem', fontSize: 'small' }}
                       >
                         Delete
                       </button>
@@ -271,23 +271,23 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
 
           <details>
             <summary>Add Team</summary>
-            <form onSubmit={handleAddTeam} style={{ marginTop: '0.5rem' }}>
-              <div className="grid">
-                <label>
-                  Team Name
-                  <input type="text" value={newTeamName} onChange={(e) => setNewTeamName(e.target.value)} required />
-                </label>
-                <label>
-                  Join Token (optional)
-                  <input type="text" value={newTeamToken} onChange={(e) => setNewTeamToken(e.target.value)} placeholder="Auto-generated if blank" />
-                </label>
-                <label>
-                  Guide Name (optional)
-                  <input type="text" value={newTeamGuide} onChange={(e) => setNewTeamGuide(e.target.value)} />
-                </label>
+            <form onSubmit={handleAddTeam} className="mt-4 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="input-label">Team Name</label>
+                  <input className="input" type="text" value={newTeamName} onChange={(e) => setNewTeamName(e.target.value)} required />
+                </div>
+                <div>
+                  <label className="input-label">Join Token (optional)</label>
+                  <input className="input" type="text" value={newTeamToken} onChange={(e) => setNewTeamToken(e.target.value)} placeholder="Auto-generated if blank" />
+                </div>
+                <div>
+                  <label className="input-label">Guide Name (optional)</label>
+                  <input className="input" type="text" value={newTeamGuide} onChange={(e) => setNewTeamGuide(e.target.value)} />
+                </div>
               </div>
-              <button type="submit" disabled={addingTeam} aria-busy={addingTeam} style={{ width: 'auto' }}>
-                {addingTeam ? 'Adding...' : 'Add Team'}
+              <button type="submit" disabled={addingTeam} className="btn">
+                {addingTeam ? <Spinner /> : 'Add Team'}
               </button>
             </form>
           </details>

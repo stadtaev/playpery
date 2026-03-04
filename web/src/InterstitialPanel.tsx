@@ -9,14 +9,14 @@ interface Props {
 
 export function InterstitialPanel({ stage, totalStages, isFirstStage, onGoToStage }: Props) {
   return (
-    <article>
-      <header>
+    <div className="card">
+      <div className="card-header">
         Stage {stage.stageNumber} of {totalStages} &mdash; {stage.location}
-      </header>
-      <p><strong>Clue:</strong> {stage.clue}</p>
-      <button onClick={onGoToStage}>
+      </div>
+      <p className="mb-4"><strong>Clue:</strong> {stage.clue}</p>
+      <button onClick={onGoToStage} className="btn btn-accent w-full">
         {isFirstStage ? 'Start Quest' : 'Go to Next Stage'}
       </button>
-    </article>
+    </div>
   )
 }

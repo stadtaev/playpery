@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react'
 import { lookupTeam, joinTeam } from './api'
 import type { TeamLookup } from './types'
+import { PageContainer } from './components/PageContainer'
+import { LoadingPage, Spinner } from './components/Spinner'
+import { ErrorMessage } from './components/ErrorMessage'
 
 export function JoinPage({ client, joinToken }: { client: string; joinToken: string }) {
   const [team, setTeam] = useState<TeamLookup | null>(null)
@@ -35,35 +38,37 @@ export function JoinPage({ client, joinToken }: { client: string; joinToken: str
 
   if (error && !team) {
     return (
-      <main className="container">
+      <PageContainer>
         <h1>CityQuest</h1>
-        <p role="alert">{error}</p>
-      </main>
+        <ErrorMessage message={error} />
+      </PageContainer>
     )
   }
 
   if (!team) {
-    return (
-      <main className="container">
-        <p aria-busy="true">Loading team...</p>
-      </main>
-    )
+    return <LoadingPage message="Loading team..." />
   }
 
   return (
-    <main className="container" style={{ maxWidth: 480 }}>
+    <PageContainer>
       <h1>CityQuest</h1>
-      <hgroup>
-        <h2>Join {team.name}</h2>
-        <p>{team.gameName}</p>
-      </hgroup>
+      <div className="mb-6">
+        <h2 className="mb-1">Join {team.name}</h2>
+        <p className="text-secondary">{team.gameName}</p>
+      </div>
       {team.role === 'supervisor' && (
-        <p><mark>Joining as Supervisor</mark></p>
+        <p>
+          <span className="inline-block bg-primary text-white text-xs font-bold uppercase tracking-widest px-3 py-1">
+            Joining as Supervisor
+          </span>
+        </p>
       )}
-      <form onSubmit={handleJoin}>
-        <label>
-          Your name
+      <form onSubmit={handleJoin} className="space-y-4">
+        <div>
+          <label className="input-label" htmlFor="player-name">Your name</label>
           <input
+            id="player-name"
+            className="input"
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -71,12 +76,12 @@ export function JoinPage({ client, joinToken }: { client: string; joinToken: str
             autoFocus
             required
           />
-        </label>
-        {error && <small style={{ color: 'var(--pico-color-red-500)' }}>{error}</small>}
-        <button type="submit" disabled={joining} aria-busy={joining}>
-          {joining ? 'Joining...' : 'Join Game'}
+        </div>
+        {error && <p className="text-feedback-error">{error}</p>}
+        <button type="submit" disabled={joining} className="btn btn-accent w-full">
+          {joining ? <Spinner /> : 'Join Game'}
         </button>
       </form>
-    </main>
+    </PageContainer>
   )
 }

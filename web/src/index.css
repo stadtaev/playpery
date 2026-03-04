@@ -1,4 +1,273 @@
-/* Pico.css handles everything. Just a few tweaks. */
-body {
-  min-height: 100vh;
+@import "tailwindcss";
+
+/* ── ASOS-inspired design tokens ── */
+@theme {
+  --font-sans: "DM Sans", sans-serif;
+
+  --color-primary: #2d2d2d;
+  --color-secondary: #767676;
+  --color-success: #018849;
+  --color-error: #d4351c;
+  --color-border: #ddd;
+  --color-border-focus: #2d2d2d;
+  --color-bg: #ffffff;
+  --color-bg-muted: #f5f5f5;
+
+  --radius-none: 0px;
+}
+
+/* ── Base layer ── */
+@layer base {
+  body {
+    @apply font-sans text-primary bg-bg antialiased min-h-screen;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-bold tracking-tight text-primary;
+    line-height: 1.2;
+  }
+
+  h1 { font-size: 1.75rem; }
+  h2 { font-size: 1.375rem; }
+  h3 { font-size: 1.125rem; }
+
+  a {
+    @apply text-primary underline underline-offset-2;
+  }
+
+  a:hover {
+    @apply text-secondary;
+  }
+
+  hr {
+    @apply border-border my-8;
+  }
+
+  details {
+    @apply border border-border p-4 my-4;
+  }
+
+  summary {
+    @apply font-bold uppercase text-xs tracking-widest cursor-pointer select-none;
+  }
+}
+
+/* ── Component classes (plain CSS, no @apply self-refs) ── */
+@layer components {
+  /* Page containers */
+  .page {
+    @apply mx-auto px-5 py-8;
+    max-width: 480px;
+  }
+
+  .page-md {
+    @apply mx-auto px-5 py-8;
+    max-width: 600px;
+  }
+
+  .page-wide {
+    @apply mx-auto px-6 py-8;
+    max-width: 960px;
+  }
+
+  /* Button base */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-primary);
+    color: white;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    padding: 0.75rem 1.5rem;
+    border: 1px solid var(--color-primary);
+    transition: background-color 150ms;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .btn:hover:not(:disabled) {
+    background-color: #1a1a1a;
+  }
+
+  .btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .btn-accent {
+    background-color: var(--color-success);
+    color: white;
+    border-color: var(--color-success);
+  }
+
+  .btn-accent:hover:not(:disabled) {
+    background-color: #016b3a;
+  }
+
+  .btn-secondary {
+    background-color: white;
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    background-color: var(--color-bg-muted);
+  }
+
+  .btn-ghost {
+    background-color: transparent;
+    color: var(--color-primary);
+    border-color: transparent;
+  }
+
+  .btn-ghost:hover:not(:disabled) {
+    background-color: var(--color-bg-muted);
+  }
+
+  .btn-danger {
+    background-color: white;
+    color: var(--color-error);
+    border-color: var(--color-error);
+  }
+
+  .btn-danger:hover:not(:disabled) {
+    background-color: var(--color-error);
+    color: white;
+  }
+
+  .btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 10px;
+  }
+
+  /* Inputs */
+  .input {
+    display: block;
+    width: 100%;
+    border: 1px solid var(--color-border);
+    background-color: white;
+    color: var(--color-primary);
+    padding: 0.625rem 0.75rem;
+    font-size: 0.875rem;
+    font-family: var(--font-sans);
+    outline: none;
+  }
+
+  .input::placeholder {
+    color: var(--color-secondary);
+  }
+
+  .input:focus {
+    border-color: var(--color-border-focus);
+  }
+
+  select.input {
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%3E%3Cpath%20fill%3D%22%23767676%22%20d%3D%22M6%208L1%203h10z%22%2F%3E%3C%2Fsvg%3E');
+    background-size: 12px;
+    background-position: right 12px center;
+    background-repeat: no-repeat;
+    padding-right: 2rem;
+  }
+
+  textarea.input {
+    resize: vertical;
+    min-height: 80px;
+  }
+
+  .input-label {
+    display: block;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--color-secondary);
+    margin-bottom: 0.375rem;
+  }
+
+  /* Cards */
+  .card {
+    border: 1px solid var(--color-border);
+    padding: 1.5rem;
+    margin: 1rem 0;
+  }
+
+  .card-header {
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--color-secondary);
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  /* Tables */
+  .admin-table {
+    @apply w-full text-sm;
+  }
+
+  .admin-table th {
+    text-align: left;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--color-secondary);
+    border-bottom: 2px solid var(--color-primary);
+    padding-bottom: 0.5rem;
+  }
+
+  .admin-table td {
+    border-bottom: 1px solid var(--color-border);
+    padding: 0.625rem 0;
+    vertical-align: top;
+  }
+
+  .admin-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* Feedback text */
+  .text-feedback-error {
+    color: var(--color-error);
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  .text-feedback-success {
+    color: var(--color-success);
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  /* Spinner */
+  .spinner {
+    display: inline-block;
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 2px solid var(--color-border);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+
+  .spinner-lg {
+    width: 2rem;
+    height: 2rem;
+    border-width: 3px;
+  }
+
+  /* Checkbox override */
+  input[type="checkbox"] {
+    width: 1rem;
+    height: 1rem;
+    accent-color: var(--color-primary);
+  }
 }
