@@ -762,17 +762,17 @@ func TestScenarioModeValidation(t *testing.T) {
 			},
 		},
 		{
-			name: "guided with questions requires question",
+			name: "supervised with questions requires question",
 			req: AdminScenarioRequest{
-				Name: "Test", City: "Lima", Mode: "guided", HasQuestions: true,
+				Name: "Test", City: "Lima", Mode: "supervised", HasQuestions: true,
 				Stages: []AdminStage{{Location: "A"}},
 			},
 			wantErr: "each stage must have a question",
 		},
 		{
-			name: "guided without questions is ok",
+			name: "supervised without questions is ok",
 			req: AdminScenarioRequest{
-				Name: "Test", City: "Lima", Mode: "guided",
+				Name: "Test", City: "Lima", Mode: "supervised",
 				Stages: []AdminStage{{Location: "A"}},
 			},
 		},
@@ -834,14 +834,14 @@ func TestScenarioModeValidation(t *testing.T) {
 	})
 
 	// Verify default mode is set.
-	t.Run("empty mode defaults to classic", func(t *testing.T) {
+	t.Run("empty mode defaults to supervised", func(t *testing.T) {
 		req := AdminScenarioRequest{
 			Name: "Test", City: "Lima",
-			Stages: []AdminStage{{Location: "A", Question: "Q?", CorrectAnswer: "A"}},
+			Stages: []AdminStage{{Location: "A"}},
 		}
 		req.validate()
-		if req.Mode != "classic" {
-			t.Errorf("expected mode 'classic', got %q", req.Mode)
+		if req.Mode != "supervised" {
+			t.Errorf("expected mode 'supervised', got %q", req.Mode)
 		}
 	})
 }

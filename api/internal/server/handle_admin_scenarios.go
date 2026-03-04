@@ -16,7 +16,7 @@ var validModes = map[string]bool{
 	"qr_quiz":      true,
 	"qr_hunt":      true,
 	"math_puzzle":  true,
-	"guided":       true,
+	"supervised":   true,
 }
 
 type AdminScenarioSummary struct {
@@ -79,16 +79,16 @@ func (req *AdminScenarioRequest) validate() string {
 		return "city is required"
 	}
 	if req.Mode == "" {
-		req.Mode = "classic"
+		req.Mode = "supervised"
 	}
 	if !validModes[req.Mode] {
-		return "mode must be one of: classic, qr_quiz, qr_hunt, math_puzzle, guided"
+		return "mode must be one of: classic, qr_quiz, qr_hunt, math_puzzle, supervised"
 	}
 	if len(req.Stages) == 0 {
 		return "at least one stage is required"
 	}
 
-	needsQuestion := req.Mode == "classic" || req.Mode == "qr_quiz" || (req.Mode == "guided" && req.HasQuestions)
+	needsQuestion := req.Mode == "classic" || req.Mode == "qr_quiz" || (req.Mode == "supervised" && req.HasQuestions)
 	needsUnlockCode := req.Mode == "qr_quiz" || req.Mode == "qr_hunt"
 	needsLocationNumber := req.Mode == "math_puzzle"
 

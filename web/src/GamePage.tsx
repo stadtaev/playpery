@@ -139,11 +139,11 @@ export function GamePage() {
     setFeedback(null)
     try {
       const mode = state!.game.mode
-      const code = mode === 'guided' ? '' : unlockCode.trim()
+      const code = mode === 'supervised' ? '' : unlockCode.trim()
       const resp = await unlockStage(client, code)
       setUnlockCode('')
       if (resp.stageComplete) {
-        // Stage auto-completed (qr_hunt, math_puzzle, guided without questions)
+        // Stage auto-completed (qr_hunt, math_puzzle, supervised without questions)
         setFeedback({ correct: true, message: `Stage ${resp.stageNumber} complete!` })
         setTimeout(() => {
           setStagePhase('interstitial')
@@ -211,7 +211,7 @@ export function GamePage() {
   const { game, team, role, currentStage, completedStages, players } = state
   const isEnded = game.status === 'ended' || (!currentStage && completedStages.length === game.totalStages)
   const mode = game.mode || 'classic'
-  const canAnswer = !game.supervised || role === 'supervisor' || mode === 'guided'
+  const canAnswer = !game.supervised || role === 'supervisor' || mode === 'supervised'
 
   return (
     <main className="container" style={{ maxWidth: 600 }}>
@@ -297,7 +297,7 @@ export function GamePage() {
             </form>
           )}
 
-          {mode === 'guided' && (
+          {mode === 'supervised' && (
             role === 'supervisor' ? (
               <form onSubmit={handleUnlock}>
                 <p>Unlock this stage for your team:</p>

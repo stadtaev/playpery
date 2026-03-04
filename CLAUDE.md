@@ -135,9 +135,9 @@ Startup order: load config → derive DB directory from DB_PATH → open admin D
 - `qr_quiz` — scan QR/enter code to unlock, then answer question
 - `qr_hunt` — scan QR/enter code, stage auto-completes (no question)
 - `math_puzzle` — enter calculated code (teamSecret + locationNumber), stage auto-completes
-- `guided` — supervisor unlocks stage, optionally followed by a question
+- `supervised` — supervisor unlocks stage, optionally followed by a question (default for new scenarios)
 
-Existing data without a `mode` field defaults to `"classic"` at read time (no migration needed).
+Existing data without a `mode` field defaults to `"classic"` at read time (no migration needed). New scenarios default to `"supervised"` mode.
 
 ## API Endpoints
 

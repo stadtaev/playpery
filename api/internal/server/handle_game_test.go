@@ -324,8 +324,8 @@ func TestModeHelpers(t *testing.T) {
 		{"qr_quiz", false, true, true},
 		{"qr_hunt", false, false, true},
 		{"math_puzzle", false, false, true},
-		{"guided", true, true, true},
-		{"guided", false, false, true},
+		{"supervised", true, true, true},
+		{"supervised", false, false, true},
 	}
 	for _, tt := range tests {
 		if got := modeHasQuestion(tt.mode, tt.hasQuestions); got != tt.wantQuestion {
@@ -396,8 +396,8 @@ func TestModeHelpersRejectNoQuestionModes(t *testing.T) {
 	if modeHasQuestion("math_puzzle", false) {
 		t.Error("math_puzzle should not have questions")
 	}
-	if modeHasQuestion("guided", false) {
-		t.Error("guided without hasQuestions should not have questions")
+	if modeHasQuestion("supervised", false) {
+		t.Error("supervised without hasQuestions should not have questions")
 	}
 }
 

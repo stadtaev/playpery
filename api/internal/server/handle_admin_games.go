@@ -195,7 +195,7 @@ func handleAdminCreateGame(admin AdminStore) http.HandlerFunc {
 		req.ScenarioName = scenario.Name
 		req.Mode = scenario.Mode
 		req.HasQuestions = scenario.HasQuestions
-		if req.Mode == "guided" {
+		if req.Mode == "supervised" {
 			req.Supervised = true
 		}
 
@@ -255,7 +255,7 @@ func handleAdminUpdateGame(admin AdminStore) http.HandlerFunc {
 		req.ScenarioName = scenario.Name
 		req.Mode = scenario.Mode
 		req.HasQuestions = scenario.HasQuestions
-		if req.Mode == "guided" {
+		if req.Mode == "supervised" {
 			req.Supervised = true
 		}
 

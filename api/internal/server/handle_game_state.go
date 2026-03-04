@@ -68,7 +68,7 @@ func modeHasQuestion(mode string, hasQuestions bool) bool {
 	switch mode {
 	case "classic", "qr_quiz":
 		return true
-	case "guided":
+	case "supervised":
 		return hasQuestions
 	default:
 		return false
@@ -78,7 +78,7 @@ func modeHasQuestion(mode string, hasQuestions bool) bool {
 // modeRequiresUnlock returns true if the mode requires unlocking before the question/completion.
 func modeRequiresUnlock(mode string) bool {
 	switch mode {
-	case "qr_quiz", "qr_hunt", "math_puzzle", "guided":
+	case "qr_quiz", "qr_hunt", "math_puzzle", "supervised":
 		return true
 	default:
 		return false

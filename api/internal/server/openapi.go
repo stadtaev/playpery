@@ -74,7 +74,7 @@ func newOpenAPISpec() *openapi3.Spec {
 	// POST /api/game/unlock
 	postUnlock, _ := r.NewOperationContext(http.MethodPost, "/api/game/unlock")
 	postUnlock.SetSummary("Unlock stage")
-	postUnlock.SetDescription("Unlock the current stage using a code (QR, math, or guided). Requires Bearer token. Not used in classic mode.")
+	postUnlock.SetDescription("Unlock the current stage using a code (QR, math, or supervised). Requires Bearer token. Not used in classic mode.")
 	postUnlock.AddReqStructure(UnlockRequest{})
 	postUnlock.AddRespStructure(UnlockResponse{}, openapi.WithHTTPStatus(http.StatusOK))
 	postUnlock.AddRespStructure(ErrorResponse{}, openapi.WithHTTPStatus(http.StatusUnauthorized))

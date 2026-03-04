@@ -12,11 +12,11 @@ const modeLabels: Record<string, string> = {
   qr_quiz: 'QR Quiz',
   qr_hunt: 'QR Hunt',
   math_puzzle: 'Math Puzzle',
-  guided: 'Guided',
+  supervised: 'Supervised',
 }
 
 function modeNeedsQuestion(mode: string, hasQuestions: boolean): boolean {
-  return mode === 'classic' || mode === 'qr_quiz' || (mode === 'guided' && hasQuestions)
+  return mode === 'classic' || mode === 'qr_quiz' || (mode === 'supervised' && hasQuestions)
 }
 
 function emptyStage(): Stage {
@@ -27,7 +27,7 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
   const [name, setName] = useState('')
   const [city, setCity] = useState('')
   const [description, setDescription] = useState('')
-  const [mode, setMode] = useState('classic')
+  const [mode, setMode] = useState('supervised')
   const [hasQuestions, setHasQuestions] = useState(false)
   const [stages, setStages] = useState<Stage[]>([emptyStage()])
   const [loading, setLoading] = useState(!!id)
@@ -41,7 +41,7 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
         setName(s.name)
         setCity(s.city)
         setDescription(s.description)
-        setMode(s.mode || 'classic')
+        setMode(s.mode || 'supervised')
         setHasQuestions(s.hasQuestions || false)
         setStages(s.stages.length > 0 ? s.stages : [emptyStage()])
       })
@@ -81,7 +81,7 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
       city,
       description,
       mode,
-      hasQuestions: mode === 'guided' ? hasQuestions : undefined,
+      hasQuestions: mode === 'supervised' ? hasQuestions : undefined,
       stages: stages.map((s, i) => ({ ...s, stageNumber: i + 1 })),
     }
 
@@ -131,7 +131,7 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
               ))}
             </select>
           </label>
-          {mode === 'guided' && (
+          {mode === 'supervised' && (
             <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingTop: '1.75rem' }}>
               <input type="checkbox" checked={hasQuestions} onChange={(e) => setHasQuestions(e.target.checked)} role="switch" />
               Include questions at each stage

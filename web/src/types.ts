@@ -13,7 +13,7 @@ export interface JoinResponse {
   role: string
 }
 
-export type ScenarioMode = 'classic' | 'qr_quiz' | 'qr_hunt' | 'math_puzzle' | 'guided'
+export type ScenarioMode = 'classic' | 'qr_quiz' | 'qr_hunt' | 'math_puzzle' | 'supervised'
 
 export interface GameInfo {
   status: string

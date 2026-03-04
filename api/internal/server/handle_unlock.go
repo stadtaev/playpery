@@ -185,7 +185,7 @@ func handleUnlock(broker *Broker) http.HandlerFunc {
 			})
 			writeJSON(w, http.StatusOK, resp)
 
-		case "guided":
+		case "supervised":
 			if sess.Role != "supervisor" {
 				writeError(w, http.StatusForbidden, "only the supervisor can unlock stages")
 				return
