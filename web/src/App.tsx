@@ -10,6 +10,7 @@ import { AdminGamesPage } from './admin/AdminGamesPage'
 import { AdminGameEditorPage } from './admin/AdminGameEditorPage'
 import { AdminGameStatusPage } from './admin/AdminGameStatusPage'
 import { PageContainer } from './components/PageContainer'
+import { getSession } from './lib/session'
 
 type Route =
   | { page: 'join'; client: string; token: string }
@@ -32,7 +33,7 @@ function getRoute(): Route {
   const joinMatch = path.match(/^\/join\/([^/]+)\/(.+)$/)
   if (joinMatch) return { page: 'join', client: joinMatch[1], token: joinMatch[2] }
 
-  if (path === '/game' && sessionStorage.getItem('session_token')) {
+  if (path === '/game' && getSession()) {
     return { page: 'game' }
   }
 

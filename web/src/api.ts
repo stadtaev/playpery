@@ -1,4 +1,5 @@
 import type { TeamLookup, JoinResponse, GameState, AnswerResponse, UnlockResponse } from './types'
+import { getSession } from './lib/session'
 
 async function request<T>(path: string, opts?: RequestInit): Promise<T> {
   const res = await fetch(path, opts)
@@ -10,8 +11,8 @@ async function request<T>(path: string, opts?: RequestInit): Promise<T> {
 }
 
 function authHeaders(): HeadersInit {
-  const token = sessionStorage.getItem('session_token')
-  return token ? { Authorization: `Bearer ${token}` } : {}
+  const session = getSession()
+  return session ? { Authorization: `Bearer ${session.token}` } : {}
 }
 
 export function lookupTeam(client: string, joinToken: string): Promise<TeamLookup> {

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { lookupTeam, joinTeam } from './api'
 import type { TeamLookup } from './types'
+import { saveSession } from './lib/session'
 import { PageContainer } from './components/PageContainer'
 import { LoadingPage, Spinner } from './components/Spinner'
 import { ErrorMessage } from './components/ErrorMessage'
@@ -24,10 +25,13 @@ export function JoinPage({ client, joinToken }: { client: string; joinToken: str
     setError('')
     try {
       const resp = await joinTeam(client, joinToken, name.trim())
-      sessionStorage.setItem('session_token', resp.token)
-      sessionStorage.setItem('team_name', resp.teamName)
-      sessionStorage.setItem('player_role', resp.role)
-      sessionStorage.setItem('client', client)
+      saveSession({
+        token: resp.token,
+        client,
+        teamId: resp.teamId,
+        teamName: resp.teamName,
+        role: resp.role,
+      })
       window.history.replaceState(null, '', '/game')
       window.dispatchEvent(new PopStateEvent('popstate'))
     } catch (e) {

@@ -2,13 +2,14 @@ import { useState, useEffect, useCallback } from 'react'
 import { getGameState, submitAnswer, unlockStage } from './api'
 import { useGameEvents } from './useGameEvents'
 import { useCountdown } from './TimerDisplay'
+import { getSession, clearSession } from './lib/session'
 import type { GameState } from './types'
 
 export type StagePhase = 'interstitial' | 'unlocking' | 'answering'
 export type Feedback = { correct: boolean; message: string }
 
 export function useGameState() {
-  const client = sessionStorage.getItem('client') || 'demo'
+  const client = getSession()?.client || 'demo'
   const [state, setState] = useState<GameState | null>(null)
   const [answer, setAnswer] = useState('')
   const [unlockCode, setUnlockCode] = useState('')
@@ -147,9 +148,7 @@ export function useGameState() {
   }
 
   function handleLogout() {
-    sessionStorage.removeItem('session_token')
-    sessionStorage.removeItem('team_name')
-    sessionStorage.removeItem('client')
+    clearSession()
     window.history.replaceState(null, '', '/')
     window.dispatchEvent(new PopStateEvent('popstate'))
   }
