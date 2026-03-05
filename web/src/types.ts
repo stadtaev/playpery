@@ -49,6 +49,7 @@ export interface CompletedStage {
 export interface PlayerInfo {
   id: string
   name: string
+  role: string
 }
 
 export interface GameState {

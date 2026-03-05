@@ -478,7 +478,11 @@ func (s *DocStore) ListPlayers(ctx context.Context, gameID, teamID string) ([]Pl
 		if t.ID == teamID {
 			players := make([]PlayerInfo, len(t.Players))
 			for i, p := range t.Players {
-				players[i] = PlayerInfo{ID: p.ID, Name: p.Name}
+				role := p.Role
+				if role == "" {
+					role = "player"
+				}
+				players[i] = PlayerInfo{ID: p.ID, Name: p.Name, Role: role}
 			}
 			return players, nil
 		}

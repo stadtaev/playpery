@@ -109,12 +109,20 @@ export function GamePage() {
       )}
 
       <details>
-        <summary>Team ({players.length} players)</summary>
-        <ul className="mt-3 space-y-1">
-          {players.map((p) => (
-            <li key={p.id}>{p.name}</li>
+        <summary>Team ({(() => { const n = players.filter((p) => p.role !== 'supervisor').length; return `${n} player${n !== 1 ? 's' : ''}` })()})</summary>
+        <div className="mt-3 space-y-1">
+          {players.filter((p) => p.role === 'supervisor').map((p) => (
+            <p key={p.id} className="flex items-center gap-2">
+              <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-600 text-white text-xs font-bold rounded-full">i</span>
+              <span>Supervisor: {p.name}</span>
+            </p>
           ))}
-        </ul>
+          <ul className="space-y-1">
+            {players.filter((p) => p.role !== 'supervisor').map((p) => (
+              <li key={p.id}>{p.name}</li>
+            ))}
+          </ul>
+        </div>
       </details>
 
       <p className="text-center mt-8">
