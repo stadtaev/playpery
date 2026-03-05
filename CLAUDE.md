@@ -116,7 +116,9 @@ web/
     App.tsx                       — URL-based routing (no router library)
     JoinPage.tsx                  — team lookup → name input → join (/join/{client}/{token})
     GamePage.tsx                  — game state, clue, question, answer, timer
+    useGameState.ts               — game state hook (fetch, SSE, phase machine, timers)
     useGameEvents.ts              — SSE hook (EventSource, client-aware)
+    ResultsPanel.tsx              — post-answer: correct/incorrect, correct answer, paginated fun facts
     components/
       Spinner.tsx                 — CSS spinner (replaces Pico's aria-busy)
       ErrorMessage.tsx            — error text component
@@ -146,6 +148,10 @@ Startup order: load config → derive DB directory from DB_PATH → open admin D
 - `supervised` — supervisor unlocks stage, optionally followed by a question (default for new scenarios)
 
 Existing data without a `mode` field defaults to `"classic"` at read time (no migration needed). New scenarios default to `"supervised"` mode.
+
+**Fun facts** — each stage can have an optional `funFacts: string[]` (JSONB, zero or more pages). After answering (correct or incorrect), the player sees a results screen with the correct answer and paginated fun facts before continuing. The answer endpoint always returns `correctAnswer` and `funFacts` in the response.
+
+**Player game flow:** interstitial → (unlocking →) answering → results → interstitial (next stage). The `results` phase is protected from SSE-triggered state refetches to prevent premature advancement (SSE events from the server can arrive before or after the HTTP response due to network ordering).
 
 ## API Endpoints
 
@@ -213,6 +219,6 @@ Existing data without a `mode` field defaults to `"classic"` at read time (no mi
 - Keep OpenAPI spec in sync — it's generated from handler structs, so add response types at package level.
 - SQLite is the only datastore. No external state infra unless explicitly requested.
 - Timer check is lazy (computed on each request from `started_at + timer_minutes`). No background goroutines.
-- SSE broker is in-process (no Redis pub/sub). Frontend re-fetches full state on every SSE event.
+- SSE broker is in-process (no Redis pub/sub). Frontend re-fetches full state on SSE events, except during `results` phase (uses refs to guard against race conditions with in-flight answer submissions).
 - Handlers get store from request context via `clientStore(r)`, not as closure parameters.
 - Admin auth is enforced via `adminAuthMiddleware`, not per-handler checks.

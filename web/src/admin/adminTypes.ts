@@ -21,6 +21,7 @@ export interface Stage {
   correctAnswer: string
   unlockCode?: string
   locationNumber?: number
+  funFacts?: string[]
   lat: number
   lng: number
 }

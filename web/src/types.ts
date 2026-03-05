@@ -67,7 +67,8 @@ export interface AnswerResponse {
   stageNumber: number
   nextStage: StageInfo | null
   gameComplete: boolean
-  correctAnswer?: string
+  correctAnswer: string
+  funFacts?: string[]
 }
 
 export interface UnlockResponse {

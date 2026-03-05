@@ -9,13 +9,12 @@ interface Props {
   answer: string
   onAnswerChange: (answer: string) => void
   onSubmit: (e: React.FormEvent) => void
-  onContinue: () => void
   feedback: Feedback | null
   submitting: boolean
   canAnswer: boolean
 }
 
-export function AnswerPanel({ stage, totalStages, role, answer, onAnswerChange, onSubmit, onContinue, feedback, submitting, canAnswer }: Props) {
+export function AnswerPanel({ stage, totalStages, role, answer, onAnswerChange, onSubmit, feedback, submitting, canAnswer }: Props) {
   return (
     <div className="card">
       <div className="card-header">
@@ -24,14 +23,7 @@ export function AnswerPanel({ stage, totalStages, role, answer, onAnswerChange, 
       {stage.question && (
         <p className="mb-4"><strong>Question:</strong> {stage.question}</p>
       )}
-      {feedback && !feedback.correct ? (
-        <div className="space-y-4">
-          <p className="text-feedback-error">{feedback.message}</p>
-          <button onClick={onContinue} className="btn w-full">
-            Continue
-          </button>
-        </div>
-      ) : canAnswer ? (
+      {canAnswer ? (
         <form onSubmit={onSubmit} className="space-y-4">
           <div>
             <input
@@ -45,7 +37,7 @@ export function AnswerPanel({ stage, totalStages, role, answer, onAnswerChange, 
             />
           </div>
           {feedback && (
-            <p className="text-feedback-success">{feedback.message}</p>
+            <p className={feedback.correct ? 'text-feedback-success' : 'text-feedback-error'}>{feedback.message}</p>
           )}
           <button type="submit" disabled={submitting} className="btn btn-accent w-full">
             {submitting ? <Spinner /> : 'Submit Answer'}

@@ -1044,15 +1044,9 @@ func (s *DocStore) UnlockAndCompleteStage(ctx context.Context, gameID, teamID st
 
 // stagesChanged returns true if the two stage slices differ in content.
 func stagesChanged(old, new []AdminStage) bool {
-	if len(old) != len(new) {
-		return true
-	}
-	for i := range old {
-		if old[i] != new[i] {
-			return true
-		}
-	}
-	return false
+	oldJSON, _ := json.Marshal(old)
+	newJSON, _ := json.Marshal(new)
+	return string(oldJSON) != string(newJSON)
 }
 
 // Ensure DocStore implements Store at compile time.

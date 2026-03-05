@@ -1,12 +1,13 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { getGameState, submitAnswer, unlockStage } from './api'
 import { useGameEvents } from './useGameEvents'
 import { useCountdown } from './TimerDisplay'
 import { getSession, clearSession } from './lib/session'
 import type { GameState } from './types'
 
-export type StagePhase = 'interstitial' | 'unlocking' | 'answering'
+export type StagePhase = 'interstitial' | 'unlocking' | 'answering' | 'results'
 export type Feedback = { correct: boolean; message: string }
+export type AnswerResult = { isCorrect: boolean; correctAnswer: string; funFacts?: string[] }
 
 export function useGameState() {
   const client = getSession()?.client || 'demo'
@@ -17,6 +18,9 @@ export function useGameState() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [stagePhase, setStagePhase] = useState<StagePhase>('interstitial')
+  const stagePhaseRef = useRef<StagePhase>('interstitial')
+  const [answerResult, setAnswerResult] = useState<AnswerResult | null>(null)
+  const answeringRef = useRef(false) // true while submitAnswer is in-flight
   const [phaseStartedAt, setPhaseStartedAt] = useState<number | null>(null)
 
   const fetchState = useCallback(() => {
@@ -32,23 +36,40 @@ export function useGameState() {
     fetchState()
   }, [fetchState])
 
+  // Keep ref in sync so SSE callback can read current phase without re-creating.
+  function updateStagePhase(phase: StagePhase) {
+    stagePhaseRef.current = phase
+    setStagePhase(phase)
+  }
+
   // SSE handler: refetch state, and if stage was unlocked, transition phase.
+  // Skip refetch during 'results' phase — we already have the answer data and
+  // the server has already advanced currentStage, which would reset the phase.
   const onSSEEvent = useCallback((eventType?: string) => {
-    fetchState()
     if (eventType === 'stage_unlocked') {
-      setStagePhase((prev) => prev === 'unlocking' ? 'answering' : prev)
+      fetchState()
+      setStagePhase((prev) => {
+        const next = prev === 'unlocking' ? 'answering' : prev
+        stagePhaseRef.current = next
+        return next
+      })
       setUnlockCode('')
+    } else if (stagePhaseRef.current !== 'results' && !answeringRef.current) {
+      fetchState()
     }
   }, [fetchState])
 
   useGameEvents(client, onSSEEvent)
 
   // Reset to interstitial when stage changes (e.g. teammate answered via SSE).
+  // Skip reset if currently showing results — handleContinue will reset explicitly.
   const currentStageNumber = state?.currentStage?.stageNumber ?? null
   useEffect(() => {
-    setStagePhase('interstitial')
+    if (stagePhaseRef.current === 'results' || answeringRef.current) return
+    updateStagePhase('interstitial')
     setPhaseStartedAt(null)
     setFeedback(null)
+    setAnswerResult(null)
     setAnswer('')
     setUnlockCode('')
   }, [currentStageNumber])
@@ -59,7 +80,7 @@ export function useGameState() {
     const mode = state.game.mode
     if (mode === 'classic') return
     if (!state.currentStage.locked && stagePhase === 'unlocking') {
-      setStagePhase('answering')
+      updateStagePhase('answering')
     }
   }, [state?.currentStage?.locked, state?.game.mode, stagePhase])
 
@@ -83,12 +104,12 @@ export function useGameState() {
     setPhaseStartedAt(now)
     setFeedback(null)
     if (mode === 'classic') {
-      setStagePhase('answering')
+      updateStagePhase('answering')
     } else {
       if (state?.currentStage && !state.currentStage.locked) {
-        setStagePhase('answering')
+        updateStagePhase('answering')
       } else {
-        setStagePhase('unlocking')
+        updateStagePhase('unlocking')
       }
     }
   }
@@ -106,11 +127,11 @@ export function useGameState() {
       if (resp.stageComplete) {
         setFeedback({ correct: true, message: `Stage ${resp.stageNumber} complete!` })
         setTimeout(() => {
-          setStagePhase('interstitial')
+          updateStagePhase('interstitial')
           fetchState()
         }, 1500)
       } else {
-        setStagePhase('answering')
+        updateStagePhase('answering')
       }
     } catch (e) {
       setFeedback({ correct: false, message: e instanceof Error ? e.message : 'Error' })
@@ -124,26 +145,28 @@ export function useGameState() {
     if (!answer.trim() || submitting) return
     setSubmitting(true)
     setFeedback(null)
+    answeringRef.current = true
     try {
       const resp = await submitAnswer(client, answer.trim())
       setAnswer('')
-      if (resp.isCorrect) {
-        setFeedback({ correct: true, message: `Stage ${resp.stageNumber} complete!` })
-        setStagePhase('interstitial')
-        fetchState()
-      } else {
-        setFeedback({ correct: false, message: `Incorrect — the correct answer was: ${resp.correctAnswer}` })
-      }
+      setAnswerResult({
+        isCorrect: resp.isCorrect,
+        correctAnswer: resp.correctAnswer,
+        funFacts: resp.funFacts,
+      })
+      updateStagePhase('results')
     } catch (e) {
       setFeedback({ correct: false, message: e instanceof Error ? e.message : 'Error' })
     } finally {
+      answeringRef.current = false
       setSubmitting(false)
     }
   }
 
   function handleContinue() {
     setFeedback(null)
-    setStagePhase('interstitial')
+    setAnswerResult(null)
+    updateStagePhase('interstitial')
     fetchState()
   }
 
@@ -162,6 +185,7 @@ export function useGameState() {
     unlockCode,
     setUnlockCode,
     feedback,
+    answerResult,
     submitting,
     gameRemaining,
     stageRemaining,

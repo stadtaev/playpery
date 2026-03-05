@@ -22,7 +22,7 @@ function modeNeedsQuestion(mode: string): boolean {
 }
 
 function emptyStage(): Stage {
-  return { stageNumber: 0, location: '', clue: '', question: '', correctAnswer: '', lat: 0, lng: 0 }
+  return { stageNumber: 0, location: '', clue: '', question: '', correctAnswer: '', funFacts: [], lat: 0, lng: 0 }
 }
 
 export function AdminScenarioEditorPage({ id }: { id?: string }) {
@@ -49,8 +49,31 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
       .finally(() => setLoading(false))
   }, [id])
 
-  function updateStage(index: number, field: keyof Stage, value: string | number) {
+  function updateStage(index: number, field: keyof Stage, value: string | number | string[]) {
     setStages((prev) => prev.map((s, i) => (i === index ? { ...s, [field]: value } : s)))
+  }
+
+  function updateFunFact(stageIndex: number, factIndex: number, value: string) {
+    setStages((prev) => prev.map((s, i) => {
+      if (i !== stageIndex) return s
+      const facts = [...(s.funFacts || [])]
+      facts[factIndex] = value
+      return { ...s, funFacts: facts }
+    }))
+  }
+
+  function addFunFact(stageIndex: number) {
+    setStages((prev) => prev.map((s, i) => {
+      if (i !== stageIndex) return s
+      return { ...s, funFacts: [...(s.funFacts || []), ''] }
+    }))
+  }
+
+  function removeFunFact(stageIndex: number, factIndex: number) {
+    setStages((prev) => prev.map((s, i) => {
+      if (i !== stageIndex) return s
+      return { ...s, funFacts: (s.funFacts || []).filter((_, fi) => fi !== factIndex) }
+    }))
   }
 
   function addStage() {
@@ -179,6 +202,28 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
                   <div>
                     <label className="input-label">Correct Answer</label>
                     <input className="input" type="text" value={stage.correctAnswer} onChange={(e) => updateStage(i, 'correctAnswer', e.target.value)} required />
+                  </div>
+                  <div>
+                    <label className="input-label">Fun Facts</label>
+                    <div className="space-y-2">
+                      {(stage.funFacts || []).map((fact, fi) => (
+                        <div key={fi} className="flex gap-2">
+                          <textarea
+                            className="input flex-1"
+                            value={fact}
+                            onChange={(e) => updateFunFact(i, fi, e.target.value)}
+                            rows={2}
+                            placeholder={`Fun fact ${fi + 1}...`}
+                          />
+                          <button type="button" className="btn-danger btn-sm self-start" onClick={() => removeFunFact(i, fi)}>
+                            &times;
+                          </button>
+                        </div>
+                      ))}
+                      <button type="button" className="btn-ghost btn-sm" onClick={() => addFunFact(i)}>
+                        + Add fun fact
+                      </button>
+                    </div>
                   </div>
                 </>
               )}

@@ -40,15 +40,16 @@ type AdminScenarioDetail struct {
 }
 
 type AdminStage struct {
-	StageNumber    int     `json:"stageNumber"`
-	Location       string  `json:"location"`
-	Clue           string  `json:"clue"`
-	Question       string  `json:"question"`
-	CorrectAnswer  string  `json:"correctAnswer"`
-	UnlockCode     string  `json:"unlockCode,omitempty"`
-	LocationNumber int     `json:"locationNumber,omitempty"`
-	Lat            float64 `json:"lat"`
-	Lng            float64 `json:"lng"`
+	StageNumber    int      `json:"stageNumber"`
+	Location       string   `json:"location"`
+	Clue           string   `json:"clue"`
+	Question       string   `json:"question"`
+	CorrectAnswer  string   `json:"correctAnswer"`
+	UnlockCode     string   `json:"unlockCode,omitempty"`
+	LocationNumber int      `json:"locationNumber,omitempty"`
+	FunFacts       []string `json:"funFacts,omitempty"`
+	Lat            float64  `json:"lat"`
+	Lng            float64  `json:"lng"`
 }
 
 type AdminScenarioRequest struct {

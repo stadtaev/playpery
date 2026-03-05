@@ -54,13 +54,14 @@ type GameStateResponse struct {
 }
 
 type scenarioStage struct {
-	StageNumber    int    `json:"stageNumber"`
-	Location       string `json:"location"`
-	Clue           string `json:"clue"`
-	Question       string `json:"question"`
-	CorrectAnswer  string `json:"correctAnswer"`
-	UnlockCode     string `json:"unlockCode,omitempty"`
-	LocationNumber int    `json:"locationNumber,omitempty"`
+	StageNumber    int      `json:"stageNumber"`
+	Location       string   `json:"location"`
+	Clue           string   `json:"clue"`
+	Question       string   `json:"question"`
+	CorrectAnswer  string   `json:"correctAnswer"`
+	UnlockCode     string   `json:"unlockCode,omitempty"`
+	LocationNumber int      `json:"locationNumber,omitempty"`
+	FunFacts       []string `json:"funFacts,omitempty"`
 }
 
 // modeHasQuestion returns true if the mode supports questions at each stage.

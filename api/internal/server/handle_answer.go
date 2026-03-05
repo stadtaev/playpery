@@ -16,7 +16,8 @@ type AnswerResponse struct {
 	StageNumber   int        `json:"stageNumber"`
 	NextStage     *StageInfo `json:"nextStage"`
 	GameComplete  bool       `json:"gameComplete"`
-	CorrectAnswer string     `json:"correctAnswer,omitempty"`
+	CorrectAnswer string     `json:"correctAnswer"`
+	FunFacts      []string   `json:"funFacts,omitempty"`
 }
 
 func handleAnswer(broker *Broker) http.HandlerFunc {
@@ -127,13 +128,17 @@ func handleAnswer(broker *Broker) http.HandlerFunc {
 			resp.GameComplete = true
 		}
 
+		resp.CorrectAnswer = stage.CorrectAnswer
+		if len(stage.FunFacts) > 0 {
+			resp.FunFacts = stage.FunFacts
+		}
+
 		if isCorrect {
 			broker.Publish(sess.TeamID, SSEEvent{
 				Type:        "stage_completed",
 				StageNumber: currentStageNum,
 			})
 		} else {
-			resp.CorrectAnswer = stage.CorrectAnswer
 			broker.Publish(sess.TeamID, SSEEvent{
 				Type:        "wrong_answer",
 				StageNumber: currentStageNum,

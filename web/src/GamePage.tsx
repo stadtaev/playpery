@@ -2,6 +2,7 @@ import { TimerDisplay } from './TimerDisplay'
 import { InterstitialPanel } from './InterstitialPanel'
 import { UnlockPanel } from './UnlockPanel'
 import { AnswerPanel } from './AnswerPanel'
+import { ResultsPanel } from './ResultsPanel'
 import { useGameState } from './useGameState'
 import { PageContainer } from './components/PageContainer'
 import { LoadingPage } from './components/Spinner'
@@ -12,7 +13,7 @@ export function GamePage() {
     state, error, stagePhase,
     answer, setAnswer,
     unlockCode, setUnlockCode,
-    feedback, submitting,
+    feedback, answerResult, submitting,
     gameRemaining, stageRemaining,
     handleGoToStage, handleUnlock, handleSubmit, handleContinue, handleLogout,
   } = useGameState()
@@ -88,10 +89,18 @@ export function GamePage() {
           answer={answer}
           onAnswerChange={setAnswer}
           onSubmit={handleSubmit}
-          onContinue={handleContinue}
           feedback={feedback}
           submitting={submitting}
           canAnswer={canAnswer}
+        />
+      )}
+
+      {currentStage && !isEnded && stagePhase === 'results' && answerResult && (
+        <ResultsPanel
+          stageNumber={currentStage.stageNumber}
+          totalStages={game.totalStages}
+          result={answerResult}
+          onContinue={handleContinue}
         />
       )}
 
