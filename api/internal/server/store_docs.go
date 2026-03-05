@@ -908,7 +908,12 @@ func (s *DocStore) GameStatus(ctx context.Context, gameID string) (AdminGameStat
 			}
 		}
 
-		completed := len(t.Results)
+		completed := 0
+		for _, r := range t.Results {
+			if r.IsCorrect {
+				completed++
+			}
+		}
 
 		teams[i] = AdminTeamStatus{
 			ID:              t.ID,

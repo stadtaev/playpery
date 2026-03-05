@@ -55,7 +55,6 @@ export function AdminClientsPage() {
         <table className="admin-table">
           <thead>
             <tr>
-              <th>Slug</th>
               <th>Name</th>
               <th></th>
             </tr>
@@ -63,7 +62,6 @@ export function AdminClientsPage() {
           <tbody>
             {clients.map((c) => (
               <tr key={c.slug}>
-                <td><code className="text-sm">{c.slug}</code></td>
                 <td>{c.name}</td>
                 <td className="whitespace-nowrap">
                   <button
@@ -88,15 +86,14 @@ export function AdminClientsPage() {
       <details>
         <summary>Add Client</summary>
         <form onSubmit={handleCreate} className="mt-4 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="input-label" htmlFor="slug">Slug</label>
-              <input id="slug" className="input" type="text" value={newSlug} onChange={(e) => setNewSlug(e.target.value)} placeholder="e.g. acme" required />
-            </div>
-            <div>
-              <label className="input-label" htmlFor="name">Name</label>
-              <input id="name" className="input" type="text" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="e.g. Acme Tours" required />
-            </div>
+          <div>
+            <label className="input-label" htmlFor="name">Name</label>
+            <input id="name" className="input" type="text" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="e.g. Acme Tours" required />
+          </div>
+          <div>
+            <label className="input-label text-secondary" htmlFor="slug">Slug</label>
+            <input id="slug" className="input text-sm" type="text" value={newSlug} onChange={(e) => setNewSlug(e.target.value)} placeholder="e.g. acme" required />
+            <p className="text-secondary text-xs mt-1">URL identifier — lowercase, no spaces</p>
           </div>
           <button type="submit" disabled={creating} className="btn">
             {creating ? <Spinner /> : 'Create Client'}
