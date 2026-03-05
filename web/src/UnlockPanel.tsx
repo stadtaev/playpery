@@ -23,7 +23,7 @@ export function UnlockPanel({ stage, totalStages, mode, role, unlockCode, onUnlo
   return (
     <div className="card">
       <div className="card-header">
-        Stage {stage.stageNumber} of {totalStages} &mdash; {stage.location}
+        Stage {stage.stageNumber} of {totalStages}{role === 'supervisor' && <> &mdash; {stage.location}</>}
       </div>
       <p className="mb-4"><strong>Clue:</strong> {stage.clue}</p>
 

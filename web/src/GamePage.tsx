@@ -60,6 +60,7 @@ export function GamePage() {
           stage={currentStage}
           totalStages={game.totalStages}
           isFirstStage={completedStages.length === 0}
+          role={role}
           onGoToStage={handleGoToStage}
         />
       )}
@@ -83,6 +84,7 @@ export function GamePage() {
         <AnswerPanel
           stage={currentStage}
           totalStages={game.totalStages}
+          role={role}
           answer={answer}
           onAnswerChange={setAnswer}
           onSubmit={handleSubmit}

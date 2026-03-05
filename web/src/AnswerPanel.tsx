@@ -5,6 +5,7 @@ import { Spinner } from './components/Spinner'
 interface Props {
   stage: StageInfo
   totalStages: number
+  role: string
   answer: string
   onAnswerChange: (answer: string) => void
   onSubmit: (e: React.FormEvent) => void
@@ -14,11 +15,11 @@ interface Props {
   canAnswer: boolean
 }
 
-export function AnswerPanel({ stage, totalStages, answer, onAnswerChange, onSubmit, onContinue, feedback, submitting, canAnswer }: Props) {
+export function AnswerPanel({ stage, totalStages, role, answer, onAnswerChange, onSubmit, onContinue, feedback, submitting, canAnswer }: Props) {
   return (
     <div className="card">
       <div className="card-header">
-        Stage {stage.stageNumber} of {totalStages} &mdash; {stage.location}
+        Stage {stage.stageNumber} of {totalStages}{role === 'supervisor' && <> &mdash; {stage.location}</>}
       </div>
       <p className="mb-2"><strong>Clue:</strong> {stage.clue}</p>
       {stage.question && (
