@@ -14,7 +14,6 @@ export function InterstitialPanel({ stage, totalStages, isFirstStage, role, onGo
       <div className="card-header">
         Stage {stage.stageNumber} of {totalStages}{role === 'supervisor' && <> &mdash; {stage.location}</>}
       </div>
-      <p className="mb-4"><strong>Clue:</strong> {stage.clue}</p>
       <button onClick={onGoToStage} className="btn btn-accent w-full">
         {isFirstStage ? 'Start Quest' : 'Go to Next Stage'}
       </button>

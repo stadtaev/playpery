@@ -21,7 +21,6 @@ export function AnswerPanel({ stage, totalStages, role, answer, onAnswerChange, 
       <div className="card-header">
         Stage {stage.stageNumber} of {totalStages}{role === 'supervisor' && <> &mdash; {stage.location}</>}
       </div>
-      <p className="mb-2"><strong>Clue:</strong> {stage.clue}</p>
       {stage.question && (
         <p className="mb-4"><strong>Question:</strong> {stage.question}</p>
       )}

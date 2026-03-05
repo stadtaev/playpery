@@ -25,7 +25,9 @@ export function UnlockPanel({ stage, totalStages, mode, role, unlockCode, onUnlo
       <div className="card-header">
         Stage {stage.stageNumber} of {totalStages}{role === 'supervisor' && <> &mdash; {stage.location}</>}
       </div>
-      <p className="mb-4"><strong>Clue:</strong> {stage.clue}</p>
+      {mode !== 'supervised' && (
+        <p className="mb-4"><strong>Clue:</strong> {stage.clue}</p>
+      )}
 
       {(mode === 'qr_quiz' || mode === 'qr_hunt') && (
         <QrUnlockForm {...common} unlockCode={unlockCode} onUnlockCodeChange={onUnlockCodeChange} />
@@ -34,7 +36,7 @@ export function UnlockPanel({ stage, totalStages, mode, role, unlockCode, onUnlo
         <MathUnlockForm {...common} unlockCode={unlockCode} onUnlockCodeChange={onUnlockCodeChange} teamSecret={teamSecret} locationNumber={stage.locationNumber} />
       )}
       {mode === 'supervised' && (
-        <SupervisedUnlockForm {...common} role={role} />
+        <SupervisedUnlockForm {...common} role={role} clue={stage.clue} />
       )}
     </div>
   )
