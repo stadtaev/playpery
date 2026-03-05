@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 
 export function useGameEvents(client: string, onEvent: (eventType?: string) => void) {
   useEffect(() => {
-    const token = localStorage.getItem('session_token')
+    const token = sessionStorage.getItem('session_token')
     if (!token) return
 
     const es = new EventSource(`/api/${client}/game/events?token=${token}`)

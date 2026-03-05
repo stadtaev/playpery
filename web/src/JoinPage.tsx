@@ -24,10 +24,10 @@ export function JoinPage({ client, joinToken }: { client: string; joinToken: str
     setError('')
     try {
       const resp = await joinTeam(client, joinToken, name.trim())
-      localStorage.setItem('session_token', resp.token)
-      localStorage.setItem('team_name', resp.teamName)
-      localStorage.setItem('player_role', resp.role)
-      localStorage.setItem('client', client)
+      sessionStorage.setItem('session_token', resp.token)
+      sessionStorage.setItem('team_name', resp.teamName)
+      sessionStorage.setItem('player_role', resp.role)
+      sessionStorage.setItem('client', client)
       window.history.replaceState(null, '', '/game')
       window.dispatchEvent(new PopStateEvent('popstate'))
     } catch (e) {

@@ -8,7 +8,7 @@ export type StagePhase = 'interstitial' | 'unlocking' | 'answering'
 export type Feedback = { correct: boolean; message: string }
 
 export function useGameState() {
-  const client = localStorage.getItem('client') || 'demo'
+  const client = sessionStorage.getItem('client') || 'demo'
   const [state, setState] = useState<GameState | null>(null)
   const [answer, setAnswer] = useState('')
   const [unlockCode, setUnlockCode] = useState('')
@@ -147,9 +147,9 @@ export function useGameState() {
   }
 
   function handleLogout() {
-    localStorage.removeItem('session_token')
-    localStorage.removeItem('team_name')
-    localStorage.removeItem('client')
+    sessionStorage.removeItem('session_token')
+    sessionStorage.removeItem('team_name')
+    sessionStorage.removeItem('client')
     window.history.replaceState(null, '', '/')
     window.dispatchEvent(new PopStateEvent('popstate'))
   }

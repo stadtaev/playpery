@@ -32,7 +32,7 @@ function getRoute(): Route {
   const joinMatch = path.match(/^\/join\/([^/]+)\/(.+)$/)
   if (joinMatch) return { page: 'join', client: joinMatch[1], token: joinMatch[2] }
 
-  if (path === '/game' && localStorage.getItem('session_token')) {
+  if (path === '/game' && sessionStorage.getItem('session_token')) {
     return { page: 'game' }
   }
 

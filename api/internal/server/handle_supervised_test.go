@@ -212,9 +212,12 @@ func TestSupervisedFlowFull(t *testing.T) {
 		t.Error("next stage should be locked")
 	}
 
-	// --- Stage 2: locked ---
+	// --- Stage 2: locked, player role must still be "player" ---
 
 	state = gameState(t, r, player.Token)
+	if state.Role != "player" {
+		t.Errorf("player role after stage 1: expected 'player', got %q", state.Role)
+	}
 	if state.CurrentStage == nil {
 		t.Fatal("expected current stage 2")
 	}

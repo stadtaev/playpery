@@ -10,7 +10,7 @@ async function request<T>(path: string, opts?: RequestInit): Promise<T> {
 }
 
 function authHeaders(): HeadersInit {
-  const token = localStorage.getItem('session_token')
+  const token = sessionStorage.getItem('session_token')
   return token ? { Authorization: `Bearer ${token}` } : {}
 }
 
