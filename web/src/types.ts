@@ -52,6 +52,13 @@ export interface PlayerInfo {
   role: string
 }
 
+export interface LastStageResult {
+  stageNumber: number
+  isCorrect: boolean
+  correctAnswer: string
+  funFacts?: string[]
+}
+
 export interface GameState {
   game: GameInfo
   team: TeamInfo
@@ -59,6 +66,7 @@ export interface GameState {
   teamSecret?: number
   stageUnlockedAt?: string | null
   currentStage: StageInfo | null
+  lastResult?: LastStageResult | null
   completedStages: CompletedStage[]
   players: PlayerInfo[]
 }

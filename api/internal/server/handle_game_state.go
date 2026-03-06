@@ -43,6 +43,13 @@ type PlayerInfo struct {
 	Role string `json:"role"`
 }
 
+type LastStageResult struct {
+	StageNumber   int      `json:"stageNumber"`
+	IsCorrect     bool     `json:"isCorrect"`
+	CorrectAnswer string   `json:"correctAnswer"`
+	FunFacts      []string `json:"funFacts,omitempty"`
+}
+
 type GameStateResponse struct {
 	Game            GameInfo         `json:"game"`
 	Team            TeamInfo         `json:"team"`
@@ -50,6 +57,7 @@ type GameStateResponse struct {
 	TeamSecret      int              `json:"teamSecret,omitempty"`
 	StageUnlockedAt *string          `json:"stageUnlockedAt,omitempty"`
 	CurrentStage    *StageInfo       `json:"currentStage"`
+	LastResult      *LastStageResult `json:"lastResult,omitempty"`
 	CompletedStages []CompletedStage `json:"completedStages"`
 	Players         []PlayerInfo     `json:"players"`
 }
@@ -170,6 +178,20 @@ func handleGameState() http.HandlerFunc {
 			currentStage = &si
 		}
 
+		// Build last result so all players (not just the submitter) can see results.
+		var lastResult *LastStageResult
+		if len(completed) > 0 {
+			last := completed[len(completed)-1]
+			lastIdx := rotatedStageIndex(last.StageNumber, data.StartStage, len(stages))
+			ls := stages[lastIdx]
+			lastResult = &LastStageResult{
+				StageNumber:   last.StageNumber,
+				IsCorrect:     last.IsCorrect,
+				CorrectAnswer: ls.CorrectAnswer,
+				FunFacts:      ls.FunFacts,
+			}
+		}
+
 		players, err := store.ListPlayers(r.Context(), sess.GameID, sess.TeamID)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "internal error")
@@ -194,6 +216,7 @@ func handleGameState() http.HandlerFunc {
 				Name: data.TeamName,
 			},
 			CurrentStage:    currentStage,
+			LastResult:      lastResult,
 			CompletedStages: completed,
 			Players:         players,
 		}

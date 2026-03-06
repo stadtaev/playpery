@@ -53,10 +53,26 @@ export function useGameState() {
         return next
       })
       setUnlockCode('')
+    } else if (eventType === 'stage_completed' || eventType === 'wrong_answer') {
+      // For non-submitters: fetch new state and show results from server.
+      if (stagePhaseRef.current !== 'results' && !answeringRef.current) {
+        getGameState(client).then((s) => {
+          setState(s)
+          setError('')
+          if (s.lastResult) {
+            setAnswerResult({
+              isCorrect: s.lastResult.isCorrect,
+              correctAnswer: s.lastResult.correctAnswer,
+              funFacts: s.lastResult.funFacts,
+            })
+            updateStagePhase('results')
+          }
+        }).catch((e) => setError(e.message))
+      }
     } else if (stagePhaseRef.current !== 'results' && !answeringRef.current) {
       fetchState()
     }
-  }, [fetchState])
+  }, [client, fetchState])
 
   useGameEvents(client, onSSEEvent)
 
