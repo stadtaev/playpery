@@ -9,6 +9,7 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>,
 )
 
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js')
-}
+// Uncomment to enable PWA install prompt:
+// if ('serviceWorker' in navigator) {
+//   navigator.serviceWorker.register('/sw.js')
+// }
