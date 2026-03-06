@@ -40,7 +40,10 @@ export function GamePage() {
   return (
     <PageContainer size="md">
       {game.timerEnabled && !isEnded && (
-        <TimerDisplay gameRemaining={gameRemaining} stageRemaining={stageRemaining} />
+        <>
+          <TimerDisplay gameRemaining={gameRemaining} stageRemaining={stageRemaining} />
+          <div className="h-8" />
+        </>
       )}
       <nav className="flex justify-between items-center mb-6">
         <h1 className="m-0">CityQuest</h1>
