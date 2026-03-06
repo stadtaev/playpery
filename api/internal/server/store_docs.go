@@ -48,6 +48,7 @@ type team struct {
 	SupervisorToken string        `json:"supervisorToken,omitempty"`
 	GuideName       string        `json:"guideName"`
 	TeamSecret      int           `json:"teamSecret,omitempty"`
+	StartStage      int           `json:"startStage,omitempty"`
 	UnlockedStages  []int         `json:"unlockedStages,omitempty"`
 	CreatedAt       string        `json:"createdAt"`
 	Players         []player      `json:"players"`
@@ -377,11 +378,13 @@ func (s *DocStore) GameState(ctx context.Context, gameID, teamID string) (gameSt
 
 	var teamName string
 	var teamSecret int
+	var startStage int
 	var unlockedStages []int
 	for _, t := range g.Teams {
 		if t.ID == teamID {
 			teamName = t.Name
 			teamSecret = t.TeamSecret
+			startStage = t.StartStage
 			unlockedStages = t.UnlockedStages
 			break
 		}
@@ -398,6 +401,7 @@ func (s *DocStore) GameState(ctx context.Context, gameID, teamID string) (gameSt
 	d.StagesJSON = string(stagesJSON)
 	d.TeamName = teamName
 	d.TeamSecret = teamSecret
+	d.StartStage = startStage
 	d.UnlockedStages = unlockedStages
 	return d, nil
 }
@@ -576,6 +580,7 @@ func (s *DocStore) CreateGame(ctx context.Context, req AdminGameRequest, stages 
 		TimerEnabled:      req.TimerEnabled,
 		TimerMinutes:      req.TimerMinutes,
 		StageTimerMinutes: req.StageTimerMinutes,
+		Stages:            stages,
 		Teams:             []AdminTeamItem{},
 		CreatedAt:         now,
 	}, nil
@@ -596,6 +601,7 @@ func (s *DocStore) GetGame(ctx context.Context, id string) (AdminGameDetail, err
 			SupervisorToken: t.SupervisorToken,
 			GuideName:       t.GuideName,
 			TeamSecret:      t.TeamSecret,
+			StartStage:      t.StartStage,
 			PlayerCount:     len(t.Players),
 			CreatedAt:       t.CreatedAt,
 		}
@@ -612,6 +618,7 @@ func (s *DocStore) GetGame(ctx context.Context, id string) (AdminGameDetail, err
 		TimerMinutes:      g.TimerMinutes,
 		StageTimerMinutes: g.StageTimerMinutes,
 		StartedAt:         g.StartedAt,
+		Stages:            g.Stages,
 		Teams:             teams,
 		CreatedAt:         g.CreatedAt,
 	}, nil
@@ -683,6 +690,7 @@ func (s *DocStore) UpdateGame(ctx context.Context, id string, req AdminGameReque
 			SupervisorToken: t.SupervisorToken,
 			GuideName:       t.GuideName,
 			TeamSecret:      t.TeamSecret,
+			StartStage:      t.StartStage,
 			PlayerCount:     len(t.Players),
 			CreatedAt:       t.CreatedAt,
 		}
@@ -699,6 +707,7 @@ func (s *DocStore) UpdateGame(ctx context.Context, id string, req AdminGameReque
 		TimerMinutes:      req.TimerMinutes,
 		StageTimerMinutes: req.StageTimerMinutes,
 		StartedAt:         g.StartedAt,
+		Stages:            g.Stages,
 		Teams:             teams,
 		CreatedAt:         g.CreatedAt,
 	}, nil
@@ -750,6 +759,7 @@ func (s *DocStore) ListTeams(ctx context.Context, gameID string) ([]AdminTeamIte
 			SupervisorToken: t.SupervisorToken,
 			GuideName:       t.GuideName,
 			TeamSecret:      t.TeamSecret,
+			StartStage:      t.StartStage,
 			PlayerCount:     len(t.Players),
 			CreatedAt:       t.CreatedAt,
 		}
@@ -780,13 +790,14 @@ func (s *DocStore) CreateTeam(ctx context.Context, gameID string, req AdminTeamR
 	teamID := newID()
 	now := nowUTC()
 	newTeam := team{
-		ID:        teamID,
-		Name:      req.Name,
-		JoinToken: token,
-		GuideName: req.GuideName,
-		CreatedAt: now,
-		Players:   []player{},
-		Results:   []stageResult{},
+		ID:         teamID,
+		Name:       req.Name,
+		JoinToken:  token,
+		GuideName:  req.GuideName,
+		StartStage: req.StartStage,
+		CreatedAt:  now,
+		Players:    []player{},
+		Results:    []stageResult{},
 	}
 	if g.Mode == "math_puzzle" {
 		var b [2]byte
@@ -822,6 +833,7 @@ func (s *DocStore) CreateTeam(ctx context.Context, gameID string, req AdminTeamR
 		SupervisorToken: newTeam.SupervisorToken,
 		GuideName:       req.GuideName,
 		TeamSecret:      newTeam.TeamSecret,
+		StartStage:      req.StartStage,
 		PlayerCount:     0,
 		CreatedAt:       now,
 	}, nil
@@ -834,6 +846,7 @@ func (s *DocStore) UpdateTeam(ctx context.Context, gameID, teamID string, req Ad
 			if g.Teams[i].ID == teamID {
 				g.Teams[i].Name = req.Name
 				g.Teams[i].GuideName = req.GuideName
+				g.Teams[i].StartStage = req.StartStage
 				result = AdminTeamItem{
 					ID:              teamID,
 					Name:            req.Name,
@@ -841,6 +854,7 @@ func (s *DocStore) UpdateTeam(ctx context.Context, gameID, teamID string, req Ad
 					SupervisorToken: g.Teams[i].SupervisorToken,
 					GuideName:       req.GuideName,
 					TeamSecret:      g.Teams[i].TeamSecret,
+					StartStage:      req.StartStage,
 					PlayerCount:     len(g.Teams[i].Players),
 					CreatedAt:       g.Teams[i].CreatedAt,
 				}

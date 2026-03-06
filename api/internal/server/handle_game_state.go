@@ -64,6 +64,17 @@ type scenarioStage struct {
 	FunFacts       []string `json:"funFacts,omitempty"`
 }
 
+// rotatedStageIndex returns the scenario stage index for a team's Nth sequential stage (1-based).
+// If startStage is 0 or 1, there's no rotation. If startStage is 3 and total is 5,
+// the team plays stages in order: 3,4,5,1,2.
+func rotatedStageIndex(teamStageNum, startStage, totalStages int) int {
+	offset := startStage - 1
+	if offset < 0 {
+		offset = 0
+	}
+	return (offset + teamStageNum - 1) % totalStages
+}
+
 // modeHasQuestion returns true if the mode supports questions at each stage.
 func modeHasQuestion(mode string) bool {
 	switch mode {
@@ -133,9 +144,10 @@ func handleGameState() http.HandlerFunc {
 		currentStageNum := len(completed) + 1
 		var currentStage *StageInfo
 		if currentStageNum <= len(stages) && data.Status == "active" {
-			s := stages[currentStageNum-1]
+			idx := rotatedStageIndex(currentStageNum, data.StartStage, len(stages))
+			s := stages[idx]
 			si := StageInfo{
-				StageNumber: s.StageNumber,
+				StageNumber: currentStageNum,
 				Clue:        s.Clue,
 				Location:    s.Location,
 			}

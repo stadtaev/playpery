@@ -86,7 +86,8 @@ func handleUnlock(broker *Broker) http.HandlerFunc {
 			return
 		}
 
-		stage := stages[currentStageNum-1]
+		idx := rotatedStageIndex(currentStageNum, data.StartStage, len(stages))
+		stage := stages[idx]
 
 		switch data.Mode {
 		case "qr_quiz":
@@ -132,9 +133,10 @@ func handleUnlock(broker *Broker) http.HandlerFunc {
 			}
 			nextStageNum := currentStageNum + 1
 			if nextStageNum <= len(stages) {
-				s := stages[nextStageNum-1]
+				nextIdx := rotatedStageIndex(nextStageNum, data.StartStage, len(stages))
+				s := stages[nextIdx]
 				resp.NextStage = &StageInfo{
-					StageNumber: s.StageNumber,
+					StageNumber: nextStageNum,
 					Clue:        s.Clue,
 					Location:    s.Location,
 					Locked:      true,
@@ -169,9 +171,10 @@ func handleUnlock(broker *Broker) http.HandlerFunc {
 			}
 			nextStageNum := currentStageNum + 1
 			if nextStageNum <= len(stages) {
-				s := stages[nextStageNum-1]
+				nextIdx := rotatedStageIndex(nextStageNum, data.StartStage, len(stages))
+				s := stages[nextIdx]
 				resp.NextStage = &StageInfo{
-					StageNumber: s.StageNumber,
+					StageNumber: nextStageNum,
 					Clue:        s.Clue,
 					Location:    s.Location,
 					Locked:      true,

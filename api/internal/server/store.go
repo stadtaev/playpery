@@ -25,6 +25,7 @@ type gameStateData struct {
 	StagesJSON        string
 	TeamName          string
 	TeamSecret        int
+	StartStage        int
 	UnlockedStages    []int
 }
 

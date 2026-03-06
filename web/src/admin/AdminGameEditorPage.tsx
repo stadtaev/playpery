@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { listScenarios, getGame, createGame, updateGame, createTeam, updateTeam, deleteTeam } from './adminApi'
-import type { ScenarioSummary, GameRequest, TeamItem, TeamRequest } from './adminTypes'
+import type { ScenarioSummary, Stage, GameRequest, TeamItem, TeamRequest } from './adminTypes'
 import { LoadingPage, Spinner } from '../components/Spinner'
 import { ErrorMessage } from '../components/ErrorMessage'
 
@@ -20,6 +20,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
   const [timerMinutes, setTimerMinutes] = useState(120)
   const [stageTimerMinutes, setStageTimerMinutes] = useState(10)
   const [startedAt, setStartedAt] = useState<string | null>(null)
+  const [stages, setStages] = useState<Stage[]>([])
   const [teams, setTeams] = useState<TeamItem[]>([])
   const [loading, setLoading] = useState(!!id)
   const [saving, setSaving] = useState(false)
@@ -29,6 +30,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
   const [newTeamName, setNewTeamName] = useState('')
   const [newTeamToken, setNewTeamToken] = useState('')
   const [newTeamGuide, setNewTeamGuide] = useState('')
+  const [newTeamStartStage, setNewTeamStartStage] = useState(0)
   const [addingTeam, setAddingTeam] = useState(false)
 
   useEffect(() => {
@@ -49,6 +51,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
           setTimerMinutes(g.timerMinutes || 120)
           setStageTimerMinutes(g.stageTimerMinutes || 10)
           setStartedAt(g.startedAt)
+          setStages(g.stages || [])
           setTeams(g.teams)
         })
       )
@@ -72,6 +75,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
       if (id) {
         const updated = await updateGame(client, id, data)
         setStartedAt(updated.startedAt)
+        setStages(updated.stages || [])
         setTeams(updated.teams)
       } else {
         const created = await createGame(client, data)
@@ -92,13 +96,14 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
     setAddingTeam(true)
     setError('')
 
-    const data: TeamRequest = { name: newTeamName, joinToken: newTeamToken, guideName: newTeamGuide }
+    const data: TeamRequest = { name: newTeamName, joinToken: newTeamToken, guideName: newTeamGuide, startStage: newTeamStartStage }
     try {
       const team = await createTeam(client, id, data)
       setTeams((prev) => [...prev, team])
       setNewTeamName('')
       setNewTeamToken('')
       setNewTeamGuide('')
+      setNewTeamStartStage(0)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to add team')
     } finally {
@@ -113,7 +118,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
     const guideName = prompt('Guide name:', team.guideName) ?? ''
 
     try {
-      const updated = await updateTeam(client, id, team.id, { name: name.trim(), joinToken: team.joinToken, guideName: guideName.trim() })
+      const updated = await updateTeam(client, id, team.id, { name: name.trim(), joinToken: team.joinToken, guideName: guideName.trim(), startStage: team.startStage })
       setTeams((prev) => prev.map((t) => (t.id === team.id ? updated : t)))
     } catch (e) {
       alert(e instanceof Error ? e.message : 'Update failed')
@@ -213,6 +218,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
                   <th>Join Link</th>
                   {supervised && <th>Supervisor Link</th>}
                   {selectedMode === 'math_puzzle' && <th>Team Secret</th>}
+                  <th>Start Stage</th>
                   <th>Guide</th>
                   <th>Players</th>
                   <th></th>
@@ -244,6 +250,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
                       </td>
                     )}
                     {selectedMode === 'math_puzzle' && <td>{t.teamSecret || '-'}</td>}
+                    <td>{t.startStage ? `${t.startStage} — ${stages.find(s => s.stageNumber === t.startStage)?.location || ''}` : 'Default (1)'}</td>
                     <td>{t.guideName || '-'}</td>
                     <td>{t.playerCount}</td>
                     <td className="whitespace-nowrap">
@@ -272,10 +279,19 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
           <details>
             <summary>Add Team</summary>
             <form onSubmit={handleAddTeam} className="mt-4 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="input-label">Team Name</label>
                   <input className="input" type="text" value={newTeamName} onChange={(e) => setNewTeamName(e.target.value)} required />
+                </div>
+                <div>
+                  <label className="input-label">Starting Stage</label>
+                  <select className="input" value={newTeamStartStage} onChange={(e) => setNewTeamStartStage(parseInt(e.target.value))}>
+                    <option value={0}>Default (Stage 1)</option>
+                    {stages.map((s) => (
+                      <option key={s.stageNumber} value={s.stageNumber}>Stage {s.stageNumber} — {s.location}</option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="input-label">Join Token (optional)</label>

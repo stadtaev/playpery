@@ -65,6 +65,7 @@ export interface TeamItem {
   supervisorToken: string
   guideName: string
   teamSecret?: number
+  startStage: number
   playerCount: number
   createdAt: string
 }
@@ -80,6 +81,7 @@ export interface GameDetail {
   timerMinutes: number
   stageTimerMinutes: number
   startedAt: string | null
+  stages: Stage[]
   teams: TeamItem[]
   createdAt: string
 }
@@ -97,6 +99,7 @@ export interface TeamRequest {
   name: string
   joinToken: string
   guideName: string
+  startStage: number
 }
 
 export interface GameStatus {

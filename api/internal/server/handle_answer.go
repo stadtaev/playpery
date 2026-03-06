@@ -94,7 +94,8 @@ func handleAnswer(broker *Broker) http.HandlerFunc {
 			return
 		}
 
-		stage := stages[currentStageNum-1]
+		idx := rotatedStageIndex(currentStageNum, data.StartStage, len(stages))
+		stage := stages[idx]
 		isCorrect := strings.EqualFold(
 			strings.TrimSpace(req.Answer),
 			strings.TrimSpace(stage.CorrectAnswer),
@@ -113,9 +114,10 @@ func handleAnswer(broker *Broker) http.HandlerFunc {
 		// Both correct and incorrect answers advance to the next stage.
 		nextStageNum := currentStageNum + 1
 		if nextStageNum <= len(stages) {
-			s := stages[nextStageNum-1]
+			nextIdx := rotatedStageIndex(nextStageNum, data.StartStage, len(stages))
+			s := stages[nextIdx]
 			ns := StageInfo{
-				StageNumber: s.StageNumber,
+				StageNumber: nextStageNum,
 				Clue:        s.Clue,
 				Location:    s.Location,
 				Locked:      modeRequiresUnlock(data.Mode),

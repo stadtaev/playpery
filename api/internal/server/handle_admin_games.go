@@ -36,6 +36,7 @@ type AdminGameDetail struct {
 	TimerMinutes      int             `json:"timerMinutes"`
 	StageTimerMinutes int             `json:"stageTimerMinutes"`
 	StartedAt         *string         `json:"startedAt"`
+	Stages            []AdminStage    `json:"stages"`
 	Teams             []AdminTeamItem `json:"teams"`
 	CreatedAt         string          `json:"createdAt"`
 }
@@ -47,6 +48,7 @@ type AdminTeamItem struct {
 	SupervisorToken string `json:"supervisorToken,omitempty"`
 	GuideName       string `json:"guideName"`
 	TeamSecret      int    `json:"teamSecret,omitempty"`
+	StartStage      int    `json:"startStage"`
 	PlayerCount     int    `json:"playerCount"`
 	CreatedAt       string `json:"createdAt"`
 }
@@ -63,9 +65,10 @@ type AdminGameRequest struct {
 }
 
 type AdminTeamRequest struct {
-	Name      string `json:"name"`
-	JoinToken string `json:"joinToken"`
-	GuideName string `json:"guideName"`
+	Name       string `json:"name"`
+	JoinToken  string `json:"joinToken"`
+	GuideName  string `json:"guideName"`
+	StartStage int    `json:"startStage"`
 }
 
 type AdminGameStatus struct {
