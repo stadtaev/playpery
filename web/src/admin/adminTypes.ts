@@ -54,6 +54,7 @@ export interface GameSummary {
   timerEnabled: boolean
   timerMinutes: number
   stageTimerMinutes: number
+  notes?: string
   teamCount: number
   createdAt: string
 }
@@ -80,6 +81,7 @@ export interface GameDetail {
   timerEnabled: boolean
   timerMinutes: number
   stageTimerMinutes: number
+  notes?: string
   startedAt: string | null
   stages: Stage[]
   teams: TeamItem[]
@@ -93,6 +95,7 @@ export interface GameRequest {
   timerEnabled: boolean
   timerMinutes: number
   stageTimerMinutes: number
+  notes: string
 }
 
 export interface TeamRequest {

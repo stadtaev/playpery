@@ -21,6 +21,7 @@ type AdminGameSummary struct {
 	TimerEnabled      bool   `json:"timerEnabled"`
 	TimerMinutes      int    `json:"timerMinutes"`
 	StageTimerMinutes int    `json:"stageTimerMinutes"`
+	Notes             string `json:"notes,omitempty"`
 	TeamCount         int    `json:"teamCount"`
 	CreatedAt         string `json:"createdAt"`
 }
@@ -35,6 +36,7 @@ type AdminGameDetail struct {
 	TimerEnabled      bool            `json:"timerEnabled"`
 	TimerMinutes      int             `json:"timerMinutes"`
 	StageTimerMinutes int             `json:"stageTimerMinutes"`
+	Notes             string          `json:"notes,omitempty"`
 	StartedAt         *string         `json:"startedAt"`
 	Stages            []AdminStage    `json:"stages"`
 	Teams             []AdminTeamItem `json:"teams"`
@@ -62,6 +64,7 @@ type AdminGameRequest struct {
 	TimerEnabled      bool   `json:"timerEnabled"`
 	TimerMinutes      int    `json:"timerMinutes"`
 	StageTimerMinutes int    `json:"stageTimerMinutes"`
+	Notes             string `json:"notes"`
 }
 
 type AdminTeamRequest struct {

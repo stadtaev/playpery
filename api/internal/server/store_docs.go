@@ -34,6 +34,7 @@ type game struct {
 	TimerEnabled      bool         `json:"timerEnabled"`
 	TimerMinutes      int          `json:"timerMinutes"`
 	StageTimerMinutes int          `json:"stageTimerMinutes"`
+	Notes             string       `json:"notes,omitempty"`
 	Stages            []AdminStage `json:"stages"`
 	StartedAt         *string      `json:"startedAt"`
 	EndedAt           *string      `json:"endedAt"`
@@ -539,6 +540,7 @@ func (s *DocStore) ListGames(ctx context.Context) ([]AdminGameSummary, error) {
 			TimerEnabled:      g.TimerEnabled,
 			TimerMinutes:      g.TimerMinutes,
 			StageTimerMinutes: g.StageTimerMinutes,
+			Notes:             g.Notes,
 			TeamCount:         len(g.Teams),
 			CreatedAt:         g.CreatedAt,
 		})
@@ -563,6 +565,7 @@ func (s *DocStore) CreateGame(ctx context.Context, req AdminGameRequest, stages 
 		TimerEnabled:      req.TimerEnabled,
 		TimerMinutes:      req.TimerMinutes,
 		StageTimerMinutes: req.StageTimerMinutes,
+		Notes:             req.Notes,
 		Stages:            stages,
 		CreatedAt:         now,
 		Teams:             []team{},
@@ -580,6 +583,7 @@ func (s *DocStore) CreateGame(ctx context.Context, req AdminGameRequest, stages 
 		TimerEnabled:      req.TimerEnabled,
 		TimerMinutes:      req.TimerMinutes,
 		StageTimerMinutes: req.StageTimerMinutes,
+		Notes:             req.Notes,
 		Stages:            stages,
 		Teams:             []AdminTeamItem{},
 		CreatedAt:         now,
@@ -617,6 +621,7 @@ func (s *DocStore) GetGame(ctx context.Context, id string) (AdminGameDetail, err
 		TimerEnabled:      g.TimerEnabled,
 		TimerMinutes:      g.TimerMinutes,
 		StageTimerMinutes: g.StageTimerMinutes,
+		Notes:             g.Notes,
 		StartedAt:         g.StartedAt,
 		Stages:            g.Stages,
 		Teams:             teams,
@@ -660,6 +665,7 @@ func (s *DocStore) UpdateGame(ctx context.Context, id string, req AdminGameReque
 	g.TimerEnabled = req.TimerEnabled
 	g.TimerMinutes = req.TimerMinutes
 	g.StageTimerMinutes = req.StageTimerMinutes
+	g.Notes = req.Notes
 
 	// Handle status transition timestamps.
 	if req.Status != oldStatus {
@@ -706,6 +712,7 @@ func (s *DocStore) UpdateGame(ctx context.Context, id string, req AdminGameReque
 		TimerEnabled:      req.TimerEnabled,
 		TimerMinutes:      req.TimerMinutes,
 		StageTimerMinutes: req.StageTimerMinutes,
+		Notes:             req.Notes,
 		StartedAt:         g.StartedAt,
 		Stages:            g.Stages,
 		Teams:             teams,

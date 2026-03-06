@@ -19,6 +19,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
   const [timerEnabled, setTimerEnabled] = useState(false)
   const [timerMinutes, setTimerMinutes] = useState(120)
   const [stageTimerMinutes, setStageTimerMinutes] = useState(10)
+  const [notes, setNotes] = useState('')
   const [startedAt, setStartedAt] = useState<string | null>(null)
   const [stages, setStages] = useState<Stage[]>([])
   const [teams, setTeams] = useState<TeamItem[]>([])
@@ -50,6 +51,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
           setTimerEnabled(g.timerEnabled)
           setTimerMinutes(g.timerMinutes || 120)
           setStageTimerMinutes(g.stageTimerMinutes || 10)
+          setNotes(g.notes || '')
           setStartedAt(g.startedAt)
           setStages(g.stages || [])
           setTeams(g.teams)
@@ -69,7 +71,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
     setSaving(true)
     setError('')
 
-    const data: GameRequest = { scenarioId, status, supervised, timerEnabled, timerMinutes, stageTimerMinutes }
+    const data: GameRequest = { scenarioId, status, supervised, timerEnabled, timerMinutes, stageTimerMinutes, notes }
 
     try {
       if (id) {
@@ -192,6 +194,11 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
             </div>
           </div>
         )}
+
+        <div>
+          <label className="input-label">Notes (optional)</label>
+          <textarea className="input" rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Organisation notes, instructions, etc." />
+        </div>
 
         <div className="flex gap-4">
           <button type="submit" disabled={saving} className="btn">
