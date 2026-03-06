@@ -15,7 +15,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
   const [scenarios, setScenarios] = useState<ScenarioSummary[]>([])
   const [scenarioId, setScenarioId] = useState('')
   const [status, setStatus] = useState('draft')
-  const [supervised, setSupervised] = useState(false)
+  const [supervised, setSupervised] = useState(true)
   const [timerEnabled, setTimerEnabled] = useState(false)
   const [timerMinutes, setTimerMinutes] = useState(120)
   const [stageTimerMinutes, setStageTimerMinutes] = useState(10)
