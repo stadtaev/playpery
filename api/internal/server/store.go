@@ -27,6 +27,7 @@ type gameStateData struct {
 	TeamSecret        int
 	StartStage        int
 	UnlockedStages    []int
+	StageUnlockedAt   *string
 }
 
 type Store interface {

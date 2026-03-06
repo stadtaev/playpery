@@ -51,6 +51,7 @@ type team struct {
 	TeamSecret      int           `json:"teamSecret,omitempty"`
 	StartStage      int           `json:"startStage,omitempty"`
 	UnlockedStages  []int         `json:"unlockedStages,omitempty"`
+	StageUnlockedAt *string       `json:"stageUnlockedAt,omitempty"`
 	CreatedAt       string        `json:"createdAt"`
 	Players         []player      `json:"players"`
 	Results         []stageResult `json:"results"`
@@ -381,12 +382,14 @@ func (s *DocStore) GameState(ctx context.Context, gameID, teamID string) (gameSt
 	var teamSecret int
 	var startStage int
 	var unlockedStages []int
+	var stageUnlockedAt *string
 	for _, t := range g.Teams {
 		if t.ID == teamID {
 			teamName = t.Name
 			teamSecret = t.TeamSecret
 			startStage = t.StartStage
 			unlockedStages = t.UnlockedStages
+			stageUnlockedAt = t.StageUnlockedAt
 			break
 		}
 	}
@@ -404,6 +407,7 @@ func (s *DocStore) GameState(ctx context.Context, gameID, teamID string) (gameSt
 	d.TeamSecret = teamSecret
 	d.StartStage = startStage
 	d.UnlockedStages = unlockedStages
+	d.StageUnlockedAt = stageUnlockedAt
 	return d, nil
 }
 
@@ -467,6 +471,7 @@ func (s *DocStore) RecordAnswer(ctx context.Context, gameID, teamID string, stag
 					IsCorrect:   isCorrect,
 					AnsweredAt:  now,
 				})
+				g.Teams[i].StageUnlockedAt = nil
 				return nil
 			}
 		}
@@ -1011,6 +1016,7 @@ func (s *DocStore) SeedDemoGame(ctx context.Context, sc *scenario) error {
 }
 
 func (s *DocStore) UnlockStage(ctx context.Context, gameID, teamID string, stageNumber int) error {
+	now := nowUTC()
 	return s.modifyGame(ctx, gameID, func(g *game) error {
 		for i := range g.Teams {
 			if g.Teams[i].ID == teamID {
@@ -1021,6 +1027,7 @@ func (s *DocStore) UnlockStage(ctx context.Context, gameID, teamID string, stage
 					}
 				}
 				g.Teams[i].UnlockedStages = append(g.Teams[i].UnlockedStages, stageNumber)
+				g.Teams[i].StageUnlockedAt = &now
 				return nil
 			}
 		}

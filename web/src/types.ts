@@ -57,6 +57,7 @@ export interface GameState {
   team: TeamInfo
   role: string
   teamSecret?: number
+  stageUnlockedAt?: string | null
   currentStage: StageInfo | null
   completedStages: CompletedStage[]
   players: PlayerInfo[]

@@ -94,9 +94,18 @@ func handleAnswer(broker *Broker) http.HandlerFunc {
 			return
 		}
 
+		// Enforce stage timer: if unlocked and stage timer expired, auto-record wrong.
+		stageTimerExpired := false
+		if data.StageTimerMinutes > 0 && data.StageUnlockedAt != nil {
+			unlockTime, _ := time.Parse(time.RFC3339Nano, *data.StageUnlockedAt)
+			if time.Since(unlockTime) > time.Duration(data.StageTimerMinutes)*time.Minute {
+				stageTimerExpired = true
+			}
+		}
+
 		idx := rotatedStageIndex(currentStageNum, data.StartStage, len(stages))
 		stage := stages[idx]
-		isCorrect := strings.EqualFold(
+		isCorrect := !stageTimerExpired && strings.EqualFold(
 			strings.TrimSpace(req.Answer),
 			strings.TrimSpace(stage.CorrectAnswer),
 		)

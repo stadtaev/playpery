@@ -21,7 +21,6 @@ export function useGameState() {
   const stagePhaseRef = useRef<StagePhase>('interstitial')
   const [answerResult, setAnswerResult] = useState<AnswerResult | null>(null)
   const answeringRef = useRef(false) // true while submitAnswer is in-flight
-  const [phaseStartedAt, setPhaseStartedAt] = useState<number | null>(null)
 
   const fetchState = useCallback(() => {
     getGameState(client)
@@ -67,7 +66,6 @@ export function useGameState() {
   useEffect(() => {
     if (stagePhaseRef.current === 'results' || answeringRef.current) return
     updateStagePhase('interstitial')
-    setPhaseStartedAt(null)
     setFeedback(null)
     setAnswerResult(null)
     setAnswer('')
@@ -91,8 +89,8 @@ export function useGameState() {
     ? new Date(state.game.startedAt).getTime() + state.game.timerMinutes * 60000
     : null
 
-  const stageDeadline = (timerActive && phaseStartedAt && state.game.stageTimerMinutes)
-    ? phaseStartedAt + state.game.stageTimerMinutes * 60000
+  const stageDeadline = (timerActive && state.stageUnlockedAt && state.game.stageTimerMinutes)
+    ? new Date(state.stageUnlockedAt).getTime() + state.game.stageTimerMinutes * 60000
     : null
 
   const gameRemaining = useCountdown(gameDeadline)
@@ -100,8 +98,6 @@ export function useGameState() {
 
   function handleGoToStage() {
     const mode = state?.game.mode || 'classic'
-    const now = Date.now()
-    setPhaseStartedAt(now)
     setFeedback(null)
     if (mode === 'classic') {
       updateStagePhase('answering')
