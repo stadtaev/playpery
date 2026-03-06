@@ -285,14 +285,25 @@ func handleAdminDeleteGame() http.HandlerFunc {
 		store := clientStore(r)
 		gameID := chi.URLParam(r, "gameID")
 
-		hasPlayers, err := store.GameHasPlayers(r.Context(), gameID)
+		game, err := store.GetGame(r.Context(), gameID)
 		if err != nil {
+			if errors.Is(err, ErrNotFound) {
+				writeError(w, http.StatusNotFound, "game not found")
+				return
+			}
 			writeError(w, http.StatusInternalServerError, "internal error")
 			return
 		}
-		if hasPlayers {
-			writeError(w, http.StatusConflict, "cannot delete game with existing players")
-			return
+		if game.Status == "active" {
+			hasPlayers, err := store.GameHasPlayers(r.Context(), gameID)
+			if err != nil {
+				writeError(w, http.StatusInternalServerError, "internal error")
+				return
+			}
+			if hasPlayers {
+				writeError(w, http.StatusConflict, "cannot delete active game with existing players")
+				return
+			}
 		}
 
 		if err := store.DeleteTeamsByGame(r.Context(), gameID); err != nil {
