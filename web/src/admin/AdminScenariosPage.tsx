@@ -16,6 +16,7 @@ export function AdminScenariosPage() {
 
   useEffect(() => {
     listScenarios()
+      .then((s) => s.sort((a, b) => b.createdAt.localeCompare(a.createdAt)))
       .then(setScenarios)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))

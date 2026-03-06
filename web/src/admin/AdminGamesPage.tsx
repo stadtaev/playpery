@@ -23,6 +23,7 @@ export function AdminGamesPage({ client }: { client: string }) {
 
   useEffect(() => {
     listGames(client)
+      .then((g) => g.sort((a, b) => b.createdAt.localeCompare(a.createdAt)))
       .then(setGames)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
