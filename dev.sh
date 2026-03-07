@@ -38,6 +38,7 @@ echo "==> starting vite on :5173..."
 PIDS+=($!)
 
 echo ""
+echo "  Landing page:     http://localhost:8080/"
 echo "  SPA (hot reload): http://localhost:5173/join/incas-2025"
 echo "  Go  (full stack): http://localhost:8080/join/incas-2025"
 echo "  API docs:         http://localhost:8080/docs"

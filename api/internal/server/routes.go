@@ -65,6 +65,13 @@ func addRoutes(r chi.Router, logger *slog.Logger, admin AdminStore, clients *Reg
 	if spaDir != "" {
 		if info, err := os.Stat(spaDir); err == nil && info.IsDir() {
 			logger.Info("serving SPA", "dir", spaDir)
+
+			// Serve landing page at root if it exists.
+			landingPath := spaDir + "/landing.html"
+			if _, err := os.Stat(landingPath); err == nil {
+				r.Get("/", handleLanding(landingPath))
+			}
+
 			r.NotFound(handleSPA(spaDir))
 		}
 	}

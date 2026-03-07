@@ -9,7 +9,6 @@ import { AdminScenarioEditorPage } from './admin/AdminScenarioEditorPage'
 import { AdminGamesPage } from './admin/AdminGamesPage'
 import { AdminGameEditorPage } from './admin/AdminGameEditorPage'
 import { AdminGameStatusPage } from './admin/AdminGameStatusPage'
-import { PageContainer } from './components/PageContainer'
 import { getSession } from './lib/session'
 
 type Route =
@@ -100,11 +99,9 @@ export default function App() {
     case 'admin-game-edit':
       return <AdminLayout client={route.client}><AdminGameEditorPage client={route.client} id={route.id} /></AdminLayout>
     default:
-      return (
-        <PageContainer className="text-center">
-          <h1>CityQuest</h1>
-          <p className="text-secondary">Scan your team's QR code or use the join link to get started.</p>
-        </PageContainer>
-      )
+      // Root path is handled by static landing.html served by the backend.
+      // If we reach here in the SPA, redirect to the landing page.
+      window.location.href = '/'
+      return null
   }
 }

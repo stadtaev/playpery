@@ -6,6 +6,13 @@ import (
 	"path/filepath"
 )
 
+// handleLanding serves a static landing page with appropriate cache headers.
+func handleLanding(path string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, path)
+	}
+}
+
 // handleSPA serves static files from dir, falling back to index.html
 // for any path that doesn't match a real file (SPA client-side routing).
 func handleSPA(dir string) http.HandlerFunc {
