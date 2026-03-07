@@ -50,7 +50,7 @@ export function GamePage() {
         <span className="text-secondary text-sm uppercase tracking-widest font-bold">{team.name}</span>
       </nav>
 
-      {isEnded && (
+      {isEnded && stagePhase !== 'results' && (
         <div className="card">
           <div className="card-header">Game Over!</div>
           <p>
@@ -98,9 +98,9 @@ export function GamePage() {
         />
       )}
 
-      {currentStage && !isEnded && stagePhase === 'results' && answerResult && (
+      {stagePhase === 'results' && answerResult && (
         <ResultsPanel
-          stageNumber={currentStage.stageNumber}
+          stageNumber={currentStage?.stageNumber ?? completedStages[completedStages.length - 1]?.stageNumber ?? 0}
           totalStages={game.totalStages}
           result={answerResult}
           onContinue={handleContinue}
