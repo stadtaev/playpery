@@ -720,110 +720,35 @@
     </div>
   </footer>
 
-  <!-- i18n: all translation strings are hardcoded static literals, no user input -->
+  <!-- i18n: translations loaded from /i18n/{lang}.json -->
   <script>
   (function() {
-    var T = {
-      ru: {
-        _title: "GoCityQuest — Городские командные приключения для компаний",
-        nav_cta: "Связаться",
-        hero_title: "Превратите тимбилдинг в городское приключение",
-        hero_text: "Выведите команду из переговорной на улицы города. GoCityQuest создаёт культурные квесты, которые объединяют людей, пробуждают любопытство и заряжают энергией.",
-        hero_cta: "Заказать квест",
-        whatwedo_label: "Что мы делаем",
-        whatwedo_title: "Корпоративный тимбилдинг нового формата",
-        whatwedo_subtitle: "Мы проектируем городские квесты, превращая исторические улицы в командные испытания. Никаких «упражнений на доверие». Только настоящие исследования, задачи и живое общение.",
-        feat1_title: "Культурные городские квесты",
-        feat1_text: "Ваша команда проходит через исторические достопримечательности, скрытые дворики и местные жемчужины. Каждая остановка — это история и задание, требующее совместной работы.",
-        feat2_title: "Настоящее сплочение команды",
-        feat2_text: "Идти бок о бок, решать задачи вместе, открывать новое — такой общий опыт создаёт доверие, которое не воспроизведёт ни один тренинг.",
-        feat3_title: "Платформа корпоративного уровня",
-        feat3_text: "Панели мониторинга в реальном времени, поддержка нескольких команд, пользовательские сценарии, брендированный опыт. Создано для компаний, которые ожидают профессионального исполнения.",
-        why_label: "Почему GoCityQuest",
-        why_title: "Ваша команда заслуживает большего, чем очередной зал для совещаний",
-        why_subtitle: "Тимбилдинг должен ощущаться как инвестиция, а не повинность. Вот почему ведущие компании выбирают культурные квесты на свежем воздухе.",
-        why1_title: "Свежий воздух и движение",
-        why1_text: "Исследования подтверждают: ходьба повышает креативное мышление до 60%. Ваша команда проводит день на свежем воздухе, заряжаясь энергией города, а не уставая от люминесцентных ламп. Это реальная инвестиция в здоровье сотрудников — и они это почувствуют.",
-        why2_title: "Культурные открытия",
-        why2_text: "Каждый квест построен на реальной истории, архитектуре и местных легендах. Ваша команда не просто посещает достопримечательности — она раскрывает скрытые слои города. От средневековых торговых путей до фасадов ар-деко.",
-        why3_title: "Живые связи, а не принудительное веселье",
-        why3_text: "Лучшее сплочение команды происходит естественно — когда люди вместе решают задачу, делают открытие или теряются и находят путь обратно. GoCityQuest создаёт условия для искреннего взаимодействия, а не постановочных групповых активностей.",
-        why4_title: "Более 20 лет опыта в индустрии",
-        why4_text: "Мы создаём командные мероприятия с тех пор, как «тимбилдинг» ещё не стал модным словом. Два десятилетия работы с компаниями любого масштаба — от стартапов до Fortune 500 — мы знаем, что работает, а что нет.",
-        how_label: "Как это работает",
-        how_title: "От заявки до празднования за четыре шага",
-        how_subtitle: "Мы берём на себя всю сложность, чтобы вам не пришлось. Каждый квест — под ключ: просто приходите и исследуйте.",
-        step1_title: "Мы создаём ваш сценарий",
-        step1_text: "Расскажите нам город, размер группы и желаемую атмосферу. Мы спроектируем уникальный маршрут через лучшие культурные достопримечательности с заданиями для вашей команды.",
-        step2_title: "Команды получают коды",
-        step2_text: "Каждая команда получает уникальный QR-код или ссылку. Никаких скачиваний приложений, никаких аккаунтов — просто отсканируйте и начинайте с любого смартфона.",
-        step3_title: "Гуляйте, исследуйте, решайте",
-        step3_text: "Команды проходят город в своём темпе. На каждой достопримечательности они открывают подсказки, отвечают на вопросы и зарабатывают очки. Таблица лидеров в реальном времени поддерживает соревновательный дух.",
-        step4_title: "Празднуйте вместе",
-        step4_text: "После квеста соберитесь, чтобы сравнить истории, посмотреть результаты и наградить победителей. Совместное приключение даёт всем о чём поговорить.",
-        ent_label: "Для бизнеса",
-        ent_title: "Создано для компаний, которые серьёзно относятся к культуре",
-        ent_subtitle: "GoCityQuest — это не игрушка. Это профессиональная платформа, рассчитанная на корпоративное использование любого масштаба.",
-        test_label: "Отзывы клиентов",
-        test_title: "Нам доверяют команды по всему миру",
-        test_subtitle: "Компании, которые инвестируют в людей, выбирают GoCityQuest ради результатов, которые сохраняются надолго.",
-        test1_quote: "«Наша команда вернулась с квеста более вдохновлённой, чем после любого выездного мероприятия. Люди, которые раньше не общались, вдруг начали сотрудничать. Это изменило динамику всего отдела.»",
-        test1_name: "Сара М.",
-        test1_role: "— Руководитель HR, ИТ-компания",
-        test2_quote: "«Мы проводим GoCityQuest для каждого нового набора сотрудников. Это стало нашим фирменным онбордингом. Культурный контекст делает его запоминающимся так, как это не могут тренинги.»",
-        test2_name: "Давид К.",
-        test2_role: "— VP Operations, финансовый сектор",
-        test3_quote: "«Я был скептиком — наша команда не любит «весёлые активности». Но квест оказался по-настоящему увлекательным. Исторические задания были умными, конкуренция жаркой, и все спросили, когда повторим.»",
-        test3_name: "Мария Л.",
-        test3_role: "— Директор по разработке, SaaS-стартап",
-        cta_title: "Готовы вывести команду на улицы?",
-        cta_text: "Давайте создадим квест, о котором ваша команда будет вспоминать годами.",
-        cta_btn: "Заказать квест",
-        contact_label: "Контакты",
-        contact_title: "Давайте спланируем ваше следующее командное приключение",
-        contact_subtitle: "Свяжитесь с нами, и мы вернёмся к вам в течение 24 часов с индивидуальным предложением для вашей команды.",
-        contact_email: "Электронная почта",
-        contact_phone: "Телефон",
-        contact_address: "Адрес",
-        footer_copy: "GoCityQuest \u00a9 2025. Все права защищены.",
-        img_alt_streets: "Команда гуляет по историческим улицам европейского города",
-        img_alt_oldtown: "Архитектура старого города и мощёные улицы",
-        img_alt_group: "Группа коллег смеётся и общается на свежем воздухе",
-        img_alt_team: "Профессиональная команда обсуждает результаты"
-      }
-    };
+    var CACHE = {};
 
-    // Checklist items: [bold, rest] pairs for safe DOM construction (no innerHTML)
-    var entFeats = {
-      ru: [
-        ["Индивидуальные сценарии", " — маршруты и задания, адаптированные под ваш город и цели команды"],
-        ["Поддержка нескольких команд", " — одновременный запуск десятков команд с отслеживанием в реальном времени"],
-        ["Панели мониторинга", " — отслеживайте прогресс каждой команды в реальном времени"],
-        ["Брендированный опыт", " — фирменный стиль вашей компании интегрирован в квест"],
-        ["Без приложения", " — работает в любом мобильном браузере, ноль барьеров для участников"],
-        ["Персональный менеджер", " — одна точка контакта от планирования до подведения итогов"],
-        ["Мультиязычность", " — квесты на любом языке вашей команды"],
-        ["Масштабируемость", " — от команд из 10 человек до корпоративных выездов на 500 участников"]
-      ]
-    };
+    function detectLang() {
+      // URL path takes priority (/ru), then localStorage, then default
+      if (window.location.pathname === "/ru") return "ru";
+      if (window.location.pathname === "/") return localStorage.getItem("lang") || "en";
+      return "en";
+    }
 
-    var lang = window.location.pathname === "/ru" ? "ru" : "en";
+    async function loadStrings(lang) {
+      if (CACHE[lang]) return CACHE[lang];
+      var resp = await fetch("/i18n/" + lang + ".json");
+      if (!resp.ok) return null;
+      CACHE[lang] = await resp.json();
+      return CACHE[lang];
+    }
 
-    function apply(lang) {
+    function apply(strings, lang) {
       document.documentElement.lang = lang;
+      localStorage.setItem("lang", lang);
 
-      // Update title
-      if (T[lang] && T[lang]._title) {
-        document.title = T[lang]._title;
-      }
+      if (strings._title) document.title = strings._title;
 
-      // Update meta description
-      if (T[lang] && T[lang].hero_text) {
-        var descEl = document.querySelector('meta[name="description"]');
-        if (descEl) descEl.content = T[lang].hero_text;
-      }
+      var descEl = document.querySelector('meta[name="description"]');
+      if (descEl && strings.hero_text) descEl.content = strings.hero_text;
 
-      // Update canonical
       var canonical = document.querySelector('link[rel="canonical"]');
       if (canonical) {
         canonical.href = lang === "ru"
@@ -831,15 +756,11 @@
           : "https://gocityquest.online/";
       }
 
-      // Update lang switch
       var sw = document.getElementById("lang-switch");
       if (sw) {
         sw.textContent = lang === "ru" ? "EN" : "RU";
         sw.href = lang === "ru" ? "/" : "/ru";
       }
-
-      if (!T[lang]) return;
-      var strings = T[lang];
 
       // data-i18n: replace textContent
       document.querySelectorAll("[data-i18n]").forEach(function(el) {
@@ -854,9 +775,9 @@
       });
 
       // Checklist items: safe DOM construction (no innerHTML)
-      if (entFeats[lang]) {
+      if (strings.ent_feats) {
         var items = document.querySelectorAll(".checklist li[data-i18n]");
-        entFeats[lang].forEach(function(pair, i) {
+        strings.ent_feats.forEach(function(pair, i) {
           if (items[i]) {
             while (items[i].firstChild) items[i].removeChild(items[i].firstChild);
             var strong = document.createElement("strong");
@@ -866,22 +787,28 @@
           }
         });
       }
-
-      // Testimonial cites: safe DOM construction (name + span role)
-      ["test1", "test2", "test3"].forEach(function(prefix) {
-        var nameKey = prefix + "_name";
-        var roleKey = prefix + "_role";
-        if (strings[nameKey] && strings[roleKey]) {
-          // Find the cite that contains a span with matching data-i18n
-          var nameEl = document.querySelector('[data-i18n="' + nameKey + '"]');
-          if (nameEl) nameEl.textContent = strings[nameKey];
-          var roleEl = document.querySelector('[data-i18n="' + roleKey + '"]');
-          if (roleEl) roleEl.textContent = strings[roleKey];
-        }
-      });
     }
 
-    if (lang !== "en") apply(lang);
+    async function init() {
+      var lang = detectLang();
+
+      // Redirect to /ru if user prefers Russian but landed on /
+      if (lang === "ru" && window.location.pathname === "/") {
+        window.location.replace("/ru");
+        return;
+      }
+
+      if (lang === "en") {
+        // HTML is already English — just persist preference
+        localStorage.setItem("lang", "en");
+        return;
+      }
+
+      var strings = await loadStrings(lang);
+      if (strings) apply(strings, lang);
+    }
+
+    init();
   })();
   </script>
 
