@@ -13,6 +13,7 @@ interface SessionData {
   teamId: string
   teamName: string
   role: string
+  language?: string
 }
 
 const ACTIVE_KEY = 'cq_active_session'

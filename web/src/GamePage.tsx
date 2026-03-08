@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { TimerDisplay } from './TimerDisplay'
 import { InterstitialPanel } from './InterstitialPanel'
 import { UnlockPanel } from './UnlockPanel'
@@ -7,8 +9,10 @@ import { useGameState } from './useGameState'
 import { PageContainer } from './components/PageContainer'
 import { LoadingPage } from './components/Spinner'
 import { ErrorMessage } from './components/ErrorMessage'
+import { getSession } from './lib/session'
 
 export function GamePage() {
+  const { t, i18n } = useTranslation('player')
   const {
     state, error, stagePhase,
     answer, setAnswer,
@@ -18,18 +22,27 @@ export function GamePage() {
     handleGoToStage, handleUnlock, handleSubmit, handleContinue, handleLogout,
   } = useGameState()
 
+  useEffect(() => {
+    const session = getSession()
+    if (session?.language) i18n.changeLanguage(session.language)
+  }, [i18n])
+
+  useEffect(() => {
+    if (state?.game.language) i18n.changeLanguage(state.game.language)
+  }, [state?.game.language, i18n])
+
   if (error) {
     return (
       <PageContainer>
-        <h1>CityQuest</h1>
+        <h1>{t('app_title')}</h1>
         <ErrorMessage message={error} />
-        <button onClick={handleLogout} className="btn">Back to start</button>
+        <button onClick={handleLogout} className="btn">{t('back_to_start')}</button>
       </PageContainer>
     )
   }
 
   if (!state) {
-    return <LoadingPage message="Loading game..." />
+    return <LoadingPage message={t('loading_game')} />
   }
 
   const { game, team, role, currentStage, completedStages, players } = state
@@ -46,15 +59,15 @@ export function GamePage() {
         </>
       )}
       <nav className="flex justify-between items-center mb-6">
-        <h1 className="m-0">CityQuest</h1>
+        <h1 className="m-0">{t('app_title')}</h1>
         <span className="text-secondary text-sm uppercase tracking-widest font-bold">{team.name}</span>
       </nav>
 
       {isEnded && stagePhase !== 'results' && (
         <div className="card">
-          <div className="card-header">Game Over!</div>
+          <div className="card-header">{t('game_over')}</div>
           <p>
-            Your team answered {completedStages.filter((s) => s.isCorrect).length} of {game.totalStages} correctly.
+            {t('game_over_score', { correct: completedStages.filter((s) => s.isCorrect).length, total: game.totalStages })}
           </p>
         </div>
       )}
@@ -109,11 +122,11 @@ export function GamePage() {
 
       {completedStages.length > 0 && (
         <details open={isEnded}>
-          <summary>Completed Stages ({completedStages.length})</summary>
+          <summary>{t('completed_stages', { count: completedStages.length })}</summary>
           <ul className="mt-3 space-y-1">
             {completedStages.map((s) => (
               <li key={s.stageNumber} className={s.isCorrect ? 'text-success' : 'text-error'}>
-                Stage {s.stageNumber} &mdash; {s.isCorrect ? 'correct' : 'incorrect'}
+                {s.isCorrect ? t('stage_correct', { number: s.stageNumber }) : t('stage_incorrect', { number: s.stageNumber })}
               </li>
             ))}
           </ul>
@@ -121,12 +134,12 @@ export function GamePage() {
       )}
 
       <details>
-        <summary>Team ({(() => { const n = players.filter((p) => p.role !== 'supervisor').length; return `${n} player${n !== 1 ? 's' : ''}` })()})</summary>
+        <summary>{t('team_players', { count: players.filter((p) => p.role !== 'supervisor').length })}</summary>
         <div className="mt-3 space-y-1">
           {players.filter((p) => p.role === 'supervisor').map((p) => (
             <p key={p.id} className="flex items-center gap-2">
               <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-600 text-white text-xs font-bold rounded-full">i</span>
-              <span>Supervisor: {p.name}</span>
+              <span>{t('supervisor_label', { name: p.name })}</span>
             </p>
           ))}
           <ul className="space-y-1">
@@ -139,7 +152,7 @@ export function GamePage() {
 
       <p className="text-center mt-8">
         <a href="#" onClick={(e) => { e.preventDefault(); handleLogout() }} className="text-secondary text-xs uppercase tracking-widest">
-          Leave game
+          {t('leave_game')}
         </a>
       </p>
     </PageContainer>

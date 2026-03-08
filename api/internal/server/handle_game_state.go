@@ -9,6 +9,7 @@ import (
 type GameInfo struct {
 	Status            string  `json:"status"`
 	Mode              string  `json:"mode"`
+	Language          string  `json:"language,omitempty"`
 	Supervised        bool    `json:"supervised"`
 	TimerEnabled      bool    `json:"timerEnabled"`
 	TimerMinutes      int     `json:"timerMinutes"`
@@ -204,6 +205,7 @@ func handleGameState() http.HandlerFunc {
 			Game: GameInfo{
 				Status:            data.Status,
 				Mode:              data.Mode,
+				Language:          data.Language,
 				Supervised:        data.Supervised,
 				TimerEnabled:      data.TimerEnabled,
 				TimerMinutes:      data.TimerMinutes,

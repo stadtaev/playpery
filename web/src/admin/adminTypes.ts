@@ -50,6 +50,7 @@ export interface GameSummary {
   scenarioName: string
   status: string
   mode: string
+  language?: string
   supervised: boolean
   timerEnabled: boolean
   timerMinutes: number
@@ -77,6 +78,7 @@ export interface GameDetail {
   scenarioName: string
   status: string
   mode: string
+  language?: string
   supervised: boolean
   timerEnabled: boolean
   timerMinutes: number
@@ -90,6 +92,7 @@ export interface GameDetail {
 
 export interface GameRequest {
   scenarioId: string
+  language: string
   status: string
   supervised: boolean
   timerEnabled: boolean

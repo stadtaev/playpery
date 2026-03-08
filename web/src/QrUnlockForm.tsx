@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type { Feedback } from './useGameState'
 import { FeedbackMessage } from './FeedbackMessage'
 import { Spinner } from './components/Spinner'
@@ -11,23 +12,24 @@ interface Props {
 }
 
 export function QrUnlockForm({ unlockCode, onUnlockCodeChange, onUnlock, feedback, submitting }: Props) {
+  const { t } = useTranslation('player')
   return (
     <form onSubmit={onUnlock} className="space-y-4">
-      <p>Enter the code from the QR at this location:</p>
+      <p>{t('qr_instruction')}</p>
       <div>
         <input
           className="input"
           type="text"
           value={unlockCode}
           onChange={(e) => onUnlockCodeChange(e.target.value)}
-          placeholder="QR code..."
+          placeholder={t('qr_placeholder')}
           autoFocus
           required
         />
       </div>
       {feedback && <FeedbackMessage feedback={feedback} />}
       <button type="submit" disabled={submitting} className="btn w-full">
-        {submitting ? <Spinner /> : 'Submit Code'}
+        {submitting ? <Spinner /> : t('submit_code')}
       </button>
     </form>
   )

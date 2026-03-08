@@ -1,0 +1,57 @@
+{
+  "app_title": "CityQuest",
+  "loading_team": "Загрузка команды...",
+  "loading_game": "Загрузка игры...",
+  "loading": "Загрузка...",
+  "failed_to_join": "Не удалось присоединиться",
+  "back_to_start": "Вернуться в начало",
+
+  "join_heading": "Присоединиться к {{name}}",
+  "join_as_supervisor": "Вход как ведущий",
+  "join_name_label": "Ваше имя",
+  "join_name_placeholder": "Введите ваше имя",
+  "join_button": "Присоединиться",
+
+  "game_over": "Игра окончена!",
+  "game_over_score": "Ваша команда ответила правильно на {{correct}} из {{total}}.",
+  "completed_stages": "Пройденные этапы ({{count}})",
+  "stage_correct": "Этап {{number}} — правильно",
+  "stage_incorrect": "Этап {{number}} — неправильно",
+  "team_players_one": "Команда ({{count}} игрок)",
+  "team_players_few": "Команда ({{count}} игрока)",
+  "team_players_other": "Команда ({{count}} игроков)",
+  "supervisor_label": "Ведущий: {{name}}",
+  "leave_game": "Выйти из игры",
+
+  "stage_of": "Этап {{current}} из {{total}}",
+  "start_quest": "Начать квест",
+  "go_to_next_stage": "Перейти к следующему этапу",
+
+  "question_label": "Вопрос:",
+  "answer_placeholder": "Ваш ответ...",
+  "submit_answer": "Отправить ответ",
+  "waiting_for_supervisor_answer": "Ожидание ответа от ведущего...",
+
+  "correct": "Правильно!",
+  "incorrect": "Неправильно",
+  "correct_answer_is": "Правильный ответ:",
+  "next": "Далее",
+  "continue": "Продолжить",
+
+  "clue_label": "Подсказка:",
+
+  "qr_instruction": "Введите код с QR-кода на этой локации:",
+  "qr_placeholder": "QR-код...",
+  "submit_code": "Отправить код",
+
+  "math_team_secret": "Секрет вашей команды: <strong>{{number}}</strong>",
+  "math_location_number": "Номер локации: <strong>{{number}}</strong>",
+  "math_instruction": "Сложите их и введите результат:",
+  "math_placeholder": "Вычисленный код...",
+
+  "supervised_waiting": "Ожидание разблокировки этапа ведущим...",
+  "unlock_stage": "Разблокировать этап",
+
+  "stage_complete": "Этап {{number}} пройден!",
+  "error_generic": "Ошибка"
+}

@@ -30,6 +30,7 @@ type game struct {
 	ScenarioName      string       `json:"scenarioName"`
 	Status            string       `json:"status"`
 	Mode              string       `json:"mode"`
+	Language          string       `json:"language,omitempty"`
 	Supervised        bool         `json:"supervised,omitempty"`
 	TimerEnabled      bool         `json:"timerEnabled"`
 	TimerMinutes      int          `json:"timerMinutes"`
@@ -310,6 +311,7 @@ func (s *DocStore) TeamLookup(ctx context.Context, joinToken string) (TeamLookup
 					Name:     t.Name,
 					GameName: g.ScenarioName,
 					GameID:   g.ID,
+					Language: g.Language,
 					Role:     "player",
 				}, nil
 			}
@@ -319,6 +321,7 @@ func (s *DocStore) TeamLookup(ctx context.Context, joinToken string) (TeamLookup
 					Name:     t.Name,
 					GameName: g.ScenarioName,
 					GameID:   g.ID,
+					Language: g.Language,
 					Role:     "supervisor",
 				}, nil
 			}
@@ -397,6 +400,7 @@ func (s *DocStore) GameState(ctx context.Context, gameID, teamID string) (gameSt
 	var d gameStateData
 	d.Status = g.Status
 	d.Mode = g.Mode
+	d.Language = g.Language
 	d.Supervised = g.Supervised
 	d.TimerEnabled = g.TimerEnabled
 	d.TimerMinutes = g.TimerMinutes
@@ -541,6 +545,7 @@ func (s *DocStore) ListGames(ctx context.Context) ([]AdminGameSummary, error) {
 			ScenarioName:      g.ScenarioName,
 			Status:            g.Status,
 			Mode:              mode,
+			Language:          g.Language,
 			Supervised:        g.Supervised,
 			TimerEnabled:      g.TimerEnabled,
 			TimerMinutes:      g.TimerMinutes,
@@ -566,6 +571,7 @@ func (s *DocStore) CreateGame(ctx context.Context, req AdminGameRequest, stages 
 		ScenarioName:      req.ScenarioName,
 		Status:            req.Status,
 		Mode:              req.Mode,
+		Language:          req.Language,
 		Supervised:        req.Supervised,
 		TimerEnabled:      req.TimerEnabled,
 		TimerMinutes:      req.TimerMinutes,
@@ -584,6 +590,7 @@ func (s *DocStore) CreateGame(ctx context.Context, req AdminGameRequest, stages 
 		ScenarioName:      req.ScenarioName,
 		Status:            req.Status,
 		Mode:              req.Mode,
+		Language:          req.Language,
 		Supervised:        req.Supervised,
 		TimerEnabled:      req.TimerEnabled,
 		TimerMinutes:      req.TimerMinutes,
@@ -622,6 +629,7 @@ func (s *DocStore) GetGame(ctx context.Context, id string) (AdminGameDetail, err
 		ScenarioName:      g.ScenarioName,
 		Status:            g.Status,
 		Mode:              g.Mode,
+		Language:          g.Language,
 		Supervised:        g.Supervised,
 		TimerEnabled:      g.TimerEnabled,
 		TimerMinutes:      g.TimerMinutes,
@@ -665,6 +673,7 @@ func (s *DocStore) UpdateGame(ctx context.Context, id string, req AdminGameReque
 	g.ScenarioID = req.ScenarioID
 	g.ScenarioName = req.ScenarioName
 	g.Mode = req.Mode
+	g.Language = req.Language
 	g.Status = req.Status
 	g.Supervised = req.Supervised
 	g.TimerEnabled = req.TimerEnabled
@@ -713,6 +722,7 @@ func (s *DocStore) UpdateGame(ctx context.Context, id string, req AdminGameReque
 		ScenarioName:      req.ScenarioName,
 		Status:            req.Status,
 		Mode:              g.Mode,
+		Language:          req.Language,
 		Supervised:        req.Supervised,
 		TimerEnabled:      req.TimerEnabled,
 		TimerMinutes:      req.TimerMinutes,

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type { StageInfo } from './types'
 import type { Feedback } from './useGameState'
 import { Spinner } from './components/Spinner'
@@ -15,13 +16,14 @@ interface Props {
 }
 
 export function AnswerPanel({ stage, totalStages, role, answer, onAnswerChange, onSubmit, feedback, submitting, canAnswer }: Props) {
+  const { t } = useTranslation('player')
   return (
     <div className="card">
       <div className="card-header">
-        Stage {stage.stageNumber} of {totalStages}{role === 'supervisor' && <> &mdash; {stage.location}</>}
+        {t('stage_of', { current: stage.stageNumber, total: totalStages })}{role === 'supervisor' && <> &mdash; {stage.location}</>}
       </div>
       {stage.question && (
-        <p className="mb-4"><strong>Question:</strong> {stage.question}</p>
+        <p className="mb-4"><strong>{t('question_label')}</strong> {stage.question}</p>
       )}
       {canAnswer ? (
         <form onSubmit={onSubmit} className="space-y-4">
@@ -31,7 +33,7 @@ export function AnswerPanel({ stage, totalStages, role, answer, onAnswerChange, 
               type="text"
               value={answer}
               onChange={(e) => onAnswerChange(e.target.value)}
-              placeholder="Your answer..."
+              placeholder={t('answer_placeholder')}
               autoFocus
               required
             />
@@ -40,11 +42,11 @@ export function AnswerPanel({ stage, totalStages, role, answer, onAnswerChange, 
             <p className={feedback.correct ? 'text-feedback-success' : 'text-feedback-error'}>{feedback.message}</p>
           )}
           <button type="submit" disabled={submitting} className="btn btn-accent w-full">
-            {submitting ? <Spinner /> : 'Submit Answer'}
+            {submitting ? <Spinner /> : t('submit_answer')}
           </button>
         </form>
       ) : (
-        <p className="text-secondary italic">Waiting for the supervisor to submit the answer...</p>
+        <p className="text-secondary italic">{t('waiting_for_supervisor_answer')}</p>
       )}
     </div>
   )

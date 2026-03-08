@@ -1,0 +1,56 @@
+{
+  "app_title": "CityQuest",
+  "loading_team": "Loading team...",
+  "loading_game": "Loading game...",
+  "loading": "Loading...",
+  "failed_to_join": "Failed to join",
+  "back_to_start": "Back to start",
+
+  "join_heading": "Join {{name}}",
+  "join_as_supervisor": "Joining as Supervisor",
+  "join_name_label": "Your name",
+  "join_name_placeholder": "Enter your name",
+  "join_button": "Join Game",
+
+  "game_over": "Game Over!",
+  "game_over_score": "Your team answered {{correct}} of {{total}} correctly.",
+  "completed_stages": "Completed Stages ({{count}})",
+  "stage_correct": "Stage {{number}} — correct",
+  "stage_incorrect": "Stage {{number}} — incorrect",
+  "team_players_one": "Team ({{count}} player)",
+  "team_players_other": "Team ({{count}} players)",
+  "supervisor_label": "Supervisor: {{name}}",
+  "leave_game": "Leave game",
+
+  "stage_of": "Stage {{current}} of {{total}}",
+  "start_quest": "Start Quest",
+  "go_to_next_stage": "Go to Next Stage",
+
+  "question_label": "Question:",
+  "answer_placeholder": "Your answer...",
+  "submit_answer": "Submit Answer",
+  "waiting_for_supervisor_answer": "Waiting for the supervisor to submit the answer...",
+
+  "correct": "Correct!",
+  "incorrect": "Incorrect",
+  "correct_answer_is": "The correct answer is:",
+  "next": "Next",
+  "continue": "Continue",
+
+  "clue_label": "Clue:",
+
+  "qr_instruction": "Enter the code from the QR at this location:",
+  "qr_placeholder": "QR code...",
+  "submit_code": "Submit Code",
+
+  "math_team_secret": "Your team secret is: <strong>{{number}}</strong>",
+  "math_location_number": "Location number: <strong>{{number}}</strong>",
+  "math_instruction": "Add them together and enter the result:",
+  "math_placeholder": "Calculated code...",
+
+  "supervised_waiting": "Waiting for the guide to unlock this stage...",
+  "unlock_stage": "Unlock Stage",
+
+  "stage_complete": "Stage {{number}} complete!",
+  "error_generic": "Error"
+}

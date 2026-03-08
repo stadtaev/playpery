@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { getScenario, createScenario, updateScenario } from './adminApi'
 import type { Stage, ScenarioRequest } from './adminTypes'
 import { LoadingPage, Spinner } from '../components/Spinner'
@@ -7,14 +8,6 @@ import { ErrorMessage } from '../components/ErrorMessage'
 function navigate(path: string) {
   window.history.pushState(null, '', path)
   window.dispatchEvent(new PopStateEvent('popstate'))
-}
-
-const modeLabels: Record<string, string> = {
-  classic: 'Classic',
-  qr_quiz: 'QR Quiz',
-  qr_hunt: 'QR Hunt',
-  math_puzzle: 'Math Puzzle',
-  supervised: 'Supervised',
 }
 
 function modeNeedsQuestion(mode: string): boolean {
@@ -26,6 +19,7 @@ function emptyStage(): Stage {
 }
 
 export function AdminScenarioEditorPage({ id }: { id?: string }) {
+  const { t } = useTranslation('admin')
   const [name, setName] = useState('')
   const [city, setCity] = useState('')
   const [description, setDescription] = useState('')
@@ -34,6 +28,14 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
   const [loading, setLoading] = useState(!!id)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+
+  const modeLabels: Record<string, string> = {
+    classic: t('mode_classic'),
+    qr_quiz: t('mode_qr_quiz'),
+    qr_hunt: t('mode_qr_hunt'),
+    math_puzzle: t('mode_math_puzzle'),
+    supervised: t('mode_supervised'),
+  }
 
   useEffect(() => {
     if (!id) return
@@ -115,38 +117,38 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
       }
       navigate('/admin/scenarios')
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Save failed')
+      setError(e instanceof Error ? e.message : t('scenario_save_failed'))
       setSaving(false)
     }
   }
 
   if (loading) {
-    return <LoadingPage message="Loading scenario..." />
+    return <LoadingPage message={t('scenarios_loading')} />
   }
 
   return (
     <>
-      <h2>{id ? 'Edit Scenario' : 'New Scenario'}</h2>
+      <h2>{id ? t('scenario_edit_title') : t('scenario_new_title')}</h2>
       {error && <ErrorMessage message={error} />}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="input-label" htmlFor="sc-name">Name</label>
+            <label className="input-label" htmlFor="sc-name">{t('scenario_name')}</label>
             <input id="sc-name" className="input" type="text" value={name} onChange={(e) => setName(e.target.value)} required />
           </div>
           <div>
-            <label className="input-label" htmlFor="sc-city">City</label>
+            <label className="input-label" htmlFor="sc-city">{t('scenario_city')}</label>
             <input id="sc-city" className="input" type="text" value={city} onChange={(e) => setCity(e.target.value)} required />
           </div>
         </div>
         <div>
-          <label className="input-label" htmlFor="sc-desc">Description</label>
+          <label className="input-label" htmlFor="sc-desc">{t('scenario_description')}</label>
           <textarea id="sc-desc" className="input" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
           <div>
-            <label className="input-label" htmlFor="sc-mode">Mode</label>
+            <label className="input-label" htmlFor="sc-mode">{t('scenario_mode')}</label>
             <select id="sc-mode" className="input" value={mode} onChange={(e) => setMode(e.target.value)}>
               {Object.entries(modeLabels).map(([value, label]) => (
                 <option key={value} value={value}>{label}</option>
@@ -155,11 +157,11 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
           </div>
         </div>
 
-        <h3 className="mt-8">Stages</h3>
+        <h3 className="mt-8">{t('scenario_stages')}</h3>
         {stages.map((stage, i) => (
           <div key={i} className="card">
             <div className="flex justify-between items-center mb-4">
-              <strong>Stage {i + 1}</strong>
+              <strong>{t('scenario_stage_n', { n: i + 1 })}</strong>
               <div className="flex gap-1">
                 <button type="button" className="btn-ghost btn-sm" onClick={() => moveStage(i, -1)} disabled={i === 0}>
                   &uarr;
@@ -174,37 +176,37 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
             </div>
             <div className="space-y-3">
               <div>
-                <label className="input-label">Location</label>
+                <label className="input-label">{t('scenario_location')}</label>
                 <input className="input" type="text" value={stage.location} onChange={(e) => updateStage(i, 'location', e.target.value)} required />
               </div>
               <div>
-                <label className="input-label">Clue</label>
+                <label className="input-label">{t('scenario_clue')}</label>
                 <textarea className="input" value={stage.clue} onChange={(e) => updateStage(i, 'clue', e.target.value)} rows={2} />
               </div>
               {(mode === 'qr_quiz' || mode === 'qr_hunt') && (
                 <div>
-                  <label className="input-label">Unlock Code</label>
-                  <input className="input" type="text" value={stage.unlockCode || ''} onChange={(e) => updateStage(i, 'unlockCode', e.target.value)} placeholder="Auto-generated if empty" />
+                  <label className="input-label">{t('scenario_unlock_code')}</label>
+                  <input className="input" type="text" value={stage.unlockCode || ''} onChange={(e) => updateStage(i, 'unlockCode', e.target.value)} placeholder={t('scenario_unlock_code_placeholder')} />
                 </div>
               )}
               {mode === 'math_puzzle' && (
                 <div>
-                  <label className="input-label">Location Number</label>
+                  <label className="input-label">{t('scenario_location_number')}</label>
                   <input className="input" type="number" value={stage.locationNumber || ''} onChange={(e) => updateStage(i, 'locationNumber', parseInt(e.target.value) || 0)} required />
                 </div>
               )}
               {modeNeedsQuestion(mode) && (
                 <>
                   <div>
-                    <label className="input-label">Question</label>
+                    <label className="input-label">{t('scenario_question')}</label>
                     <input className="input" type="text" value={stage.question} onChange={(e) => updateStage(i, 'question', e.target.value)} required />
                   </div>
                   <div>
-                    <label className="input-label">Correct Answer</label>
+                    <label className="input-label">{t('scenario_correct_answer')}</label>
                     <input className="input" type="text" value={stage.correctAnswer} onChange={(e) => updateStage(i, 'correctAnswer', e.target.value)} required />
                   </div>
                   <div>
-                    <label className="input-label">Fun Facts</label>
+                    <label className="input-label">{t('scenario_fun_facts')}</label>
                     <div className="space-y-2">
                       {(stage.funFacts || []).map((fact, fi) => (
                         <div key={fi} className="flex gap-2">
@@ -213,7 +215,7 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
                             value={fact}
                             onChange={(e) => updateFunFact(i, fi, e.target.value)}
                             rows={2}
-                            placeholder={`Fun fact ${fi + 1}...`}
+                            placeholder={t('scenario_fun_fact_placeholder', { n: fi + 1 })}
                           />
                           <button type="button" className="btn-danger btn-sm self-start" onClick={() => removeFunFact(i, fi)}>
                             &times;
@@ -221,7 +223,7 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
                         </div>
                       ))}
                       <button type="button" className="btn-ghost btn-sm" onClick={() => addFunFact(i)}>
-                        + Add fun fact
+                        {t('scenario_add_fun_fact')}
                       </button>
                     </div>
                   </div>
@@ -229,11 +231,11 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
               )}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="input-label">Latitude</label>
+                  <label className="input-label">{t('scenario_latitude')}</label>
                   <input className="input" type="number" step="any" value={stage.lat || ''} onChange={(e) => updateStage(i, 'lat', parseFloat(e.target.value) || 0)} />
                 </div>
                 <div>
-                  <label className="input-label">Longitude</label>
+                  <label className="input-label">{t('scenario_longitude')}</label>
                   <input className="input" type="number" step="any" value={stage.lng || ''} onChange={(e) => updateStage(i, 'lng', parseFloat(e.target.value) || 0)} />
                 </div>
               </div>
@@ -242,15 +244,15 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
         ))}
 
         <button type="button" className="btn-secondary w-full" onClick={addStage}>
-          Add Stage
+          {t('scenario_add_stage')}
         </button>
 
         <div className="flex gap-4 mt-6">
           <button type="submit" disabled={saving} className="btn">
-            {saving ? <Spinner /> : id ? 'Update Scenario' : 'Create Scenario'}
+            {saving ? <Spinner /> : id ? t('scenario_update') : t('scenario_create')}
           </button>
           <button type="button" className="btn-secondary" onClick={() => navigate('/admin/scenarios')}>
-            Cancel
+            {t('scenario_cancel')}
           </button>
         </div>
       </form>

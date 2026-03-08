@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { getGameStatus } from './adminApi'
 import type { GameStatus } from './adminTypes'
 import { LoadingPage } from '../components/Spinner'
@@ -10,6 +11,7 @@ function navigate(path: string) {
 }
 
 export function AdminGameStatusPage({ client, id }: { client: string; id: string }) {
+  const { t } = useTranslation('admin')
   const [game, setGame] = useState<GameStatus | null>(null)
   const [error, setError] = useState('')
 
@@ -37,47 +39,47 @@ export function AdminGameStatusPage({ client, id }: { client: string; id: string
       <div className="flex items-baseline gap-4 flex-wrap mb-2">
         <h2 className="m-0">{game.scenarioName}</h2>
         <span className="text-sm">
-          <strong>Status:</strong> {game.status}
+          {t('status_label')} {t(`status_${game.status}`)}
         </span>
         {game.timerEnabled && (
           <span className="text-sm">
-            <strong>Timer:</strong> {game.timerMinutes}m (stage: {game.stageTimerMinutes}m)
+            {t('timer_label', { game: game.timerMinutes, stage: game.stageTimerMinutes })}
           </span>
         )}
         <span className="text-sm">
-          <strong>Players:</strong> {totalPlayers}
+          {t('players_label', { count: totalPlayers })}
         </span>
         <span className="text-sm">
-          <strong>Stages:</strong> {game.totalStages}
+          {t('stages_label', { count: game.totalStages })}
         </span>
       </div>
       {game.startedAt && (
         <p className="text-secondary text-xs mb-4">
-          Started: {new Date(game.startedAt).toLocaleString()}
+          {t('started_label', { date: new Date(game.startedAt).toLocaleString() })}
         </p>
       )}
 
       <div className="flex gap-2 mb-8">
         <button className="btn-secondary btn-sm" onClick={() => navigate(`/admin/clients/${client}/games/${id}/edit`)}>
-          Edit Game
+          {t('status_edit_game')}
         </button>
         <button className="btn-ghost btn-sm" onClick={() => navigate(`/admin/clients/${client}/games`)}>
-          Back to Games
+          {t('status_back_to_games')}
         </button>
       </div>
 
       {game.teams.length === 0 ? (
-        <p className="text-secondary">No teams yet.</p>
+        <p className="text-secondary">{t('teams_empty')}</p>
       ) : (
         <>
-          <h3>Scoreboard</h3>
+          <h3>{t('scoreboard_title')}</h3>
           <table className="admin-table mb-8">
             <thead>
               <tr>
-                <th>Team</th>
-                <th>Points</th>
-                <th>Progress</th>
-                <th>Players</th>
+                <th>{t('scoreboard_col_team')}</th>
+                <th>{t('scoreboard_col_points')}</th>
+                <th>{t('scoreboard_col_progress')}</th>
+                <th>{t('scoreboard_col_players')}</th>
               </tr>
             </thead>
             <tbody>
@@ -87,31 +89,31 @@ export function AdminGameStatusPage({ client, id }: { client: string; id: string
                   <tr key={team.id}>
                     <td><strong>{team.name}</strong></td>
                     <td>{team.completedStages}</td>
-                    <td>{team.completedStages}/{game.totalStages} stages</td>
+                    <td>{t('scoreboard_progress', { completed: team.completedStages, total: game.totalStages })}</td>
                     <td>{team.players.length}</td>
                   </tr>
                 ))}
             </tbody>
           </table>
 
-          <h3>Team Details</h3>
+          <h3>{t('team_details_title')}</h3>
           {game.teams.map((team) => (
             <div key={team.id} className="card">
               <div className="flex justify-between items-center mb-3">
                 <div>
                   <strong>{team.name}</strong>
-                  {team.guideName && <span className="text-secondary"> &mdash; Guide: {team.guideName}</span>}
+                  {team.guideName && <span className="text-secondary"> &mdash; {t('team_guide', { name: team.guideName })}</span>}
                 </div>
-                <span className="font-bold">{team.completedStages} pts</span>
+                <span className="font-bold">{t('scoreboard_pts', { count: team.completedStages })}</span>
               </div>
               {team.players.length === 0 ? (
-                <p className="text-secondary text-sm m-0">No players yet.</p>
+                <p className="text-secondary text-sm m-0">{t('team_no_players')}</p>
               ) : (
                 <table className="admin-table">
                   <thead>
                     <tr>
-                      <th>Player</th>
-                      <th>Joined</th>
+                      <th>{t('team_col_player')}</th>
+                      <th>{t('team_col_joined')}</th>
                     </tr>
                   </thead>
                   <tbody>

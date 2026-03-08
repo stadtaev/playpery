@@ -17,6 +17,7 @@ type AdminGameSummary struct {
 	ScenarioName      string `json:"scenarioName"`
 	Status            string `json:"status"`
 	Mode              string `json:"mode"`
+	Language          string `json:"language,omitempty"`
 	Supervised        bool   `json:"supervised"`
 	TimerEnabled      bool   `json:"timerEnabled"`
 	TimerMinutes      int    `json:"timerMinutes"`
@@ -32,6 +33,7 @@ type AdminGameDetail struct {
 	ScenarioName      string          `json:"scenarioName"`
 	Status            string          `json:"status"`
 	Mode              string          `json:"mode"`
+	Language          string          `json:"language,omitempty"`
 	Supervised        bool            `json:"supervised"`
 	TimerEnabled      bool            `json:"timerEnabled"`
 	TimerMinutes      int             `json:"timerMinutes"`
@@ -59,6 +61,7 @@ type AdminGameRequest struct {
 	ScenarioID        string `json:"scenarioId"`
 	ScenarioName      string `json:"-"`  // set by handler after validation
 	Mode              string `json:"-"`  // set by handler from scenario
+	Language          string `json:"language"`
 	Status            string `json:"status"`
 	Supervised        bool   `json:"supervised"`
 	TimerEnabled      bool   `json:"timerEnabled"`

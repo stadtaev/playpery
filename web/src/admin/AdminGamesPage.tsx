@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { listGames, deleteGame } from './adminApi'
 import type { GameSummary } from './adminTypes'
 import { LoadingPage } from '../components/Spinner'
@@ -9,14 +10,8 @@ function navigate(path: string) {
   window.dispatchEvent(new PopStateEvent('popstate'))
 }
 
-const statusLabels: Record<string, string> = {
-  draft: 'Draft',
-  active: 'Active',
-  paused: 'Paused',
-  ended: 'Ended',
-}
-
 export function AdminGamesPage({ client }: { client: string }) {
+  const { t } = useTranslation('admin')
   const [games, setGames] = useState<GameSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -30,17 +25,17 @@ export function AdminGamesPage({ client }: { client: string }) {
   }, [client])
 
   async function handleDelete(id: string, scenarioName: string) {
-    if (!confirm(`Delete game "${scenarioName}"?`)) return
+    if (!confirm(t('games_delete_confirm', { name: scenarioName }))) return
     try {
       await deleteGame(client, id)
       setGames((prev) => prev.filter((g) => g.id !== id))
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'Delete failed')
+      alert(e instanceof Error ? e.message : t('games_delete_failed'))
     }
   }
 
   if (loading) {
-    return <LoadingPage message="Loading games..." />
+    return <LoadingPage message={t('games_loading')} />
   }
 
   if (error) {
@@ -50,24 +45,24 @@ export function AdminGamesPage({ client }: { client: string }) {
   return (
     <>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="m-0">Games</h2>
+        <h2 className="m-0">{t('games_title')}</h2>
         <button onClick={() => navigate(`/admin/clients/${client}/games/new`)} className="btn">
-          New Game
+          {t('games_new')}
         </button>
       </div>
 
       {games.length === 0 ? (
-        <p className="text-secondary">No games yet.</p>
+        <p className="text-secondary">{t('games_empty')}</p>
       ) : (
         <table className="admin-table">
           <thead>
             <tr>
-              <th>Scenario</th>
-              <th>Mode</th>
-              <th>Status</th>
-              <th>Timer</th>
-              <th>Teams</th>
-              <th>Created</th>
+              <th>{t('games_col_scenario')}</th>
+              <th>{t('games_col_mode')}</th>
+              <th>{t('games_col_status')}</th>
+              <th>{t('games_col_timer')}</th>
+              <th>{t('games_col_teams')}</th>
+              <th>{t('games_col_created')}</th>
               <th></th>
             </tr>
           </thead>
@@ -79,12 +74,12 @@ export function AdminGamesPage({ client }: { client: string }) {
                     href={`/admin/clients/${client}/games/${g.id}/edit`}
                     onClick={(e) => { e.preventDefault(); navigate(`/admin/clients/${client}/games/${g.id}/edit`) }}
                   >
-                    {g.scenarioName}{g.supervised && ' (supervised)'}
+                    {g.scenarioName}{g.supervised && ` ${t('games_supervised_suffix')}`}
                   </a>
                 </td>
                 <td>{g.mode || 'classic'}</td>
-                <td>{statusLabels[g.status] || g.status}</td>
-                <td>{g.timerMinutes}m</td>
+                <td>{t(`status_${g.status}`)}</td>
+                <td>{t('games_timer_minutes', { minutes: g.timerMinutes })}</td>
                 <td>{g.teamCount}</td>
                 <td>{new Date(g.createdAt).toLocaleDateString()}</td>
                 <td>
@@ -92,7 +87,7 @@ export function AdminGamesPage({ client }: { client: string }) {
                     className="btn-danger btn-sm"
                     onClick={() => handleDelete(g.id, g.scenarioName)}
                   >
-                    Delete
+                    {t('games_delete')}
                   </button>
                 </td>
               </tr>

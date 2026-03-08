@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { listScenarios, deleteScenario } from './adminApi'
 import type { ScenarioSummary } from './adminTypes'
 import { LoadingPage } from '../components/Spinner'
@@ -10,6 +11,7 @@ function navigate(path: string) {
 }
 
 export function AdminScenariosPage() {
+  const { t } = useTranslation('admin')
   const [scenarios, setScenarios] = useState<ScenarioSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -23,17 +25,17 @@ export function AdminScenariosPage() {
   }, [])
 
   async function handleDelete(id: string, name: string) {
-    if (!confirm(`Delete scenario "${name}"?`)) return
+    if (!confirm(t('scenarios_delete_confirm', { name }))) return
     try {
       await deleteScenario(id)
       setScenarios((prev) => prev.filter((s) => s.id !== id))
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'Delete failed')
+      alert(e instanceof Error ? e.message : t('scenarios_delete_failed'))
     }
   }
 
   if (loading) {
-    return <LoadingPage message="Loading scenarios..." />
+    return <LoadingPage message={t('scenarios_loading')} />
   }
 
   if (error) {
@@ -43,23 +45,23 @@ export function AdminScenariosPage() {
   return (
     <>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="m-0">Scenarios</h2>
+        <h2 className="m-0">{t('scenarios_title')}</h2>
         <button onClick={() => navigate('/admin/scenarios/new')} className="btn">
-          New Scenario
+          {t('scenarios_new')}
         </button>
       </div>
 
       {scenarios.length === 0 ? (
-        <p className="text-secondary">No scenarios yet.</p>
+        <p className="text-secondary">{t('scenarios_empty')}</p>
       ) : (
         <table className="admin-table">
           <thead>
             <tr>
-              <th>Name</th>
-              <th>City</th>
-              <th>Mode</th>
-              <th>Stages</th>
-              <th>Created</th>
+              <th>{t('scenarios_col_name')}</th>
+              <th>{t('scenarios_col_city')}</th>
+              <th>{t('scenarios_col_mode')}</th>
+              <th>{t('scenarios_col_stages')}</th>
+              <th>{t('scenarios_col_created')}</th>
               <th></th>
             </tr>
           </thead>
@@ -83,7 +85,7 @@ export function AdminScenariosPage() {
                     className="btn-danger btn-sm"
                     onClick={() => handleDelete(s.id, s.name)}
                   >
-                    Delete
+                    {t('scenarios_delete')}
                   </button>
                 </td>
               </tr>

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { AnswerResult } from './useGameState'
 
 interface Props {
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export function ResultsPanel({ stageNumber, totalStages, result, onContinue }: Props) {
+  const { t } = useTranslation('player')
   const [page, setPage] = useState(0)
   const funFacts = result.funFacts ?? []
   const hasPages = funFacts.length > 0
@@ -17,13 +19,13 @@ export function ResultsPanel({ stageNumber, totalStages, result, onContinue }: P
   return (
     <div className="card">
       <div className="card-header">
-        Stage {stageNumber} of {totalStages}
+        {t('stage_of', { current: stageNumber, total: totalStages })}
       </div>
       <div className="space-y-4">
         <p className={result.isCorrect ? 'text-feedback-success' : 'text-feedback-error'}>
-          {result.isCorrect ? 'Correct!' : 'Incorrect'}
+          {result.isCorrect ? t('correct') : t('incorrect')}
         </p>
-        <p>The correct answer is: <strong>{result.correctAnswer}</strong></p>
+        <p>{t('correct_answer_is')} <strong>{result.correctAnswer}</strong></p>
 
         {hasPages && (
           <>
@@ -35,11 +37,11 @@ export function ResultsPanel({ stageNumber, totalStages, result, onContinue }: P
 
         {!isLastPage ? (
           <button className="btn w-full" onClick={() => setPage((p) => p + 1)}>
-            Next
+            {t('next')}
           </button>
         ) : (
           <button className="btn btn-accent w-full" onClick={onContinue}>
-            Continue
+            {t('continue')}
           </button>
         )}
       </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { getGameState, submitAnswer, unlockStage } from './api'
 import { useGameEvents } from './useGameEvents'
 import { useCountdown } from './TimerDisplay'
@@ -10,6 +11,7 @@ export type Feedback = { correct: boolean; message: string }
 export type AnswerResult = { isCorrect: boolean; correctAnswer: string; funFacts?: string[] }
 
 export function useGameState() {
+  const { t } = useTranslation('player')
   const client = getSession()?.client || 'demo'
   const [state, setState] = useState<GameState | null>(null)
   const [answer, setAnswer] = useState('')
@@ -137,7 +139,7 @@ export function useGameState() {
       const resp = await unlockStage(client, code)
       setUnlockCode('')
       if (resp.stageComplete) {
-        setFeedback({ correct: true, message: `Stage ${resp.stageNumber} complete!` })
+        setFeedback({ correct: true, message: t('stage_complete', { number: resp.stageNumber }) })
         setTimeout(() => {
           updateStagePhase('interstitial')
           fetchState()
@@ -146,7 +148,7 @@ export function useGameState() {
         updateStagePhase('answering')
       }
     } catch (e) {
-      setFeedback({ correct: false, message: e instanceof Error ? e.message : 'Error' })
+      setFeedback({ correct: false, message: e instanceof Error ? e.message : t('error_generic') })
     } finally {
       setSubmitting(false)
     }
@@ -168,7 +170,7 @@ export function useGameState() {
       })
       updateStagePhase('results')
     } catch (e) {
-      setFeedback({ correct: false, message: e instanceof Error ? e.message : 'Error' })
+      setFeedback({ correct: false, message: e instanceof Error ? e.message : t('error_generic') })
     } finally {
       answeringRef.current = false
       setSubmitting(false)
