@@ -30,11 +30,11 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
   const [error, setError] = useState('')
 
   const modeLabels: Record<string, string> = {
+    supervised: t('mode_supervised'),
     classic: t('mode_classic'),
     qr_quiz: t('mode_qr_quiz'),
     qr_hunt: t('mode_qr_hunt'),
     math_puzzle: t('mode_math_puzzle'),
-    supervised: t('mode_supervised'),
   }
 
   useEffect(() => {
