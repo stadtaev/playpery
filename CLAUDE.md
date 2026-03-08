@@ -114,7 +114,7 @@ web/
     robots.txt                    — search engine directives (allow /, disallow /api/ /admin/ /game)
     sitemap.xml                   — sitemap with hreflang alternates for / and /ru
   src/
-    index.css                     — Tailwind entry + ASOS design system (@theme, component classes)
+    index.css                     — Tailwind entry + design system (@theme, component classes)
     types.ts                      — TS types matching API responses
     api.ts                        — fetch wrappers (client-scoped: /api/{client}/...)
     App.tsx                       — URL-based routing (no router library)
@@ -214,7 +214,7 @@ Existing data without a `mode` field defaults to `"classic"` at read time (no mi
 - **React 19** + TypeScript.
 - **pnpm** — fast, disk-efficient package manager.
 - **Tailwind CSS v4** — utility-first CSS via `@tailwindcss/vite` plugin.
-- **DM Sans** (Google Fonts) — primary typeface. ASOS-inspired design: monochrome, flat, no shadows, no border-radius.
+- **DM Sans** (Google Fonts) — primary typeface. Clean, light, angular design: monochrome, flat, no shadows, no border-radius.
 
 ## Database
 

@@ -2,12 +2,12 @@
 
 ## Tech Stack
 - **Styling:** Tailwind CSS v4 (`@tailwindcss/vite` plugin, no PostCSS config needed)
-- **Design system:** Custom `@apply`-based component classes in `index.css` (ASOS-inspired)
+- **Design system:** Custom `@apply`-based component classes in `index.css`
 - **Utilities:** `cn()` from `@/lib/utils` (clsx + tailwind-merge) for conditional classes
 - **Path alias:** `@/*` maps to `src/*` (configured in vite.config.ts + tsconfig.app.json)
 
-## Design Language — ASOS-inspired
-Monochrome, flat, editorial. No gradients, no shadows, no border-radius.
+## Design Language
+Clean, light, angular. Monochrome, flat, editorial. No gradients, no shadows, no border-radius.
 
 - **Font:** DM Sans (Google Fonts). Bold uppercase for labels/buttons.
 - **Colors:** White bg, black text (#2d2d2d), gray secondary (#767676), green accent (#018849), red error (#d4351c). All defined as `@theme` tokens in `index.css`.

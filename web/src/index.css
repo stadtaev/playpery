@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* ── ASOS-inspired design tokens ── */
+/* ── Design tokens ── */
 @theme {
   --font-sans: "DM Sans", sans-serif;
 
