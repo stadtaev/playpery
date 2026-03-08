@@ -214,6 +214,7 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
                             className="input flex-1"
                             value={fact}
                             onChange={(e) => updateFunFact(i, fi, e.target.value)}
+                            onBlur={(e) => { if (!e.target.value.trim()) removeFunFact(i, fi) }}
                             rows={2}
                             placeholder={t('scenario_fun_fact_placeholder', { n: fi + 1 })}
                           />
