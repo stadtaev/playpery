@@ -220,6 +220,15 @@ Existing data without a `mode` field defaults to `"classic"` at read time (no mi
 
 **Per-client SQLite** with WAL mode. DocStore creates its own tables (JSONB schema evolution). Admin DB (`_admin.db`) stores admins, admin sessions, and client registry. All IDs are 16-byte random hex. Timestamps are ISO 8601 UTC. `:memory:` works for tests.
 
+## i18n — IMPORTANT
+
+**Russian is the primary language.** This project targets the Russian market. When adding new user-facing strings:
+1. **Always add the Russian (`ru`) translation first** — it is the default and fallback language.
+2. Then add the English (`en`) translation.
+3. New games default to `language: "ru"`. The i18next fallback is `ru`.
+4. Translation files: `web/src/i18n/{en,ru}/{player,admin}.json`. Two namespaces: `player` (game UI) and `admin` (admin panel).
+5. Use `useTranslation('player')` or `useTranslation('admin')` — never hardcode user-facing strings.
+
 ## Design Rules
 
 - Split packages at ~800 lines, not before.

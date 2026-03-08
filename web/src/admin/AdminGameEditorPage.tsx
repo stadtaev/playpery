@@ -17,7 +17,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
   const [scenarios, setScenarios] = useState<ScenarioSummary[]>([])
   const [scenarioId, setScenarioId] = useState('')
   const [status, setStatus] = useState('draft')
-  const [language, setLanguage] = useState('en')
+  const [language, setLanguage] = useState('ru')
   const [supervised, setSupervised] = useState(true)
   const [timerEnabled, setTimerEnabled] = useState(false)
   const [timerMinutes, setTimerMinutes] = useState(120)
@@ -50,7 +50,7 @@ export function AdminGameEditorPage({ client, id }: { client: string; id?: strin
         getGame(client, id).then((g) => {
           setScenarioId(g.scenarioId)
           setStatus(g.status)
-          setLanguage(g.language || 'en')
+          setLanguage(g.language || 'ru')
           setSupervised(g.supervised)
           setTimerEnabled(g.timerEnabled)
           setTimerMinutes(g.timerMinutes || 120)
