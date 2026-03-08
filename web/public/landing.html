@@ -19,8 +19,11 @@
   <meta name="twitter:description" content="Transform corporate team building with outdoor city quests. Teams explore landmarks, solve challenges, build connections." />
   <meta name="twitter:image" content="https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1200&h=630&fit=crop" />
 
-  <!-- Canonical -->
+  <!-- Canonical + hreflang -->
   <link rel="canonical" href="https://gocityquest.online/" />
+  <link rel="alternate" hreflang="en" href="https://gocityquest.online/" />
+  <link rel="alternate" hreflang="ru" href="https://gocityquest.online/ru" />
+  <link rel="alternate" hreflang="x-default" href="https://gocityquest.online/" />
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="/icons/peru-192.png" />
@@ -117,6 +120,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 16px;
     }
 
     .nav-logo {
@@ -126,6 +130,23 @@
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .lang-switch {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      text-decoration: none;
+      color: var(--color-secondary);
+    }
+
+    .lang-switch:hover { color: var(--color-primary); }
 
     .nav-cta {
       display: inline-flex;
@@ -378,6 +399,7 @@
     }
 
     .testimonial cite span {
+      font-style: normal;
       font-weight: 400;
       color: var(--color-secondary);
       text-transform: none;
@@ -472,7 +494,10 @@
   <nav class="nav" role="navigation" aria-label="Main navigation">
     <div class="wrap">
       <a href="/" class="nav-logo">GoCityQuest</a>
-      <a href="#contact" class="nav-cta">Get in Touch</a>
+      <div class="nav-right">
+        <a href="/ru" class="lang-switch" id="lang-switch">RU</a>
+        <a href="#contact" class="nav-cta" data-i18n="nav_cta">Get in Touch</a>
+      </div>
     </div>
   </nav>
 
@@ -482,34 +507,34 @@
     <section class="hero">
       <div class="hero-bg" role="presentation"></div>
       <div class="hero-content">
-        <h1>Transform Team Building Into an Urban Adventure</h1>
-        <p>Get your team out of the conference room and into the city. GoCityQuest creates guided cultural explorations that build genuine connections, spark curiosity, and keep your people moving.</p>
-        <a href="#contact" class="btn-hero">Book Your Quest</a>
+        <h1 data-i18n="hero_title">Transform Team Building Into an Urban Adventure</h1>
+        <p data-i18n="hero_text">Get your team out of the conference room and into the city. GoCityQuest creates guided cultural explorations that build genuine connections, spark curiosity, and keep your people moving.</p>
+        <a href="#contact" class="btn-hero" data-i18n="hero_cta">Book Your Quest</a>
       </div>
     </section>
 
     <!-- What We Do -->
     <section class="section" id="what-we-do">
       <div class="wrap">
-        <p class="section-label">What We Do</p>
-        <h2 class="section-title">Corporate Team Building, Reinvented</h2>
-        <p class="section-subtitle">We design city-wide quests that turn historic streets into team challenges. No trust falls. No awkward icebreakers. Just real exploration, real problem-solving, and real conversation.</p>
+        <p class="section-label" data-i18n="whatwedo_label">What We Do</p>
+        <h2 class="section-title" data-i18n="whatwedo_title">Corporate Team Building, Reinvented</h2>
+        <p class="section-subtitle" data-i18n="whatwedo_subtitle">We design city-wide quests that turn historic streets into team challenges. No trust falls. No awkward icebreakers. Just real exploration, real problem-solving, and real conversation.</p>
 
         <div class="grid-3">
           <div class="grid-3-item">
             <div class="grid-3-icon" aria-hidden="true">&#9962;</div>
-            <h3>Cultural City Quests</h3>
-            <p>Your team navigates through historic landmarks, hidden courtyards, and local gems. Every stop reveals a story — and a challenge that demands collaboration.</p>
+            <h3 data-i18n="feat1_title">Cultural City Quests</h3>
+            <p data-i18n="feat1_text">Your team navigates through historic landmarks, hidden courtyards, and local gems. Every stop reveals a story — and a challenge that demands collaboration.</p>
           </div>
           <div class="grid-3-item">
             <div class="grid-3-icon" aria-hidden="true">&#9734;</div>
-            <h3>Genuine Team Bonding</h3>
-            <p>Walking side by side, solving problems together, discovering something new — these shared experiences create the kind of trust that no workshop can replicate.</p>
+            <h3 data-i18n="feat2_title">Genuine Team Bonding</h3>
+            <p data-i18n="feat2_text">Walking side by side, solving problems together, discovering something new — these shared experiences create the kind of trust that no workshop can replicate.</p>
           </div>
           <div class="grid-3-item">
             <div class="grid-3-icon" aria-hidden="true">&#9881;</div>
-            <h3>Enterprise-Ready Platform</h3>
-            <p>Real-time dashboards, multi-team support, custom scenarios, branded experiences. Built for companies that expect professional execution at any scale.</p>
+            <h3 data-i18n="feat3_title">Enterprise-Ready Platform</h3>
+            <p data-i18n="feat3_text">Real-time dashboards, multi-team support, custom scenarios, branded experiences. Built for companies that expect professional execution at any scale.</p>
           </div>
         </div>
       </div>
@@ -518,20 +543,21 @@
     <!-- Why GoCityQuest -->
     <section class="section section-alt" id="why">
       <div class="wrap">
-        <p class="section-label">Why GoCityQuest</p>
-        <h2 class="section-title">Your Team Deserves Better Than Another Meeting Room</h2>
-        <p class="section-subtitle">Team building should feel like an investment, not a chore. Here's why leading companies choose outdoor cultural quests over traditional activities.</p>
+        <p class="section-label" data-i18n="why_label">Why GoCityQuest</p>
+        <h2 class="section-title" data-i18n="why_title">Your Team Deserves Better Than Another Meeting Room</h2>
+        <p class="section-subtitle" data-i18n="why_subtitle">Team building should feel like an investment, not a chore. Here's why leading companies choose outdoor cultural quests over traditional activities.</p>
 
         <div class="row">
           <img
             class="row-img"
             src="https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=600&h=450&fit=crop"
             alt="Team walking through historic European city streets"
+            data-i18n-alt="img_alt_streets"
             loading="lazy"
           />
           <div class="row-text">
-            <h3>Fresh Air and Movement</h3>
-            <p>Research consistently shows that walking boosts creative thinking by up to 60%. Your team spends the day outdoors, moving through the city, energised by the environment rather than drained by fluorescent lights. It's a genuine investment in your employees' wellbeing — and they'll feel the difference.</p>
+            <h3 data-i18n="why1_title">Fresh Air and Movement</h3>
+            <p data-i18n="why1_text">Research consistently shows that walking boosts creative thinking by up to 60%. Your team spends the day outdoors, moving through the city, energised by the environment rather than drained by fluorescent lights. It's a genuine investment in your employees' wellbeing — and they'll feel the difference.</p>
           </div>
         </div>
 
@@ -540,11 +566,12 @@
             class="row-img"
             src="https://images.unsplash.com/photo-1467269204594-9661b134dd2b?w=600&h=450&fit=crop"
             alt="Historic old town architecture and cobblestone streets"
+            data-i18n-alt="img_alt_oldtown"
             loading="lazy"
           />
           <div class="row-text">
-            <h3>Cultural Discovery</h3>
-            <p>Every quest is built around real history, architecture, and local stories. Your team doesn't just visit landmarks — they uncover the hidden layers of a city. From medieval trade routes to art deco facades, each stage brings context that makes the place come alive.</p>
+            <h3 data-i18n="why2_title">Cultural Discovery</h3>
+            <p data-i18n="why2_text">Every quest is built around real history, architecture, and local stories. Your team doesn't just visit landmarks — they uncover the hidden layers of a city. From medieval trade routes to art deco facades, each stage brings context that makes the place come alive.</p>
           </div>
         </div>
 
@@ -553,11 +580,12 @@
             class="row-img"
             src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=600&h=450&fit=crop"
             alt="Group of colleagues laughing and collaborating outdoors"
+            data-i18n-alt="img_alt_group"
             loading="lazy"
           />
           <div class="row-text">
-            <h3>Real Connections, Not Forced Fun</h3>
-            <p>The best team bonding happens naturally — when people share a challenge, celebrate a discovery, or get lost together and find their way back. GoCityQuest creates the conditions for authentic interaction, not scripted group activities that everyone endures politely.</p>
+            <h3 data-i18n="why3_title">Real Connections, Not Forced Fun</h3>
+            <p data-i18n="why3_text">The best team bonding happens naturally — when people share a challenge, celebrate a discovery, or get lost together and find their way back. GoCityQuest creates the conditions for authentic interaction, not scripted group activities that everyone endures politely.</p>
           </div>
         </div>
 
@@ -566,11 +594,12 @@
             class="row-img"
             src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&h=450&fit=crop"
             alt="Professional team reviewing results on a tablet"
+            data-i18n-alt="img_alt_team"
             loading="lazy"
           />
           <div class="row-text">
-            <h3>20+ Years of Industry Experience</h3>
-            <p>We've been designing team experiences since before "team building" became a buzzword. Two decades of working with companies of every size — from startups to Fortune 500 — means we know what works, what doesn't, and how to deliver consistently at scale.</p>
+            <h3 data-i18n="why4_title">20+ Years of Industry Experience</h3>
+            <p data-i18n="why4_text">We've been designing team experiences since before "team building" became a buzzword. Two decades of working with companies of every size — from startups to Fortune 500 — means we know what works, what doesn't, and how to deliver consistently at scale.</p>
           </div>
         </div>
       </div>
@@ -579,26 +608,26 @@
     <!-- How It Works -->
     <section class="section" id="how-it-works">
       <div class="wrap">
-        <p class="section-label">How It Works</p>
-        <h2 class="section-title">From Booking to Celebration in Four Steps</h2>
-        <p class="section-subtitle">We handle the complexity so you don't have to. Every quest is turnkey — just show up and explore.</p>
+        <p class="section-label" data-i18n="how_label">How It Works</p>
+        <h2 class="section-title" data-i18n="how_title">From Booking to Celebration in Four Steps</h2>
+        <p class="section-subtitle" data-i18n="how_subtitle">We handle the complexity so you don't have to. Every quest is turnkey — just show up and explore.</p>
 
         <div class="steps">
           <div class="step">
-            <h3>We Design Your Scenario</h3>
-            <p>Tell us the city, group size, and vibe you're after. We craft a custom route through the best cultural landmarks, with challenges tailored to your team.</p>
+            <h3 data-i18n="step1_title">We Design Your Scenario</h3>
+            <p data-i18n="step1_text">Tell us the city, group size, and vibe you're after. We craft a custom route through the best cultural landmarks, with challenges tailored to your team.</p>
           </div>
           <div class="step">
-            <h3>Teams Get Their Codes</h3>
-            <p>Each team receives a unique QR code or join link. No app downloads, no accounts — just scan and go from any smartphone browser.</p>
+            <h3 data-i18n="step2_title">Teams Get Their Codes</h3>
+            <p data-i18n="step2_text">Each team receives a unique QR code or join link. No app downloads, no accounts — just scan and go from any smartphone browser.</p>
           </div>
           <div class="step">
-            <h3>Walk, Explore, Solve</h3>
-            <p>Teams navigate the city at their own pace. At each landmark they unlock clues, answer questions, and earn points. A live leaderboard keeps the competitive spirit alive.</p>
+            <h3 data-i18n="step3_title">Walk, Explore, Solve</h3>
+            <p data-i18n="step3_text">Teams navigate the city at their own pace. At each landmark they unlock clues, answer questions, and earn points. A live leaderboard keeps the competitive spirit alive.</p>
           </div>
           <div class="step">
-            <h3>Celebrate Together</h3>
-            <p>After the quest, gather to compare stories, review the scoreboard, and recognise the winning team. The shared adventure gives everyone something real to talk about.</p>
+            <h3 data-i18n="step4_title">Celebrate Together</h3>
+            <p data-i18n="step4_text">After the quest, gather to compare stories, review the scoreboard, and recognise the winning team. The shared adventure gives everyone something real to talk about.</p>
           </div>
         </div>
       </div>
@@ -607,19 +636,19 @@
     <!-- Enterprise Ready -->
     <section class="section section-alt" id="enterprise">
       <div class="wrap">
-        <p class="section-label">Enterprise Ready</p>
-        <h2 class="section-title">Built for Companies That Take Culture Seriously</h2>
-        <p class="section-subtitle">GoCityQuest is not a toy. It's a professional-grade platform designed for corporate use at any scale.</p>
+        <p class="section-label" data-i18n="ent_label">Enterprise Ready</p>
+        <h2 class="section-title" data-i18n="ent_title">Built for Companies That Take Culture Seriously</h2>
+        <p class="section-subtitle" data-i18n="ent_subtitle">GoCityQuest is not a toy. It's a professional-grade platform designed for corporate use at any scale.</p>
 
         <ul class="checklist">
-          <li><strong>Custom scenarios</strong> — tailored routes and challenges for your city and team goals</li>
-          <li><strong>Multi-team support</strong> — run dozens of teams simultaneously with real-time tracking</li>
-          <li><strong>Live dashboards</strong> — monitor every team's progress as it happens</li>
-          <li><strong>Branded experiences</strong> — your company's identity woven into the quest</li>
-          <li><strong>No app required</strong> — works in any mobile browser, zero friction for participants</li>
-          <li><strong>Dedicated account manager</strong> — a single point of contact from planning to debrief</li>
-          <li><strong>Multilingual</strong> — quests in any language your team speaks</li>
-          <li><strong>Scalable</strong> — from 10-person teams to 500-person company offsites</li>
+          <li data-i18n="ent_feat1"><strong>Custom scenarios</strong> — tailored routes and challenges for your city and team goals</li>
+          <li data-i18n="ent_feat2"><strong>Multi-team support</strong> — run dozens of teams simultaneously with real-time tracking</li>
+          <li data-i18n="ent_feat3"><strong>Live dashboards</strong> — monitor every team's progress as it happens</li>
+          <li data-i18n="ent_feat4"><strong>Branded experiences</strong> — your company's identity woven into the quest</li>
+          <li data-i18n="ent_feat5"><strong>No app required</strong> — works in any mobile browser, zero friction for participants</li>
+          <li data-i18n="ent_feat6"><strong>Dedicated account manager</strong> — a single point of contact from planning to debrief</li>
+          <li data-i18n="ent_feat7"><strong>Multilingual</strong> — quests in any language your team speaks</li>
+          <li data-i18n="ent_feat8"><strong>Scalable</strong> — from 10-person teams to 500-person company offsites</li>
         </ul>
       </div>
     </section>
@@ -627,22 +656,22 @@
     <!-- Testimonials -->
     <section class="section" id="testimonials">
       <div class="wrap">
-        <p class="section-label">What Our Clients Say</p>
-        <h2 class="section-title">Trusted by Teams Worldwide</h2>
-        <p class="section-subtitle">Companies that invest in their people choose GoCityQuest for results that last beyond the event.</p>
+        <p class="section-label" data-i18n="test_label">What Our Clients Say</p>
+        <h2 class="section-title" data-i18n="test_title">Trusted by Teams Worldwide</h2>
+        <p class="section-subtitle" data-i18n="test_subtitle">Companies that invest in their people choose GoCityQuest for results that last beyond the event.</p>
 
         <div class="testimonials">
           <div class="testimonial">
-            <blockquote>"Our team came back from the quest more energised than any offsite we've done. People who'd never spoken were suddenly collaborating. It changed the dynamic of our entire department."</blockquote>
-            <cite>Sarah M. <span>- Head of People, Tech Company</span></cite>
+            <blockquote data-i18n="test1_quote">"Our team came back from the quest more energised than any offsite we've done. People who'd never spoken were suddenly collaborating. It changed the dynamic of our entire department."</blockquote>
+            <cite><span data-i18n="test1_name">Sarah M.</span> <span data-i18n="test1_role">- Head of People, Tech Company</span></cite>
           </div>
           <div class="testimonial">
-            <blockquote>"We run GoCityQuest for every new cohort of hires. It's become our signature onboarding experience. The cultural context makes it memorable in a way that workshops simply aren't."</blockquote>
-            <cite>David K. <span>- VP Operations, Financial Services</span></cite>
+            <blockquote data-i18n="test2_quote">"We run GoCityQuest for every new cohort of hires. It's become our signature onboarding experience. The cultural context makes it memorable in a way that workshops simply aren't."</blockquote>
+            <cite><span data-i18n="test2_name">David K.</span> <span data-i18n="test2_role">- VP Operations, Financial Services</span></cite>
           </div>
           <div class="testimonial">
-            <blockquote>"I was skeptical — our team is not the 'fun activities' type. But the quest was genuinely engaging. The historical challenges were smart, the competition was fierce, and everyone asked when we're doing it again."</blockquote>
-            <cite>Maria L. <span>- Engineering Director, SaaS Startup</span></cite>
+            <blockquote data-i18n="test3_quote">"I was skeptical — our team is not the 'fun activities' type. But the quest was genuinely engaging. The historical challenges were smart, the competition was fierce, and everyone asked when we're doing it again."</blockquote>
+            <cite><span data-i18n="test3_name">Maria L.</span> <span data-i18n="test3_role">- Engineering Director, SaaS Startup</span></cite>
           </div>
         </div>
       </div>
@@ -651,30 +680,30 @@
     <!-- CTA Banner -->
     <section class="cta-banner">
       <div class="wrap">
-        <h2>Ready to Get Your Team Moving?</h2>
-        <p>Let's design a quest your team will talk about for years.</p>
-        <a href="#contact" class="btn-hero">Book Your Quest</a>
+        <h2 data-i18n="cta_title">Ready to Get Your Team Moving?</h2>
+        <p data-i18n="cta_text">Let's design a quest your team will talk about for years.</p>
+        <a href="#contact" class="btn-hero" data-i18n="cta_btn">Book Your Quest</a>
       </div>
     </section>
 
     <!-- Contact -->
     <section class="section" id="contact">
       <div class="wrap">
-        <p class="section-label">Contact Us</p>
-        <h2 class="section-title">Let's Plan Your Next Team Adventure</h2>
-        <p class="section-subtitle">Reach out and we'll get back to you within 24 hours with a tailored proposal for your team.</p>
+        <p class="section-label" data-i18n="contact_label">Contact Us</p>
+        <h2 class="section-title" data-i18n="contact_title">Let's Plan Your Next Team Adventure</h2>
+        <p class="section-subtitle" data-i18n="contact_subtitle">Reach out and we'll get back to you within 24 hours with a tailored proposal for your team.</p>
 
         <div class="contact-grid">
           <div class="contact-item">
-            <h3>Email</h3>
+            <h3 data-i18n="contact_email">Email</h3>
             <p><a href="mailto:hello@gocityquest.online">hello@gocityquest.online</a></p>
           </div>
           <div class="contact-item">
-            <h3>Phone</h3>
+            <h3 data-i18n="contact_phone">Phone</h3>
             <p><a href="tel:+10000000000">+1 (000) 000-0000</a></p>
           </div>
           <div class="contact-item">
-            <h3>Address</h3>
+            <h3 data-i18n="contact_address">Address</h3>
             <p>123 Adventure Street<br />Lima, Peru</p>
           </div>
         </div>
@@ -686,10 +715,175 @@
   <!-- Footer -->
   <footer class="footer">
     <div class="wrap">
-      <span>GoCityQuest &copy; 2025. All rights reserved.</span>
+      <span data-i18n="footer_copy">GoCityQuest &copy; 2025. All rights reserved.</span>
       <span><a href="/admin/login">Admin</a></span>
     </div>
   </footer>
+
+  <!-- i18n: all translation strings are hardcoded static literals, no user input -->
+  <script>
+  (function() {
+    var T = {
+      ru: {
+        _title: "GoCityQuest — Городские командные приключения для компаний",
+        nav_cta: "Связаться",
+        hero_title: "Превратите тимбилдинг в городское приключение",
+        hero_text: "Выведите команду из переговорной на улицы города. GoCityQuest создаёт культурные квесты, которые объединяют людей, пробуждают любопытство и заряжают энергией.",
+        hero_cta: "Заказать квест",
+        whatwedo_label: "Что мы делаем",
+        whatwedo_title: "Корпоративный тимбилдинг нового формата",
+        whatwedo_subtitle: "Мы проектируем городские квесты, превращая исторические улицы в командные испытания. Никаких «упражнений на доверие». Только настоящие исследования, задачи и живое общение.",
+        feat1_title: "Культурные городские квесты",
+        feat1_text: "Ваша команда проходит через исторические достопримечательности, скрытые дворики и местные жемчужины. Каждая остановка — это история и задание, требующее совместной работы.",
+        feat2_title: "Настоящее сплочение команды",
+        feat2_text: "Идти бок о бок, решать задачи вместе, открывать новое — такой общий опыт создаёт доверие, которое не воспроизведёт ни один тренинг.",
+        feat3_title: "Платформа корпоративного уровня",
+        feat3_text: "Панели мониторинга в реальном времени, поддержка нескольких команд, пользовательские сценарии, брендированный опыт. Создано для компаний, которые ожидают профессионального исполнения.",
+        why_label: "Почему GoCityQuest",
+        why_title: "Ваша команда заслуживает большего, чем очередной зал для совещаний",
+        why_subtitle: "Тимбилдинг должен ощущаться как инвестиция, а не повинность. Вот почему ведущие компании выбирают культурные квесты на свежем воздухе.",
+        why1_title: "Свежий воздух и движение",
+        why1_text: "Исследования подтверждают: ходьба повышает креативное мышление до 60%. Ваша команда проводит день на свежем воздухе, заряжаясь энергией города, а не уставая от люминесцентных ламп. Это реальная инвестиция в здоровье сотрудников — и они это почувствуют.",
+        why2_title: "Культурные открытия",
+        why2_text: "Каждый квест построен на реальной истории, архитектуре и местных легендах. Ваша команда не просто посещает достопримечательности — она раскрывает скрытые слои города. От средневековых торговых путей до фасадов ар-деко.",
+        why3_title: "Живые связи, а не принудительное веселье",
+        why3_text: "Лучшее сплочение команды происходит естественно — когда люди вместе решают задачу, делают открытие или теряются и находят путь обратно. GoCityQuest создаёт условия для искреннего взаимодействия, а не постановочных групповых активностей.",
+        why4_title: "Более 20 лет опыта в индустрии",
+        why4_text: "Мы создаём командные мероприятия с тех пор, как «тимбилдинг» ещё не стал модным словом. Два десятилетия работы с компаниями любого масштаба — от стартапов до Fortune 500 — мы знаем, что работает, а что нет.",
+        how_label: "Как это работает",
+        how_title: "От заявки до празднования за четыре шага",
+        how_subtitle: "Мы берём на себя всю сложность, чтобы вам не пришлось. Каждый квест — под ключ: просто приходите и исследуйте.",
+        step1_title: "Мы создаём ваш сценарий",
+        step1_text: "Расскажите нам город, размер группы и желаемую атмосферу. Мы спроектируем уникальный маршрут через лучшие культурные достопримечательности с заданиями для вашей команды.",
+        step2_title: "Команды получают коды",
+        step2_text: "Каждая команда получает уникальный QR-код или ссылку. Никаких скачиваний приложений, никаких аккаунтов — просто отсканируйте и начинайте с любого смартфона.",
+        step3_title: "Гуляйте, исследуйте, решайте",
+        step3_text: "Команды проходят город в своём темпе. На каждой достопримечательности они открывают подсказки, отвечают на вопросы и зарабатывают очки. Таблица лидеров в реальном времени поддерживает соревновательный дух.",
+        step4_title: "Празднуйте вместе",
+        step4_text: "После квеста соберитесь, чтобы сравнить истории, посмотреть результаты и наградить победителей. Совместное приключение даёт всем о чём поговорить.",
+        ent_label: "Для бизнеса",
+        ent_title: "Создано для компаний, которые серьёзно относятся к культуре",
+        ent_subtitle: "GoCityQuest — это не игрушка. Это профессиональная платформа, рассчитанная на корпоративное использование любого масштаба.",
+        test_label: "Отзывы клиентов",
+        test_title: "Нам доверяют команды по всему миру",
+        test_subtitle: "Компании, которые инвестируют в людей, выбирают GoCityQuest ради результатов, которые сохраняются надолго.",
+        test1_quote: "«Наша команда вернулась с квеста более вдохновлённой, чем после любого выездного мероприятия. Люди, которые раньше не общались, вдруг начали сотрудничать. Это изменило динамику всего отдела.»",
+        test1_name: "Сара М.",
+        test1_role: "— Руководитель HR, ИТ-компания",
+        test2_quote: "«Мы проводим GoCityQuest для каждого нового набора сотрудников. Это стало нашим фирменным онбордингом. Культурный контекст делает его запоминающимся так, как это не могут тренинги.»",
+        test2_name: "Давид К.",
+        test2_role: "— VP Operations, финансовый сектор",
+        test3_quote: "«Я был скептиком — наша команда не любит «весёлые активности». Но квест оказался по-настоящему увлекательным. Исторические задания были умными, конкуренция жаркой, и все спросили, когда повторим.»",
+        test3_name: "Мария Л.",
+        test3_role: "— Директор по разработке, SaaS-стартап",
+        cta_title: "Готовы вывести команду на улицы?",
+        cta_text: "Давайте создадим квест, о котором ваша команда будет вспоминать годами.",
+        cta_btn: "Заказать квест",
+        contact_label: "Контакты",
+        contact_title: "Давайте спланируем ваше следующее командное приключение",
+        contact_subtitle: "Свяжитесь с нами, и мы вернёмся к вам в течение 24 часов с индивидуальным предложением для вашей команды.",
+        contact_email: "Электронная почта",
+        contact_phone: "Телефон",
+        contact_address: "Адрес",
+        footer_copy: "GoCityQuest \u00a9 2025. Все права защищены.",
+        img_alt_streets: "Команда гуляет по историческим улицам европейского города",
+        img_alt_oldtown: "Архитектура старого города и мощёные улицы",
+        img_alt_group: "Группа коллег смеётся и общается на свежем воздухе",
+        img_alt_team: "Профессиональная команда обсуждает результаты"
+      }
+    };
+
+    // Checklist items: [bold, rest] pairs for safe DOM construction (no innerHTML)
+    var entFeats = {
+      ru: [
+        ["Индивидуальные сценарии", " — маршруты и задания, адаптированные под ваш город и цели команды"],
+        ["Поддержка нескольких команд", " — одновременный запуск десятков команд с отслеживанием в реальном времени"],
+        ["Панели мониторинга", " — отслеживайте прогресс каждой команды в реальном времени"],
+        ["Брендированный опыт", " — фирменный стиль вашей компании интегрирован в квест"],
+        ["Без приложения", " — работает в любом мобильном браузере, ноль барьеров для участников"],
+        ["Персональный менеджер", " — одна точка контакта от планирования до подведения итогов"],
+        ["Мультиязычность", " — квесты на любом языке вашей команды"],
+        ["Масштабируемость", " — от команд из 10 человек до корпоративных выездов на 500 участников"]
+      ]
+    };
+
+    var lang = window.location.pathname === "/ru" ? "ru" : "en";
+
+    function apply(lang) {
+      document.documentElement.lang = lang;
+
+      // Update title
+      if (T[lang] && T[lang]._title) {
+        document.title = T[lang]._title;
+      }
+
+      // Update meta description
+      if (T[lang] && T[lang].hero_text) {
+        var descEl = document.querySelector('meta[name="description"]');
+        if (descEl) descEl.content = T[lang].hero_text;
+      }
+
+      // Update canonical
+      var canonical = document.querySelector('link[rel="canonical"]');
+      if (canonical) {
+        canonical.href = lang === "ru"
+          ? "https://gocityquest.online/ru"
+          : "https://gocityquest.online/";
+      }
+
+      // Update lang switch
+      var sw = document.getElementById("lang-switch");
+      if (sw) {
+        sw.textContent = lang === "ru" ? "EN" : "RU";
+        sw.href = lang === "ru" ? "/" : "/ru";
+      }
+
+      if (!T[lang]) return;
+      var strings = T[lang];
+
+      // data-i18n: replace textContent
+      document.querySelectorAll("[data-i18n]").forEach(function(el) {
+        var key = el.getAttribute("data-i18n");
+        if (strings[key]) el.textContent = strings[key];
+      });
+
+      // data-i18n-alt: replace alt attribute
+      document.querySelectorAll("[data-i18n-alt]").forEach(function(el) {
+        var key = el.getAttribute("data-i18n-alt");
+        if (strings[key]) el.alt = strings[key];
+      });
+
+      // Checklist items: safe DOM construction (no innerHTML)
+      if (entFeats[lang]) {
+        var items = document.querySelectorAll(".checklist li[data-i18n]");
+        entFeats[lang].forEach(function(pair, i) {
+          if (items[i]) {
+            while (items[i].firstChild) items[i].removeChild(items[i].firstChild);
+            var strong = document.createElement("strong");
+            strong.textContent = pair[0];
+            items[i].appendChild(strong);
+            items[i].appendChild(document.createTextNode(pair[1]));
+          }
+        });
+      }
+
+      // Testimonial cites: safe DOM construction (name + span role)
+      ["test1", "test2", "test3"].forEach(function(prefix) {
+        var nameKey = prefix + "_name";
+        var roleKey = prefix + "_role";
+        if (strings[nameKey] && strings[roleKey]) {
+          // Find the cite that contains a span with matching data-i18n
+          var nameEl = document.querySelector('[data-i18n="' + nameKey + '"]');
+          if (nameEl) nameEl.textContent = strings[nameKey];
+          var roleEl = document.querySelector('[data-i18n="' + roleKey + '"]');
+          if (roleEl) roleEl.textContent = strings[roleKey];
+        }
+      });
+    }
+
+    if (lang !== "en") apply(lang);
+  })();
+  </script>
 
 </body>
 </html>

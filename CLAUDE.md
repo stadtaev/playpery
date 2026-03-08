@@ -104,11 +104,15 @@ api/
       handle_admin_logout.go      — POST /api/admin/logout
       handle_admin_scenarios.go   — CRUD for /api/admin/clients/{client}/scenarios
       handle_admin_games.go       — CRUD for /api/admin/clients/{client}/games + nested teams
-      spa.go                      — static file server + index.html fallback
+      spa.go                      — static file server + index.html fallback + landing page handler
       health.go                   — GET /healthz
       openapi.go                  — OpenAPI 3.0 spec generation
       wsecho.go                   — GET /ws/echo (WebSocket test)
 web/
+  public/
+    landing.html                  — static marketing landing page (EN/RU, client-side i18n)
+    robots.txt                    — search engine directives (allow /, disallow /api/ /admin/ /game)
+    sitemap.xml                   — sitemap with hreflang alternates for / and /ru
   src/
     index.css                     — Tailwind entry + ASOS design system (@theme, component classes)
     types.ts                      — TS types matching API responses
@@ -140,6 +144,8 @@ web/
 
 Startup order: load config → derive DB directory from DB_PATH → open admin DB → create Registry → pre-open existing clients → seed demo if first run → start HTTP server. Graceful shutdown via errgroup + signal.NotifyContext.
 
+**Landing page** — static HTML marketing page at `/` and `/ru`. Served by Go (`handleLanding` in `spa.go`) before the SPA catch-all. Single file with client-side i18n: `data-i18n` attributes on elements, JS translation object switches text based on `window.location.pathname`. English is default, Russian at `/ru`. SEO: meta tags, Open Graph, JSON-LD structured data, `robots.txt`, `sitemap.xml` with `hreflang` alternates. Lives in `web/public/` so Vite copies it to `dist/` on build.
+
 **Scenario modes** control what happens at each stage. Mode is scenario-level (copied to game at creation). Five modes exist:
 - `classic` — question shown immediately (default, backward-compatible)
 - `qr_quiz` — scan QR/enter code to unlock, then answer question
@@ -157,6 +163,8 @@ Existing data without a `mode` field defaults to `"classic"` at read time (no mi
 
 | Method | Path | Purpose | Auth |
 |--------|------|---------|------|
+| GET | `/` | Marketing landing page (EN) | none |
+| GET | `/ru` | Marketing landing page (RU) | none |
 | GET | `/healthz` | Health check | none |
 | GET | `/openapi.json` | OpenAPI spec | none |
 | GET | `/docs` | Swagger UI | none |
