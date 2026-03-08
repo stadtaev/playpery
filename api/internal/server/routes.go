@@ -66,11 +66,11 @@ func addRoutes(r chi.Router, logger *slog.Logger, admin AdminStore, clients *Reg
 		if info, err := os.Stat(spaDir); err == nil && info.IsDir() {
 			logger.Info("serving SPA", "dir", spaDir)
 
-			// Serve landing page at root and /ru if it exists.
+			// Serve landing page at root and /en if it exists.
 			landingPath := spaDir + "/landing.html"
 			if _, err := os.Stat(landingPath); err == nil {
 				r.Get("/", handleLanding(landingPath))
-				r.Get("/ru", handleLanding(landingPath))
+				r.Get("/en", handleLanding(landingPath))
 			}
 
 			r.NotFound(handleSPA(spaDir))
