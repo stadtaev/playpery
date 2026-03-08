@@ -305,7 +305,7 @@
     var CACHE = {};
 
     function detectLang() {
-      // URL path takes priority (/en), then localStorage, then default (ru)
+      // Explicit path wins, then localStorage for returning visitors on /
       if (window.location.pathname === "/en") return "en";
       if (window.location.pathname === "/") return localStorage.getItem("lang") || "ru";
       return "ru";
@@ -321,7 +321,6 @@
 
     function apply(strings, lang) {
       document.documentElement.lang = lang;
-      localStorage.setItem("lang", lang);
 
       if (strings._title) document.title = strings._title;
 
@@ -371,21 +370,23 @@
     async function init() {
       var lang = detectLang();
 
-      // Redirect to /en if user prefers English but landed on /
+      // Redirect returning English user from / to /en
       if (lang === "en" && window.location.pathname === "/") {
         window.location.replace("/en");
         return;
       }
 
-      if (lang === "ru") {
-        // HTML is already Russian — just persist preference
-        localStorage.setItem("lang", "ru");
-        return;
-      }
+      if (lang === "ru") return; // HTML is already Russian
 
       var strings = await loadStrings(lang);
       if (strings) apply(strings, lang);
     }
+
+    // Lang switch: save preference before navigating (prevents redirect loop)
+    document.getElementById("lang-switch").addEventListener("click", function(e) {
+      var target = this.getAttribute("href") === "/en" ? "en" : "ru";
+      localStorage.setItem("lang", target);
+    });
 
     init();
   })();
