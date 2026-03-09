@@ -4,11 +4,11 @@ import { getGameState, submitAnswer, unlockStage } from './api'
 import { useGameEvents } from './useGameEvents'
 import { useCountdown } from './TimerDisplay'
 import { getSession, clearSession } from './lib/session'
-import type { GameState } from './types'
+import type { GameState, FunFact } from './types'
 
 export type StagePhase = 'interstitial' | 'unlocking' | 'answering' | 'results'
 export type Feedback = { correct: boolean; message: string }
-export type AnswerResult = { isCorrect: boolean; correctAnswer: string; funFacts?: string[] }
+export type AnswerResult = { isCorrect: boolean; correctAnswer: string; funFacts?: FunFact[] }
 
 export function useGameState() {
   const { t } = useTranslation('player')

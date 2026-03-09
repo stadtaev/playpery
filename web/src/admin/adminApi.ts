@@ -47,6 +47,24 @@ export function createClient(slug: string, name: string): Promise<ClientInfo> {
   })
 }
 
+// File uploads.
+
+export async function uploadImage(file: File): Promise<string> {
+  const form = new FormData()
+  form.append('file', file)
+  const res = await fetch(BASE + '/uploads', {
+    method: 'POST',
+    credentials: 'same-origin',
+    body: form,
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(body.error || `HTTP ${res.status}`)
+  }
+  const data = await res.json()
+  return data.url
+}
+
 // Scenarios — global (not client-scoped).
 
 export function listScenarios(): Promise<ScenarioSummary[]> {

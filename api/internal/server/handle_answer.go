@@ -17,7 +17,7 @@ type AnswerResponse struct {
 	NextStage     *StageInfo `json:"nextStage"`
 	GameComplete  bool       `json:"gameComplete"`
 	CorrectAnswer string     `json:"correctAnswer"`
-	FunFacts      []string   `json:"funFacts,omitempty"`
+	FunFacts      []FunFact  `json:"funFacts,omitempty"`
 }
 
 func handleAnswer(broker *Broker) http.HandlerFunc {
@@ -128,11 +128,13 @@ func handleAnswer(broker *Broker) http.HandlerFunc {
 			ns := StageInfo{
 				StageNumber: nextStageNum,
 				Clue:        s.Clue,
+				ClueImage:   s.ClueImage,
 				Location:    s.Location,
 				Locked:      modeRequiresUnlock(data.Mode),
 			}
 			if !ns.Locked {
 				ns.Question = s.Question
+				ns.QuestionImage = s.QuestionImage
 			}
 			resp.NextStage = &ns
 		} else {

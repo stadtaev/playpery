@@ -23,7 +23,10 @@ export function AnswerPanel({ stage, totalStages, role, answer, onAnswerChange, 
         {t('stage_of', { current: stage.stageNumber, total: totalStages })}{role === 'supervisor' && <> &mdash; {stage.location}</>}
       </div>
       {stage.question && (
-        <p className="mb-4"><strong>{t('question_label')}</strong> {stage.question}</p>
+        <div className="mb-4">
+          <p><strong>{t('question_label')}</strong> {stage.question}</p>
+          {stage.questionImage && <img src={stage.questionImage} alt="" className="w-full mt-2" />}
+        </div>
       )}
       {canAnswer ? (
         <form onSubmit={onSubmit} className="space-y-4">

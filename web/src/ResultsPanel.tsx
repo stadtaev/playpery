@@ -1,6 +1,11 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { AnswerResult } from './useGameState'
+import type { FunFact } from './types'
+
+function normalizeFunFact(f: string | FunFact): FunFact {
+  return typeof f === 'string' ? { text: f } : f
+}
 
 interface Props {
   stageNumber: number
@@ -12,9 +17,10 @@ interface Props {
 export function ResultsPanel({ stageNumber, totalStages, result, onContinue }: Props) {
   const { t } = useTranslation('player')
   const [page, setPage] = useState(0)
-  const funFacts = result.funFacts ?? []
+  const funFacts = (result.funFacts ?? []).map(normalizeFunFact)
   const hasPages = funFacts.length > 0
   const isLastPage = !hasPages || page >= funFacts.length - 1
+  const currentFact = hasPages ? funFacts[page] : null
 
   return (
     <div className="card">
@@ -27,10 +33,13 @@ export function ResultsPanel({ stageNumber, totalStages, result, onContinue }: P
         </p>
         <p>{t('correct_answer_is')} <strong>{result.correctAnswer}</strong></p>
 
-        {hasPages && (
+        {currentFact && (
           <>
             <hr className="border-t border-gray-200" />
-            <p>{funFacts[page]}</p>
+            <p>{currentFact.text}</p>
+            {currentFact.image && (
+              <img src={currentFact.image} alt="" className="w-full" />
+            )}
             <p className="text-secondary text-sm text-center">{page + 1} / {funFacts.length}</p>
           </>
         )}

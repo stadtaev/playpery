@@ -3,13 +3,15 @@ package server
 import (
 	"database/sql"
 	"log/slog"
+	"net/http"
 	"os"
+	"path/filepath"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/swaggest/swgui/v5emb"
 )
 
-func addRoutes(r chi.Router, logger *slog.Logger, admin AdminStore, clients *Registry, adminDB *sql.DB, spaDir string) {
+func addRoutes(r chi.Router, logger *slog.Logger, admin AdminStore, clients *Registry, adminDB *sql.DB, spaDir, dataDir string) {
 	broker := NewBroker()
 
 	r.Get("/openapi.json", handleOpenAPI())
@@ -28,12 +30,19 @@ func addRoutes(r chi.Router, logger *slog.Logger, admin AdminStore, clients *Reg
 		r.Get("/game/events", handleEvents(broker))
 	})
 
+	// Uploaded images — public, no auth.
+	uploadsDir := filepath.Join(dataDir, "uploads")
+	r.Handle("/uploads/*", http.StripPrefix("/uploads/", http.FileServer(http.Dir(uploadsDir))))
+
 	// Admin auth — shared DB.
 	r.Post("/api/admin/login", handleAdminLogin(admin))
 	r.Post("/api/admin/logout", handleAdminLogout(admin))
 	r.Get("/api/admin/me", handleAdminMe(admin))
 	r.Get("/api/admin/clients", handleAdminListClients(admin))
 	r.Post("/api/admin/clients", handleAdminCreateClient(admin, clients))
+
+	// Admin file upload.
+	r.With(adminAuthMiddleware(admin)).Post("/api/admin/uploads", handleUpload(dataDir))
 
 	// Admin scenarios — global, stored in admin DB.
 	r.Route("/api/admin/scenarios", func(r chi.Router) {

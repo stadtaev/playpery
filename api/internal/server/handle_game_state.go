@@ -26,7 +26,9 @@ type TeamInfo struct {
 type StageInfo struct {
 	StageNumber    int    `json:"stageNumber"`
 	Clue           string `json:"clue"`
+	ClueImage      string `json:"clueImage,omitempty"`
 	Question       string `json:"question,omitempty"`
+	QuestionImage  string `json:"questionImage,omitempty"`
 	Location       string `json:"location"`
 	Locked         bool   `json:"locked"`
 	LocationNumber int    `json:"locationNumber,omitempty"`
@@ -45,10 +47,10 @@ type PlayerInfo struct {
 }
 
 type LastStageResult struct {
-	StageNumber   int      `json:"stageNumber"`
-	IsCorrect     bool     `json:"isCorrect"`
-	CorrectAnswer string   `json:"correctAnswer"`
-	FunFacts      []string `json:"funFacts,omitempty"`
+	StageNumber   int       `json:"stageNumber"`
+	IsCorrect     bool      `json:"isCorrect"`
+	CorrectAnswer string    `json:"correctAnswer"`
+	FunFacts      []FunFact `json:"funFacts,omitempty"`
 }
 
 type GameStateResponse struct {
@@ -64,14 +66,16 @@ type GameStateResponse struct {
 }
 
 type scenarioStage struct {
-	StageNumber    int      `json:"stageNumber"`
-	Location       string   `json:"location"`
-	Clue           string   `json:"clue"`
-	Question       string   `json:"question"`
-	CorrectAnswer  string   `json:"correctAnswer"`
-	UnlockCode     string   `json:"unlockCode,omitempty"`
-	LocationNumber int      `json:"locationNumber,omitempty"`
-	FunFacts       []string `json:"funFacts,omitempty"`
+	StageNumber    int       `json:"stageNumber"`
+	Location       string    `json:"location"`
+	Clue           string    `json:"clue"`
+	ClueImage      string    `json:"clueImage,omitempty"`
+	Question       string    `json:"question"`
+	QuestionImage  string    `json:"questionImage,omitempty"`
+	CorrectAnswer  string    `json:"correctAnswer"`
+	UnlockCode     string    `json:"unlockCode,omitempty"`
+	LocationNumber int       `json:"locationNumber,omitempty"`
+	FunFacts       []FunFact `json:"funFacts,omitempty"`
 }
 
 // rotatedStageIndex returns the scenario stage index for a team's Nth sequential stage (1-based).
@@ -159,6 +163,7 @@ func handleGameState() http.HandlerFunc {
 			si := StageInfo{
 				StageNumber: currentStageNum,
 				Clue:        s.Clue,
+				ClueImage:   s.ClueImage,
 				Location:    s.Location,
 			}
 
@@ -167,6 +172,7 @@ func handleGameState() http.HandlerFunc {
 				si.Locked = !unlocked
 				if unlocked && modeHasQuestion(data.Mode) {
 					si.Question = s.Question
+					si.QuestionImage = s.QuestionImage
 				}
 				if data.Mode == "math_puzzle" {
 					si.LocationNumber = s.LocationNumber
@@ -174,6 +180,7 @@ func handleGameState() http.HandlerFunc {
 			} else {
 				// classic: always show question, never locked
 				si.Question = s.Question
+				si.QuestionImage = s.QuestionImage
 			}
 
 			currentStage = &si

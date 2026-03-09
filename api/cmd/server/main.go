@@ -80,7 +80,7 @@ func run(ctx context.Context, stdout io.Writer) error {
 		return fmt.Errorf("seeding demo: %w", err)
 	}
 
-	srv := server.New(cfg.HTTPAddr, logger, admin, clients, adminDB, cfg.SPADir)
+	srv := server.New(cfg.HTTPAddr, logger, admin, clients, adminDB, cfg.SPADir, dbDir)
 
 	g, gctx := errgroup.WithContext(ctx)
 

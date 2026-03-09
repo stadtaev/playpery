@@ -13,15 +13,22 @@ export interface ScenarioSummary {
   createdAt: string
 }
 
+export interface FunFact {
+  text: string
+  image?: string
+}
+
 export interface Stage {
   stageNumber: number
   location: string
   clue: string
+  clueImage?: string
   question: string
+  questionImage?: string
   correctAnswer: string
   unlockCode?: string
   locationNumber?: number
-  funFacts?: string[]
+  funFacts?: FunFact[]
   lat: number
   lng: number
 }

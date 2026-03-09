@@ -28,7 +28,10 @@ export function UnlockPanel({ stage, totalStages, mode, role, unlockCode, onUnlo
         {t('stage_of', { current: stage.stageNumber, total: totalStages })}{role === 'supervisor' && <> &mdash; {stage.location}</>}
       </div>
       {mode !== 'supervised' && (
-        <p className="mb-4"><strong>{t('clue_label')}</strong> {stage.clue}</p>
+        <div className="mb-4">
+          <p><strong>{t('clue_label')}</strong> {stage.clue}</p>
+          {stage.clueImage && <img src={stage.clueImage} alt="" className="w-full mt-2" />}
+        </div>
       )}
 
       {(mode === 'qr_quiz' || mode === 'qr_hunt') && (
@@ -38,7 +41,7 @@ export function UnlockPanel({ stage, totalStages, mode, role, unlockCode, onUnlo
         <MathUnlockForm {...common} unlockCode={unlockCode} onUnlockCodeChange={onUnlockCodeChange} teamSecret={teamSecret} locationNumber={stage.locationNumber} />
       )}
       {mode === 'supervised' && (
-        <SupervisedUnlockForm {...common} role={role} clue={stage.clue} />
+        <SupervisedUnlockForm {...common} role={role} clue={stage.clue} clueImage={stage.clueImage} />
       )}
     </div>
   )

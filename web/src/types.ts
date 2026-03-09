@@ -36,7 +36,9 @@ export interface TeamInfo {
 export interface StageInfo {
   stageNumber: number
   clue: string
+  clueImage?: string
   question?: string
+  questionImage?: string
   location: string
   locked: boolean
   locationNumber?: number
@@ -54,11 +56,16 @@ export interface PlayerInfo {
   role: string
 }
 
+export interface FunFact {
+  text: string
+  image?: string
+}
+
 export interface LastStageResult {
   stageNumber: number
   isCorrect: boolean
   correctAnswer: string
-  funFacts?: string[]
+  funFacts?: FunFact[]
 }
 
 export interface GameState {
@@ -79,7 +86,7 @@ export interface AnswerResponse {
   nextStage: StageInfo | null
   gameComplete: boolean
   correctAnswer: string
-  funFacts?: string[]
+  funFacts?: FunFact[]
 }
 
 export interface UnlockResponse {

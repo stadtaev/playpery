@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { getScenario, createScenario, updateScenario } from './adminApi'
-import type { Stage, ScenarioRequest } from './adminTypes'
+import { getScenario, createScenario, updateScenario, uploadImage } from './adminApi'
+import type { Stage, ScenarioRequest, FunFact } from './adminTypes'
 import { LoadingPage, Spinner } from '../components/Spinner'
 import { ErrorMessage } from '../components/ErrorMessage'
 
@@ -16,6 +16,51 @@ function modeNeedsQuestion(mode: string): boolean {
 
 function emptyStage(): Stage {
   return { stageNumber: 0, location: '', clue: '', question: '', correctAnswer: '', funFacts: [], lat: 0, lng: 0 }
+}
+
+function normalizeFunFacts(facts?: (string | FunFact)[]): FunFact[] {
+  if (!facts) return []
+  return facts.map((f) => (typeof f === 'string' ? { text: f } : f))
+}
+
+function ImageUpload({ label, value, onChange }: { label: string; value?: string; onChange: (url: string | undefined) => void }) {
+  const { t } = useTranslation('admin')
+  const [uploading, setUploading] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const url = await uploadImage(file)
+      onChange(url)
+    } catch {
+      // silently fail — user can retry
+    } finally {
+      setUploading(false)
+      if (inputRef.current) inputRef.current.value = ''
+    }
+  }
+
+  return (
+    <div>
+      <label className="input-label">{label}</label>
+      {value ? (
+        <div className="flex items-start gap-2">
+          <img src={value} alt="" className="w-32 h-auto border border-gray-200" />
+          <button type="button" className="btn-danger btn-sm" onClick={() => onChange(undefined)}>
+            {t('scenario_remove_image')}
+          </button>
+        </div>
+      ) : (
+        <div>
+          <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleFile} disabled={uploading} className="text-sm" />
+          {uploading && <span className="text-secondary text-sm ml-2">{t('scenario_uploading_image')}</span>}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export function AdminScenarioEditorPage({ id }: { id?: string }) {
@@ -45,21 +90,22 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
         setCity(s.city)
         setDescription(s.description)
         setMode(s.mode || 'supervised')
-        setStages(s.stages.length > 0 ? s.stages : [emptyStage()])
+        const loaded = s.stages.length > 0 ? s.stages : [emptyStage()]
+        setStages(loaded.map((st) => ({ ...st, funFacts: normalizeFunFacts(st.funFacts) })))
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
   }, [id])
 
-  function updateStage(index: number, field: keyof Stage, value: string | number | string[]) {
+  function updateStage(index: number, field: keyof Stage, value: Stage[keyof Stage]) {
     setStages((prev) => prev.map((s, i) => (i === index ? { ...s, [field]: value } : s)))
   }
 
-  function updateFunFact(stageIndex: number, factIndex: number, value: string) {
+  function updateFunFact(stageIndex: number, factIndex: number, field: keyof FunFact, value: string | undefined) {
     setStages((prev) => prev.map((s, i) => {
       if (i !== stageIndex) return s
       const facts = [...(s.funFacts || [])]
-      facts[factIndex] = value
+      facts[factIndex] = { ...facts[factIndex], [field]: value }
       return { ...s, funFacts: facts }
     }))
   }
@@ -67,7 +113,7 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
   function addFunFact(stageIndex: number) {
     setStages((prev) => prev.map((s, i) => {
       if (i !== stageIndex) return s
-      return { ...s, funFacts: [...(s.funFacts || []), ''] }
+      return { ...s, funFacts: [...(s.funFacts || []), { text: '' }] }
     }))
   }
 
@@ -183,6 +229,7 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
                 <label className="input-label">{t('scenario_clue')}</label>
                 <textarea className="input" value={stage.clue} onChange={(e) => updateStage(i, 'clue', e.target.value)} rows={2} />
               </div>
+              <ImageUpload label={t('scenario_clue_image')} value={stage.clueImage} onChange={(url) => updateStage(i, 'clueImage', url ?? '')} />
               {(mode === 'qr_quiz' || mode === 'qr_hunt') && (
                 <div>
                   <label className="input-label">{t('scenario_unlock_code')}</label>
@@ -201,26 +248,34 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
                     <label className="input-label">{t('scenario_question')}</label>
                     <input className="input" type="text" value={stage.question} onChange={(e) => updateStage(i, 'question', e.target.value)} required />
                   </div>
+                  <ImageUpload label={t('scenario_question_image')} value={stage.questionImage} onChange={(url) => updateStage(i, 'questionImage', url ?? '')} />
                   <div>
                     <label className="input-label">{t('scenario_correct_answer')}</label>
                     <input className="input" type="text" value={stage.correctAnswer} onChange={(e) => updateStage(i, 'correctAnswer', e.target.value)} required />
                   </div>
                   <div>
                     <label className="input-label">{t('scenario_fun_facts')}</label>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {(stage.funFacts || []).map((fact, fi) => (
-                        <div key={fi} className="flex gap-2">
-                          <textarea
-                            className="input flex-1"
-                            value={fact}
-                            onChange={(e) => updateFunFact(i, fi, e.target.value)}
-                            onBlur={(e) => { if (!e.target.value.trim()) removeFunFact(i, fi) }}
-                            rows={2}
-                            placeholder={t('scenario_fun_fact_placeholder', { n: fi + 1 })}
+                        <div key={fi} className="border border-gray-200 p-3 space-y-2">
+                          <div className="flex gap-2">
+                            <textarea
+                              className="input flex-1"
+                              value={typeof fact === 'string' ? fact : fact.text}
+                              onChange={(e) => updateFunFact(i, fi, 'text', e.target.value)}
+                              onBlur={(e) => { if (!e.target.value.trim() && !(typeof fact !== 'string' && fact.image)) removeFunFact(i, fi) }}
+                              rows={2}
+                              placeholder={t('scenario_fun_fact_placeholder', { n: fi + 1 })}
+                            />
+                            <button type="button" className="btn-danger btn-sm self-start" onClick={() => removeFunFact(i, fi)}>
+                              &times;
+                            </button>
+                          </div>
+                          <ImageUpload
+                            label={t('scenario_fun_fact_image')}
+                            value={typeof fact !== 'string' ? fact.image : undefined}
+                            onChange={(url) => updateFunFact(i, fi, 'image', url)}
                           />
-                          <button type="button" className="btn-danger btn-sm self-start" onClick={() => removeFunFact(i, fi)}>
-                            &times;
-                          </button>
                         </div>
                       ))}
                       <button type="button" className="btn-ghost btn-sm" onClick={() => addFunFact(i)}>

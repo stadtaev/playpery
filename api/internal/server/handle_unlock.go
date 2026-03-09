@@ -138,6 +138,7 @@ func handleUnlock(broker *Broker) http.HandlerFunc {
 				resp.NextStage = &StageInfo{
 					StageNumber: nextStageNum,
 					Clue:        s.Clue,
+					ClueImage:   s.ClueImage,
 					Location:    s.Location,
 					Locked:      true,
 				}
@@ -176,6 +177,7 @@ func handleUnlock(broker *Broker) http.HandlerFunc {
 				resp.NextStage = &StageInfo{
 					StageNumber: nextStageNum,
 					Clue:        s.Clue,
+					ClueImage:   s.ClueImage,
 					Location:    s.Location,
 					Locked:      true,
 				}

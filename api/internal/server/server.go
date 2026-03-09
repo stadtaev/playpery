@@ -19,7 +19,7 @@ type Server struct {
 	logger *slog.Logger
 }
 
-func New(addr string, logger *slog.Logger, admin AdminStore, clients *Registry, adminDB *sql.DB, spaDir string) *Server {
+func New(addr string, logger *slog.Logger, admin AdminStore, clients *Registry, adminDB *sql.DB, spaDir, dataDir string) *Server {
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
@@ -27,7 +27,7 @@ func New(addr string, logger *slog.Logger, admin AdminStore, clients *Registry, 
 	r.Use(newStructuredLogger(logger))
 	r.Use(middleware.Recoverer)
 
-	addRoutes(r, logger, admin, clients, adminDB, spaDir)
+	addRoutes(r, logger, admin, clients, adminDB, spaDir, dataDir)
 
 	return &Server{
 		srv: &http.Server{

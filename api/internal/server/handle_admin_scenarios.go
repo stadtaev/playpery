@@ -3,6 +3,7 @@ package server
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -10,6 +11,23 @@ import (
 
 	"github.com/go-chi/chi/v5"
 )
+
+// FunFact represents a fun fact with optional image. Supports backward compat:
+// unmarshaling a plain string produces FunFact{Text: "..."}.
+type FunFact struct {
+	Text  string `json:"text"`
+	Image string `json:"image,omitempty"`
+}
+
+func (f *FunFact) UnmarshalJSON(data []byte) error {
+	var s string
+	if json.Unmarshal(data, &s) == nil {
+		f.Text = s
+		return nil
+	}
+	type plain FunFact
+	return json.Unmarshal(data, (*plain)(f))
+}
 
 var validModes = map[string]bool{
 	"classic":      true,
@@ -40,16 +58,18 @@ type AdminScenarioDetail struct {
 }
 
 type AdminStage struct {
-	StageNumber    int      `json:"stageNumber"`
-	Location       string   `json:"location"`
-	Clue           string   `json:"clue"`
-	Question       string   `json:"question"`
-	CorrectAnswer  string   `json:"correctAnswer"`
-	UnlockCode     string   `json:"unlockCode,omitempty"`
-	LocationNumber int      `json:"locationNumber,omitempty"`
-	FunFacts       []string `json:"funFacts,omitempty"`
-	Lat            float64  `json:"lat"`
-	Lng            float64  `json:"lng"`
+	StageNumber    int       `json:"stageNumber"`
+	Location       string    `json:"location"`
+	Clue           string    `json:"clue"`
+	ClueImage      string    `json:"clueImage,omitempty"`
+	Question       string    `json:"question"`
+	QuestionImage  string    `json:"questionImage,omitempty"`
+	CorrectAnswer  string    `json:"correctAnswer"`
+	UnlockCode     string    `json:"unlockCode,omitempty"`
+	LocationNumber int       `json:"locationNumber,omitempty"`
+	FunFacts       []FunFact `json:"funFacts,omitempty"`
+	Lat            float64   `json:"lat"`
+	Lng            float64   `json:"lng"`
 }
 
 type AdminScenarioRequest struct {
