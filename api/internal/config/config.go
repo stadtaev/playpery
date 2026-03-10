@@ -12,6 +12,8 @@ type Config struct {
 	DBPath   string     `env:"DB_PATH" envDefault:"db/local.db"`
 	LogLevel slog.Level `env:"LOG_LEVEL" envDefault:"INFO"`
 	SPADir   string     `env:"SPA_DIR" envDefault:"../web/dist"`
+	TLSCert  string     `env:"TLS_CERT"`
+	TLSKey   string     `env:"TLS_KEY"`
 }
 
 func Load() (*Config, error) {
