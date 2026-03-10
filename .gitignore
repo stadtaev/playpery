@@ -12,6 +12,7 @@ db/
 # Environment
 .env
 *.env
+*.pem
 terraform.tfvars
 
 # IDE
