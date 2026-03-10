@@ -95,6 +95,38 @@ export function deleteScenario(id: string): Promise<void> {
   return request(`/scenarios/${id}`, { method: 'DELETE' })
 }
 
+export async function exportScenario(id: string, name: string): Promise<void> {
+  const res = await fetch(BASE + `/scenarios/${id}/export`, {
+    credentials: 'same-origin',
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(body.error || `HTTP ${res.status}`)
+  }
+  const blob = await res.blob()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${name}.md`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+export async function importScenario(file: File): Promise<ScenarioDetail> {
+  const form = new FormData()
+  form.append('file', file)
+  const res = await fetch(BASE + '/scenarios/import', {
+    method: 'POST',
+    credentials: 'same-origin',
+    body: form,
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(body.error || `HTTP ${res.status}`)
+  }
+  return res.json()
+}
+
 // Games — per-client.
 
 export function listGames(client: string): Promise<GameSummary[]> {

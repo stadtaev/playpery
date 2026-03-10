@@ -50,8 +50,10 @@ func addRoutes(r chi.Router, logger *slog.Logger, admin AdminStore, clients *Reg
 		r.Get("/", handleAdminListScenarios(admin))
 		r.Post("/", handleAdminCreateScenario(admin))
 		r.Get("/{id}", handleAdminGetScenario(admin))
+		r.Get("/{id}/export", handleAdminExportScenario(admin, dataDir))
 		r.Put("/{id}", handleAdminUpdateScenario(admin))
 		r.Delete("/{id}", handleAdminDeleteScenario(admin, clients))
+		r.Post("/import", handleAdminImportScenario(admin, dataDir))
 	})
 
 	// Admin games/teams — per-client, requires admin auth.
