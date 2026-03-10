@@ -9,7 +9,18 @@ if ! id cityquest &>/dev/null; then
 fi
 
 echo "==> Creating directories..."
-mkdir -p /opt/cityquest/{data,web}
+mkdir -p /opt/cityquest/{data,web,tls}
+
+echo "==> Generating self-signed TLS cert for backend..."
+if [ ! -f /opt/cityquest/tls/cert.pem ]; then
+    openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 \
+        -keyout /opt/cityquest/tls/key.pem \
+        -out /opt/cityquest/tls/cert.pem \
+        -days 3650 -nodes \
+        -subj "/CN=localhost"
+    chmod 600 /opt/cityquest/tls/key.pem
+fi
+
 chown -R cityquest:cityquest /opt/cityquest
 
 echo "==> Installing Caddy..."

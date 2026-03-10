@@ -1,8 +1,8 @@
 gocityquest.online {
-	reverse_proxy localhost:8080
+	reverse_proxy https://localhost:8443 {
+		transport http {
+			tls_insecure_skip_verify
+			versions h2 h3
+		}
+	}
 }
-
-# For testing without a domain (uncomment and comment the block above):
-# :80 {
-#     reverse_proxy localhost:8080
-# }
