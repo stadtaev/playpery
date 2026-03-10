@@ -116,10 +116,7 @@ func (s *Server) Shutdown(ctx context.Context) error {
 
 	tcpErr := s.tcpSrv.Shutdown(ctx)
 
-	if h3Err != nil {
-		return h3Err
-	}
-	return tcpErr
+	return errors.Join(h3Err, tcpErr)
 }
 
 func newStructuredLogger(logger *slog.Logger) func(next http.Handler) http.Handler {
