@@ -5,6 +5,7 @@ go 1.25.7
 require (
 	github.com/caarlos0/env/v11 v11.3.1
 	github.com/go-chi/chi/v5 v5.2.5
+	github.com/quic-go/quic-go v0.59.0
 	github.com/swaggest/openapi-go v0.2.60
 	github.com/swaggest/swgui v1.8.5
 	github.com/tursodatabase/go-libsql v0.0.0-20251219133454-43644db490ff
@@ -15,17 +16,15 @@ require (
 require (
 	github.com/andybalholm/brotli v1.2.0 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.0 // indirect
-	github.com/kr/pretty v0.3.1 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/libsql/sqlite-antlr4-parser v0.0.0-20240327125255-dbf53b6cbf06 // indirect
-	github.com/quic-go/quic-go v0.59.0 // indirect
-	github.com/rogpeppe/go-internal v1.10.0 // indirect
-	github.com/stretchr/testify v1.11.1 // indirect
+	github.com/quic-go/qpack v0.6.0 // indirect
 	github.com/swaggest/jsonschema-go v0.3.74 // indirect
 	github.com/swaggest/refl v1.3.1 // indirect
 	github.com/vearutop/statigz v1.4.0 // indirect
 	golang.org/x/exp v0.0.0-20250620022241-b7579e27df2b // indirect
 	golang.org/x/net v0.49.0 // indirect
 	golang.org/x/sys v0.41.0 // indirect
-	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
+	golang.org/x/text v0.34.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
