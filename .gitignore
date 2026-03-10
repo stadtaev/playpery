@@ -30,3 +30,4 @@ web/dist/
 .DS_Store
 # ralphex progress logs
 .ralphex/progress/
+docs/plans/
