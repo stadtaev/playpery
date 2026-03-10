@@ -85,7 +85,7 @@ func run(ctx context.Context, stdout io.Writer) error {
 	g, gctx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
-		logger.Info("starting http server", "addr", cfg.HTTPAddr)
+		logger.Info("starting server", "addr", cfg.HTTPAddr)
 		return srv.Run(gctx)
 	})
 
