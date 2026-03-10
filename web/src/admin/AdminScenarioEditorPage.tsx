@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { getScenario, createScenario, updateScenario, uploadImage } from './adminApi'
+import { getScenario, createScenario, updateScenario, uploadImage, exportScenario } from './adminApi'
 import type { Stage, ScenarioRequest, FunFact } from './adminTypes'
 import { LoadingPage, Spinner } from '../components/Spinner'
 import { ErrorMessage } from '../components/ErrorMessage'
@@ -174,7 +174,14 @@ export function AdminScenarioEditorPage({ id }: { id?: string }) {
 
   return (
     <>
-      <h2>{id ? t('scenario_edit_title') : t('scenario_new_title')}</h2>
+      <div className="flex justify-between items-center">
+        <h2>{id ? t('scenario_edit_title') : t('scenario_new_title')}</h2>
+        {id && (
+          <button type="button" className="btn-secondary btn-sm" onClick={() => exportScenario(id, name || 'scenario')}>
+            {t('scenarios_export')}
+          </button>
+        )}
+      </div>
       {error && <ErrorMessage message={error} />}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
