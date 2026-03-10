@@ -27,14 +27,6 @@ func newOpenAPISpec() *openapi3.Spec {
 	getHealthz.AddRespStructure(HealthResponse{}, openapi.WithHTTPStatus(http.StatusServiceUnavailable))
 	_ = r.AddOperation(getHealthz)
 
-	// GET /ws/echo
-	getWSEcho, _ := r.NewOperationContext(http.MethodGet, "/ws/echo")
-	getWSEcho.SetSummary("WebSocket echo")
-	getWSEcho.SetDescription("Upgrades to a WebSocket connection that echoes messages back.")
-	getWSEcho.AddRespStructure(nil, openapi.WithHTTPStatus(http.StatusSwitchingProtocols),
-		openapi.WithContentType("text/plain"))
-	_ = r.AddOperation(getWSEcho)
-
 	// GET /api/teams/{joinToken}
 	getTeam, _ := r.NewOperationContext(http.MethodGet, "/api/teams/{joinToken}")
 	getTeam.SetSummary("Look up team")

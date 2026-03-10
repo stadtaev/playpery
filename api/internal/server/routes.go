@@ -17,7 +17,6 @@ func addRoutes(r chi.Router, logger *slog.Logger, admin AdminStore, clients *Reg
 	r.Get("/openapi.json", handleOpenAPI())
 	r.Mount("/docs", v5emb.New("CityQuest API", "/openapi.json", "/docs"))
 	r.Get("/healthz", handleHealth(logger, adminDB))
-	r.Get("/ws/echo", handleWSEcho(logger))
 
 	// Player routes — {client} resolved by clientMiddleware.
 	r.Route("/api/{client}", func(r chi.Router) {
