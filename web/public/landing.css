@@ -253,6 +253,40 @@ img { display: block; max-width: 100%; height: auto; }
   line-height: 1.7;
 }
 
+/* ── Concept Examples ── */
+.example-card {
+  border: 1px solid var(--color-border);
+  padding: 40px;
+  margin-bottom: 40px;
+}
+
+.example-card:last-child {
+  margin-bottom: 0;
+}
+
+.example-images {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.example-images img {
+  width: 100%;
+  aspect-ratio: 16/9;
+  object-fit: cover;
+}
+
+.example-text h3 {
+  font-size: 1.5rem;
+  margin-bottom: 12px;
+}
+
+.example-text p {
+  color: var(--color-secondary);
+  line-height: 1.8;
+}
+
 /* ── Alternating rows ── */
 .row {
   display: grid;
@@ -458,6 +492,8 @@ img { display: block; max-width: 100%; height: auto; }
   .row { grid-template-columns: 1fr 1fr; }
   .row-reverse { direction: rtl; }
   .row-reverse > * { direction: ltr; }
+  .example-images { grid-template-columns: 1fr 1fr; }
+  .example-images-3 { grid-template-columns: repeat(3, 1fr); }
 }
 
 @media (min-width: 1024px) {
