@@ -69,6 +69,17 @@ img { display: block; max-width: 100%; height: auto; }
   gap: 16px;
 }
 
+.nav-link {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  color: var(--color-secondary);
+}
+
+.nav-link:hover { color: var(--color-primary); }
+
 .lang-switch {
   font-size: 12px;
   font-weight: 700;
@@ -207,6 +218,39 @@ img { display: block; max-width: 100%; height: auto; }
   justify-content: center;
   margin-bottom: 20px;
   font-size: 20px;
+}
+
+/* ── Concepts ── */
+.concepts-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 40px;
+}
+
+.concept-card {
+  border: 1px solid var(--color-border);
+  padding: 32px;
+}
+
+.concept-icon {
+  width: 48px;
+  height: 48px;
+  border: 2px solid var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  font-size: 20px;
+}
+
+.concept-card h3 {
+  font-size: 1.125rem;
+  margin-bottom: 8px;
+}
+
+.concept-card p {
+  color: var(--color-secondary);
+  line-height: 1.7;
 }
 
 /* ── Alternating rows ── */
@@ -401,6 +445,7 @@ img { display: block; max-width: 100%; height: auto; }
 /* ── Responsive ── */
 @media (min-width: 640px) {
   .grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .concepts-grid { grid-template-columns: repeat(3, 1fr); }
   .steps { grid-template-columns: repeat(2, 1fr); }
   .checklist { grid-template-columns: repeat(2, 1fr); }
   .testimonials { grid-template-columns: repeat(3, 1fr); }
