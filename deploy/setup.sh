@@ -42,7 +42,7 @@ systemctl enable cityquest
 
 echo "==> Installing Caddyfile..."
 cp "$(dirname "$0")/Caddyfile" /etc/caddy/Caddyfile
-systemctl reload caddy
+systemctl restart caddy
 
 echo ""
 echo "=== Setup complete ==="
