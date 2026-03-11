@@ -40,8 +40,8 @@ func handleSPA(dir string) http.HandlerFunc {
 func setCacheHeaders(w http.ResponseWriter, urlPath string) {
 	switch {
 	case strings.HasPrefix(urlPath, "/assets/"):
-		// Vite content-hashed files — never change, cache forever.
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		// Vite content-hashed files — immutable, 2 days.
+		w.Header().Set("Cache-Control", "public, max-age=172800, immutable")
 	case urlPath == "/sw.js":
 		// Service worker — browser checks for updates on every navigation.
 		w.Header().Set("Cache-Control", "no-cache")
