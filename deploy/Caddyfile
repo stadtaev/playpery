@@ -2,7 +2,7 @@ gocityquest.online {
 	reverse_proxy https://localhost:8443 {
 		transport http {
 			tls_insecure_skip_verify
-			versions h2 h3
+			versions 2 3
 		}
 	}
 }
