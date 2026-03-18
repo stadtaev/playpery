@@ -2,6 +2,7 @@ User-agent: *
 Allow: /
 Disallow: /api/
 Disallow: /admin/
-Disallow: /game
+Disallow: /join/
+Disallow: /game/
 
 Sitemap: https://gocityquest.online/sitemap.xml

@@ -5,6 +5,7 @@
     <loc>https://gocityquest.online/</loc>
     <xhtml:link rel="alternate" hreflang="ru" href="https://gocityquest.online/" />
     <xhtml:link rel="alternate" hreflang="en" href="https://gocityquest.online/en" />
+    <lastmod>2025-03-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
@@ -12,6 +13,7 @@
     <loc>https://gocityquest.online/en</loc>
     <xhtml:link rel="alternate" hreflang="ru" href="https://gocityquest.online/" />
     <xhtml:link rel="alternate" hreflang="en" href="https://gocityquest.online/en" />
+    <lastmod>2025-03-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
