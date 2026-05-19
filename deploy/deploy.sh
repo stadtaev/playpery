@@ -32,7 +32,7 @@ rsync -avz --delete --progress \
     "$SERVER:/opt/cityquest/web/"
 
 echo "==> Restarting service..."
-ssh "$SERVER" 'sudo systemctl restart cityquest'
+ssh "$SERVER" 'if [ "$(id -u)" -eq 0 ]; then systemctl restart cityquest; else sudo systemctl restart cityquest; fi'
 
 rm -f "$REPO_ROOT/cityquest"
 
